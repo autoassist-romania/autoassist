@@ -1344,7 +1344,10 @@
   <div class="topbar"><div><div class="pt">Agenți AI AutoAssist</div><div class="ps">Echipa ta de asistenți inteligenți — conectați la Claude API</div></div></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <div style="font-size:12px;color:var(--t2);font-weight:600" id="mem-status">🧠 Memoria agenților este <span style="color:var(--green)">activă</span> — conversațiile se salvează automat</div>
-    <button class="btn btn-ghost btn-sm" onclick="clearAgentHistory()" style="font-size:11px">🗑️ Șterge istoric</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="showConvHistory()" style="font-size:11px">📂 Conversații</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearAgentHistory()" style="font-size:11px">🗑️ Șterge istoric</button>
+    </div>
   </div>
   <div class="agent-chips">
     <button class="achip on" onclick="selAgent(this,'manager')">🧠 Manager</button>
@@ -1354,7 +1357,7 @@
     <button class="achip" onclick="selAgent(this,'vanzare')">💰 Vânzare</button>
     <button class="achip" onclick="selAgent(this,'itp')">🔬 ITP & Service</button>
   </div>
-  <div class="card" style="display:flex;flex-direction:column;height:calc(100vh - 300px);padding:16px">
+  <div class="card" style="display:flex;flex-direction:column;height:calc(100vh - 300px);padding:16px;position:relative">
     <div id="chat-msgs" class="chat-msgs">
       <div class="msg ai">
         <div class="mav ai">AL</div>
@@ -1364,6 +1367,7 @@
         </div>
       </div>
     </div>
+    <button id="scroll-down-btn" onclick="document.getElementById('chat-msgs').scrollTop=9999;this.style.display='none'" style="display:none;position:absolute;bottom:90px;right:16px;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.3)">↓</button>
     <div class="cbar">
       <textarea id="chat-in" class="cin" placeholder="Scrie un mesaj pentru agentul tău AI..." rows="1" onkeydown="chatKey(event)" oninput="autoH(this)"></textarea>
       <button class="btn btn-primary btn-sm" onclick="sendMsg()" style="flex-shrink:0">↑ Trimite</button>
@@ -1371,6 +1375,18 @@
   </div>
   <div id="api-status" style="margin-top:10px;padding:10px 14px;border-radius:var(--rs);font-size:12px;font-weight:600;display:none"></div>
 </section>
+
+<!-- MODAL CONVERSAȚII SALVATE -->
+<div class="mo" id="mo-conv-history">
+  <div class="md" style="max-width:560px">
+    <div class="md-handle"></div>
+    <div class="md-h">
+      <div class="md-t">📂 Conversații salvate</div>
+      <div class="md-x" onclick="closeM('conv-history')">✕</div>
+    </div>
+    <div id="conv-history-body" style="padding-bottom:16px"></div>
+  </div>
+</div>
 
 <!-- CALCULATOR COSTURI -->
 <section class="sec" id="sec-costuri">

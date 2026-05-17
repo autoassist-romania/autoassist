@@ -401,7 +401,9 @@ async function initAuth() {
       closeM('signup');
       await loadAgentHistory(curAgent);
       showDevBar();
-      _applySection('dashboard');
+      const hash = window.location.hash.replace('#','');
+      const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','ev','vanzare','carvertical','legal','setari','docpers'];
+      _applySection((hash && validSections.includes(hash)) ? hash : 'dashboard');
     } else {
       currentUser = null;
       updateUserUI(null);

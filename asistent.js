@@ -76,6 +76,50 @@ async function loadAgentHistory(agent, returnHTML=false) {
   return html;
 }
 
+function addScrollBtn(msgs) {
+  const btn = document.getElementById('scroll-down-btn');
+  if(!btn) return;
+  const check = () => {
+    if(msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight > 80) {
+      btn.style.display = 'flex';
+      btn.style.alignItems = 'center';
+      btn.style.justifyContent = 'center';
+    } else {
+      btn.style.display = 'none';
+    }
+  };
+  msgs.removeEventListener('scroll', msgs._scrollHandler||null);
+  msgs._scrollHandler = check;
+  msgs.addEventListener('scroll', check);
+}
+
+function showConvHistory() {
+  const agents = {manager:'🧠 Manager',auto:'🚗 Auto & Service',documente:'📄 Documente',juridic:'⚖️ Juridic',vanzare:'💰 Vânzare',itp:'🔬 ITP & Service'};
+  const body = document.getElementById('conv-history-body');
+  if(!body) return;
+  let html = '';
+  let hasAny = false;
+  Object.entries(agents).forEach(([key, label]) => {
+    const hist = JSON.parse(localStorage.getItem('chat_' + key) || '[]');
+    if(hist.length === 0) return;
+    hasAny = true;
+    const last = hist[hist.length-1];
+    const lastTime = last.time ? new Date(last.time).toLocaleDateString('ro-RO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    const preview = (last.content||'').slice(0,80) + ((last.content||'').length > 80 ? '...' : '');
+    html += `<div style="border:1px solid var(--b2);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:background 0.2s" 
+      onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''"
+      onclick="closeM('conv-history');document.querySelector('.achip[onclick*=\\'${key}\\']').click()">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:700;color:var(--text)">${label}</span>
+        <span style="font-size:11px;color:var(--t3)">${hist.length} mesaje · ${lastTime}</span>
+      </div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.5">${preview}</div>
+    </div>`;
+  });
+  body.innerHTML = hasAny ? html : '<div style="text-align:center;padding:32px;color:var(--t3)">Nu ai conversații salvate încă.</div>';
+  openM('conv-history');
+}
+
 async function selAgent(btn,agent){
   document.querySelectorAll('.achip').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
@@ -90,6 +134,8 @@ async function selAgent(btn,agent){
   
   msgs.innerHTML = welcomeMsg + historyHTML;
   msgs.scrollTop = msgs.scrollHeight;
+  // Buton scroll jos dacă există istoric
+  addScrollBtn(msgs);
 }
 function chatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
 function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
