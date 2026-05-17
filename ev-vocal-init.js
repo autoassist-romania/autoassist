@@ -281,11 +281,9 @@ async function initAuth() {
     if(ov && ov.style.display !== 'none'){ ov.style.opacity='0'; setTimeout(()=>ov.style.display='none',300); }
     if(!document.querySelector('.sec.active')) {
       if(currentUser) {
-        // Citesc hash-ul din URL și navighez la pagina salvată
-        const hash = window.location.hash.replace('#','');
+        const saved = sessionStorage.getItem('aa_last_sec');
         const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','ev','vanzare','carvertical','legal','setari','docpers'];
-        const targetSec = (hash && validSections.includes(hash)) ? hash : 'dashboard';
-        _applySection(targetSec);
+        _applySection((saved && validSections.includes(saved)) ? saved : 'dashboard');
       } else {
         _applySection('landing');
       }
@@ -401,9 +399,9 @@ async function initAuth() {
       closeM('signup');
       await loadAgentHistory(curAgent);
       showDevBar();
-      const hash = window.location.hash.replace('#','');
+      const saved = sessionStorage.getItem('aa_last_sec');
       const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','ev','vanzare','carvertical','legal','setari','docpers'];
-      _applySection((hash && validSections.includes(hash)) ? hash : 'dashboard');
+      _applySection((saved && validSections.includes(saved)) ? saved : 'dashboard');
     } else {
       currentUser = null;
       updateUserUI(null);

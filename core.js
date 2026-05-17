@@ -154,6 +154,8 @@ function loadSavedKey() {
 let _navStack = ['dashboard'];
 function _applySection(sec){
   if(!document.getElementById('sec-'+sec)) sec='dashboard';
+  // Salvez pagina curentă (dacă userul e logat, nu pe landing)
+  if(sec !== 'landing') sessionStorage.setItem('aa_last_sec', sec);
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   document.getElementById('sec-'+sec).classList.add('active');
