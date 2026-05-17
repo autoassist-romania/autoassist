@@ -79,18 +79,23 @@ async function loadAgentHistory(agent, returnHTML=false) {
 function addScrollBtn(msgs) {
   const btn = document.getElementById('scroll-down-btn');
   if(!btn) return;
-  const check = () => {
-    if(msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight > 80) {
-      btn.style.display = 'flex';
-      btn.style.alignItems = 'center';
-      btn.style.justifyContent = 'center';
-    } else {
-      btn.style.display = 'none';
-    }
+  const update = () => {
+    const atBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 60;
+    btn.style.display = atBottom ? 'none' : 'flex';
   };
-  msgs.removeEventListener('scroll', msgs._scrollHandler||null);
-  msgs._scrollHandler = check;
-  msgs.addEventListener('scroll', check);
+  msgs.addEventListener('scroll', update);
+  setTimeout(update, 100);
+}
+
+function newConversation() {
+  chatHistory = [];
+  const agent = curAgent;
+  localStorage.removeItem('chat_' + agent);
+  if(supabaseClient && currentUser) {
+    supabaseClient.from('chat_history').delete().eq('user_id', currentUser.id).eq('agent', agent).then(()=>{});
+  }
+  const msgs = document.getElementById('chat-msgs');
+  msgs.innerHTML = `<div class="msg ai"><div class="mav ai">AA</div><div class="mb"><div class="mn">${AGENT_NAMES[agent]}</div><div class="mbu">Conversație nouă pornită! Cu ce te pot ajuta? 🚀</div></div></div>`;
 }
 
 function showConvHistory() {
@@ -153,7 +158,14 @@ function needsWebSearch(txt) {
   return triggers.some(t => lower.includes(t));
 }
 
-function buildSearchQuery(txt) {
+function detectWeatherCity(txt) {
+  const lower = txt.toLowerCase();
+  if(!lower.includes('vreme') && !lower.includes('temperatura') && !lower.includes('vremea') && !lower.includes('ploua') && !lower.includes('soare')) return null;
+  // Orase comune Romania
+  const cities = ['bucurești','bucharest','cluj','timișoara','timisoara','iași','iasi','constanța','constanta','craiova','brașov','brasov','galați','galati','ploiești','ploiesti','oradea','sibiu','bacău','bacau','pitești','pitesti','arad','baia mare','buzău','buzau'];
+  for(const c of cities) { if(lower.includes(c)) return c; }
+  return 'Romania'; // default
+}
   const lower = txt.toLowerCase();
   const carBrands = ['dacia','logan','sandero','duster','volkswagen','golf','passat','polo','bmw','mercedes','audi','renault','ford','opel','skoda','toyota','hyundai','kia','peugeot','citroen','fiat','seat','mazda','honda','nissan','volvo'];
   const hasBrand = carBrands.some(b => lower.includes(b));
@@ -181,6 +193,7 @@ async function sendMsg(){
 
   // Web search — se face server-side în edge function
   const searchQuery = needsWebSearch(txt) ? buildSearchQuery(txt) : null;
+  const weatherCity = detectWeatherCity(txt);
   const finalMsg = txt;
   chatHistory.push({role:'user',content:finalMsg});
   try{
@@ -194,7 +207,8 @@ async function sendMsg(){
         max_tokens:1024,
         question:txt,
         systemPrompt:buildAgentPrompt(curAgent),
-        searchQuery:searchQuery
+        searchQuery:searchQuery,
+        weatherCity:weatherCity
       })
     });
     const data=await res.json();

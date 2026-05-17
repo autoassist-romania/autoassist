@@ -1345,8 +1345,9 @@
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <div style="font-size:12px;color:var(--t2);font-weight:600" id="mem-status">🧠 Memoria agenților este <span style="color:var(--green)">activă</span> — conversațiile se salvează automat</div>
     <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="newConversation()" style="font-size:11px">✏️ Conversație nouă</button>
       <button class="btn btn-ghost btn-sm" onclick="showConvHistory()" style="font-size:11px">📂 Conversații</button>
-      <button class="btn btn-ghost btn-sm" onclick="clearAgentHistory()" style="font-size:11px">🗑️ Șterge istoric</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearAgentHistory()" style="font-size:11px">🗑️ Șterge tot</button>
     </div>
   </div>
   <div class="agent-chips">
@@ -1367,7 +1368,7 @@
         </div>
       </div>
     </div>
-    <button id="scroll-down-btn" onclick="document.getElementById('chat-msgs').scrollTop=9999;this.style.display='none'" style="display:none;position:absolute;bottom:90px;right:16px;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.3)">↓</button>
+    <button id="scroll-down-btn" onclick="const m=document.getElementById('chat-msgs');m.scrollTop=m.scrollHeight;this.style.display='none'" style="display:none;position:absolute;bottom:90px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:20px;cursor:pointer;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,0.4);align-items:center;justify-content:center;">↓</button>
     <div class="cbar">
       <textarea id="chat-in" class="cin" placeholder="Scrie un mesaj pentru agentul tău AI..." rows="1" onkeydown="chatKey(event)" oninput="autoH(this)"></textarea>
       <button class="btn btn-primary btn-sm" onclick="sendMsg()" style="flex-shrink:0">↑ Trimite</button>
