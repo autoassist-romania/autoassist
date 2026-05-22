@@ -1,3 +1,4 @@
+ // v2026-05-22
 // AutoAssist Service Worker v2
 // Nu face cache la HTML - doar la assets statice
 
