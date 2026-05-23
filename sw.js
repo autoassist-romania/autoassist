@@ -2,7 +2,7 @@
 // AutoAssist Service Worker v2
 // Nu face cache la HTML - doar la assets statice
 
-const CACHE_NAME = 'autoassist-v3';
+const CACHE_NAME = 'autoassist-v4';
 const STATIC_ASSETS = [
   '/icon-192.png',
   '/icon-512.png',
