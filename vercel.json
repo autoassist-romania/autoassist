@@ -1,0 +1,27 @@
+{
+  "functions": {
+    "api/*.js": {
+      "runtime": "edge"
+    }
+  },
+  "crons": [
+    { "path": "/api/ping-supabase", "schedule": "0 10 * * *" },
+    { "path": "/api/sync-fuel", "schedule": "0 6 * * *" },
+    { "path": "/api/sync-fuel?full=1", "schedule": "0 6 * * 1" }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" }
+      ]
+    }
+  ]
+}
