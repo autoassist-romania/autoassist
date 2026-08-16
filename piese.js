@@ -759,21 +759,22 @@ function showCompatNotice(url) {
   `;
   el.innerHTML = `
     <div style="font-size:32px;margin-bottom:8px">⚠️</div>
-    <div style="font-weight:800;font-size:15px;color:var(--t1);margin-bottom:6px">Verifică compatibilitatea!</div>
-    <div style="font-size:12px;color:var(--t3);line-height:1.5">
+    <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:6px">Verifică compatibilitatea!</div>
+    <div style="font-size:12px;color:#fff;opacity:0.85;line-height:1.5">
       Pe site-ul partenerului, confirmă piesa exactă cu <strong>seria de șasiu (VIN)</strong> sau marca/modelul mașinii tale înainte să comanzi.
+      Dacă nu găsește piesa automat, selectează manual caracteristicile mașinii și piesa dorită, direct pe site.
     </div>
     <div style="display:flex;gap:8px;margin-top:16px">
-      <button id="compat-cancel-btn" style="flex:1;padding:10px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--t3);font-weight:700;font-size:12px;cursor:pointer">Anulează</button>
+      <button id="compat-cancel-btn" style="flex:1;padding:10px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Anulează</button>
       <button id="compat-confirm-btn" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Am înțeles →</button>
     </div>
     <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--b2)">
-      <div style="font-size:10px;color:var(--t3);line-height:1.4;margin-bottom:8px">
+      <div style="font-size:10px;color:#fff;opacity:0.85;line-height:1.4;margin-bottom:8px">
         Nu s-a deschis nimic? Ai probabil un <strong>blocator de reclame (AdBlock)</strong> activ.
       </div>
       <div style="display:flex;gap:6px;justify-content:center">
-        <button id="compat-copy-link" style="padding:6px 12px;background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--t3);font-size:10px;cursor:pointer">📋 Copiază linkul</button>
-        <button id="compat-edge-link" style="padding:6px 12px;background:transparent;border:1px solid var(--b2);border-radius:8px;color:var(--t3);font-size:10px;cursor:pointer">🌐 Deschide în Edge</button>
+        <button id="compat-copy-link" style="padding:6px 12px;background:transparent;border:1px solid var(--b2);border-radius:8px;color:#fff;font-size:10px;cursor:pointer">📋 Copiază linkul</button>
+        <button id="compat-edge-link" style="padding:6px 12px;background:transparent;border:1px solid var(--b2);border-radius:8px;color:#fff;font-size:10px;cursor:pointer">🌐 Deschide în Edge</button>
       </div>
     </div>
   `;
@@ -858,7 +859,7 @@ async function pieseCautaLiber() {
       { nume: 'Anvelope.ro — Vară',  icon: '☀️', url: `https://www.anvelope.ro/anvelope-vara/${lat}-${prof}-r${diam}/` },
       { nume: 'Anvelope.ro — Iarnă', icon: '❄️', url: `https://www.anvelope.ro/anvelope-iarna/${lat}-${prof}-r${diam}/` },
       { nume: 'AutoEco — Anvelope',  icon: '🟣', url: buildAutoEcoTireUrl(lat, prof, diam) },
-      { nume: 'eMAG — Anvelope',     icon: '🟠', url: EMAG_LINK },
+      { nume: 'eMAG — Anvelope',     icon: '🟠', url: EMAG_LINK, sub: 'Sau orice alt produs de pe eMAG' },
     ]);
     return;
   }
@@ -894,7 +895,7 @@ async function pieseCautaLiber() {
   showStoreChooser(q, produsGasit, [
     { nume: 'Automobilus.ro', icon: '🟢', url: automobilusUrl },
     { nume: 'AutoEco',        icon: '🟣', url: autoEcoUrl },
-    { nume: 'eMAG',           icon: '🟠', url: emagUrl },
+    { nume: 'eMAG',           icon: '🟠', url: emagUrl, sub: 'Nu doar piese — comanzi orice de pe eMAG' },
   ]);
 }
 
@@ -919,19 +920,24 @@ function showStoreChooser(query, produsGasit, magazine) {
   `;
   el.innerHTML = `
     <div style="font-size:28px;margin-bottom:6px">🔍</div>
-    <div style="font-weight:800;font-size:14px;color:var(--t1);margin-bottom:4px">${query}</div>
+    <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px">${query}</div>
     ${produsGasit
       ? `<div style="font-size:12px;color:var(--green);margin-bottom:10px">Preț orientativ: <strong>${Number(produsGasit.pret).toFixed(2)} lei</strong>${produsGasit.brand?` · ${produsGasit.brand}`:''}</div>`
-      : `<div style="font-size:11px;color:var(--t3);margin-bottom:10px">Alege magazinul unde vrei să cauți</div>`
+      : `<div style="font-size:11px;color:#fff;opacity:0.85;margin-bottom:10px">Alege magazinul unde vrei să cauți</div>`
     }
     <div style="display:flex;flex-direction:column;gap:8px;margin:12px 0">
       ${magazine.map(m => `
-        <a href="${m.url}" target="_blank" onclick="document.getElementById('compat-notice')?.remove()" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--t1);font-weight:700;font-size:13px">
-          <span style="font-size:16px">${m.icon}</span> ${m.nume}
+        <a href="${m.url}" target="_blank" onclick="document.getElementById('compat-notice')?.remove()" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:#fff;font-weight:700;font-size:13px">
+          <span style="font-size:16px">${m.icon}</span>
+          <div style="flex:1">
+            <div>${m.nume}</div>
+            ${m.sub ? `<div style="font-size:9px;font-weight:400;opacity:0.75;margin-top:1px">${m.sub}</div>` : ''}
+          </div>
         </a>`).join('')}
     </div>
-    <div style="font-size:10px;color:var(--t3);line-height:1.4;margin-top:4px">
-      ⚠️ Verifică pe site-ul ales compatibilitatea exactă (VIN/marcă/model) înainte să comanzi.
+    <div style="font-size:10px;color:#fff;opacity:0.85;line-height:1.5;margin-top:4px">
+      ⚠️ Verifică pe site-ul ales compatibilitatea exactă (VIN/marcă/model) înainte să comanzi.<br>
+      Dacă nu găsește piesa automat, selectează manual caracteristicile mașinii și piesa dorită, direct pe site-ul care se deschide.
     </div>
     <button onclick="document.getElementById('compat-notice')?.remove()" style="
       margin-top:12px;padding:6px 18px;background:transparent;border:1px solid var(--b2);
