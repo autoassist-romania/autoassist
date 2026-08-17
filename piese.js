@@ -842,6 +842,40 @@ function detectCategoryFromText(text) {
   return null;
 }
 
+// ═══ MĂRCI CUNOSCUTE — preferate pentru prețul orientativ ═══
+// Fără filtrare, query-ul aducea mereu cea mai ieftină piesă din feed, care e des un brand
+// necunoscut/generic (mai ales la distribuție, amortizoare, plăcuțe frână). Preferăm un preț
+// orientativ de la o marcă recunoscută, chiar dacă nu e cea mai mică valoare din categorie.
+const MARCI_CUNOSCUTE = [
+  'bosch','febi','febi bilstein','sachs','luk','valeo','ngk','denso','mann','mann-filter','mann filter',
+  'filtron','mahle','mahle original','hella','trw','ate','brembo','textar','ferodo','delphi',
+  'continental','contitech','gates','skf','ina','fag','schaeffler','monroe','kyb','kayaba',
+  'bilstein','boge','meyle','ruville','metzger','bendix','champion','fram','knecht','corteco',
+  'elring','victor reinz','pierburg','behr','nissens','varta','exide','banner','yuasa','optima',
+  'zimmermann','dayco','ebc','hengst','mapco','swag','lemforder','lemförder','jp group','blue print',
+  'first line','national','motorcraft','aisin','ac delco','akebono','castrol','shell','mobil','liqui moly','motul','elf',
+];
+function esteMarcaCunoscuta(brand) {
+  if(!brand) return false;
+  const b = brand.toLowerCase().trim();
+  return MARCI_CUNOSCUTE.some(m => b===m || b.includes(m));
+}
+
+// Caută preț orientativ: preferă cea mai ieftină piesă de la o marcă cunoscută din primele 30 (după preț);
+// dacă niciuna din primele 30 nu e de la o marcă cunoscută, cade pe cea mai ieftină overall (mai bine decât nimic).
+async function gasestePretOrientativ(catId, textCautat) {
+  if(typeof supabaseClient === 'undefined') return null;
+  try {
+    let query = supabaseClient.from('piese_automobilus').select('titlu,pret,brand');
+    if(catId) query = query.eq('categorie_app', catId);
+    else if(textCautat) query = query.ilike('titlu', `%${textCautat}%`);
+    else return null;
+    const { data } = await query.order('pret', { ascending: true }).limit(30);
+    if(!data || !data.length) return null;
+    return data.find(p => esteMarcaCunoscuta(p.brand)) || data[0];
+  } catch(e) { return null; /* tabelul poate să nu existe încă / sincronizarea încă rulează */ }
+}
+
 async function pieseCautaLiber() {
   const q = document.getElementById('piese-search-input')?.value?.trim();
   if(!q) return;
@@ -872,21 +906,8 @@ async function pieseCautaLiber() {
   const emagUrl = EMAG_LINK;
 
   // Preț orientativ — încerc întâi pe categoria detectată (mai multe șanse de match), apoi pe textul brut
-  let produsGasit = null;
-  if(typeof supabaseClient !== 'undefined') {
-    try {
-      if(catId) {
-        const { data } = await supabaseClient.from('piese_automobilus').select('titlu,pret,brand')
-          .eq('categorie_app', catId).order('pret', { ascending: true }).limit(1);
-        if(data && data.length) produsGasit = data[0];
-      }
-      if(!produsGasit) {
-        const { data } = await supabaseClient.from('piese_automobilus').select('titlu,pret,brand')
-          .ilike('titlu', `%${q}%`).order('pret', { ascending: true }).limit(1);
-        if(data && data.length) produsGasit = data[0];
-      }
-    } catch(e) { /* tabelul poate să nu existe încă / sincronizarea încă rulează — nu blocăm căutarea din cauza asta */ }
-  }
+  let produsGasit = catId ? await gasestePretOrientativ(catId) : null;
+  if(!produsGasit) produsGasit = await gasestePretOrientativ(null, q);
 
   // AutoDoc scos temporar — nu avem confirmare că a fost aprobat pe Awin, nici structura reală de URL verificată
   showStoreChooser(q, produsGasit, [
@@ -904,14 +925,7 @@ async function pieseAlegeMagazinCategorie(catId, catLabel, carBrand, carModel) {
   const masina = [carBrand, carModel].filter(Boolean).join(' ');
 
   // Preț orientativ pentru categoria exactă (dacă avem sync-ul de piese Automobilus în Supabase)
-  let produsGasit = null;
-  if(typeof supabaseClient !== 'undefined') {
-    try {
-      const { data } = await supabaseClient.from('piese_automobilus').select('titlu,pret,brand')
-        .eq('categorie_app', catId).order('pret', { ascending: true }).limit(1);
-      if(data && data.length) produsGasit = data[0];
-    } catch(e) { /* tabelul poate să nu existe încă / sincronizarea încă rulează — nu blocăm popup-ul din cauza asta */ }
-  }
+  const produsGasit = await gasestePretOrientativ(catId);
 
   showStoreChooser(catLabel, produsGasit, [
     { nume: 'Automobilus.ro', icon: '🟢', url: automobilusUrl },
