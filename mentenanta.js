@@ -1223,23 +1223,39 @@ function updateAnvLink() {
   if(lat && prof && diam) {
     const dim = `${lat}/${prof} R${diam}`;
     if(prev) { prev.style.display='block'; prev.textContent = dim + (sezon==='vara'?' ☀️':sezon==='iarna'?' ❄️':' 🌤️'); }
-    const sezonMap = { vara: 'summer', iarna: 'winter', all: 'allseason' };
-    const anvLink = document.getElementById('anv-link-anvelope');
-    const autodocLink = document.getElementById('anv-link-autodoc');
-    const emagLink = document.getElementById('anv-link-emag');
-    if(anvLink) anvLink.href = `https://www.anvelope.ro/anvelope-${sezon === 'iarna' ? 'iarna' : sezon === 'all' ? 'all-season' : 'vara'}/${lat}-${prof}-r${diam}/`;
-    if(autodocLink) autodocLink.href = `https://ro.autodoc.ro/anvelope?width=${lat}&profile=${prof}&diameter=${diam}&season=${sezonMap[sezon]||'summer'}`;
-    if(emagLink) emagLink.href = `https://www.emag.ro/anvelope/filter/latime-${lat},profil-${prof},diametru-janta-${diam}/c`;
   } else {
     if(prev) prev.style.display='none';
   }
-  // Automobilus.ro nu are catalog pe dimensiuni — trimitem spre pagina mărcii mașinii selectate
-  const automobilusLink = document.getElementById('anv-link-automobilus');
-  if(automobilusLink && typeof buildAutomobilusUrl === 'function') {
+}
+
+// ═══ ANVELOPE — deschide magazinul ales, cu dimensiunea curentă calculată chiar la click (nu href static) ═══
+function anvOpenStore(store) {
+  const lat = document.getElementById('anv-lat')?.value?.trim();
+  const prof = document.getElementById('anv-prof')?.value?.trim();
+  const diam = document.getElementById('anv-diam')?.value?.trim();
+  const sezon = document.getElementById('anv-sezon')?.value || 'vara';
+  const areDimensiuni = !!(lat && prof && diam);
+
+  let url;
+  if(store === 'anvelope') {
+    const sezonSlug = sezon === 'iarna' ? 'anvelope-iarna' : sezon === 'all' ? 'anvelope-all-season' : 'anvelope-vara';
+    url = areDimensiuni ? `https://www.anvelope.ro/${sezonSlug}/${lat}-${prof}-r${diam}/` : `https://www.anvelope.ro/${sezonSlug}/`;
+  } else if(store === 'emag') {
+    // Link de afiliat Profitshare — nu avem confirmat un tipar de link personalizat pe dimensiune, folosim link-ul fix peste tot
+    url = (typeof EMAG_LINK !== 'undefined') ? EMAG_LINK : 'https://l.profitshare.ro/l/16322119';
+  } else if(store === 'automobilus') {
     const carId = document.getElementById('anv-car')?.value;
-    const car = (cars||[]).find(c => c.id == carId);
-    automobilusLink.href = buildAutomobilusUrl(car?.brand, null);
+    const car = (typeof cars !== 'undefined' ? cars : []).find(c => c.id == carId);
+    url = (typeof buildAutomobilusUrl === 'function') ? buildAutomobilusUrl(car?.brand, null) : 'https://automobilus.ro/piese-auto';
   }
+  if(!url) return;
+
+  if(!areDimensiuni && store !== 'automobilus' && typeof showNotification === 'function') {
+    showNotification('📐 Completează dimensiunile', 'Introdu lățime, profil și diametru pentru rezultate exacte — te trimit spre pagina generală de anvelope.');
+  }
+
+  if(typeof showCompatNotice === 'function') showCompatNotice(url);
+  else window.open(url, '_blank');
 }
 
 // ═══ DASHBOARD CONFIGURABIL ═══

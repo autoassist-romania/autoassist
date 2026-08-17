@@ -1749,10 +1749,9 @@
       <div class="card" style="margin-top:12px">
         <div class="ch"><span class="ct">🛒 Comandă Anvelope</span></div>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <a id="anv-link-anvelope" href="https://www.anvelope.ro" target="_blank" class="btn btn-primary btn-full" style="text-decoration:none;text-align:center">🔴 anvelope.ro</a>
-          <a id="anv-link-autodoc" href="https://ro.autodoc.ro/anvelope" target="_blank" class="btn btn-full" style="text-decoration:none;text-align:center;background:var(--s2);color:var(--t1)">🔵 AutoDoc</a>
-          <a id="anv-link-automobilus" href="https://automobilus.ro/piese-auto" target="_blank" class="btn btn-full" style="text-decoration:none;text-align:center;background:var(--s2);color:var(--t1)">🟢 Automobilus</a>
-          <a id="anv-link-emag" href="https://l.profitshare.ro/l/16322119" target="_blank" class="btn btn-full" style="text-decoration:none;text-align:center;background:var(--s2);color:var(--t1)">🟠 eMAG</a>
+          <button type="button" onclick="anvOpenStore('anvelope')" class="btn btn-primary btn-full" style="text-align:center">🔴 anvelope.ro</button>
+          <button type="button" onclick="anvOpenStore('automobilus')" class="btn btn-full" style="text-align:center;background:var(--s2);color:var(--t1)">🟢 Automobilus</button>
+          <button type="button" onclick="anvOpenStore('emag')" class="btn btn-full" style="text-align:center;background:var(--s2);color:var(--t1)">🟠 eMAG</button>
         </div>
         <div style="font-size:10px;color:var(--t3);margin-top:8px">Automobilus nu are filtrare pe dimensiune — te duce la piesele mărcii tale, de unde alegi modelul exact.</div>
       </div>

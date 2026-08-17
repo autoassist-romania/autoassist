@@ -861,18 +861,39 @@ function esteMarcaCunoscuta(brand) {
   return MARCI_CUNOSCUTE.some(m => b===m || b.includes(m));
 }
 
-// Caută preț orientativ: preferă cea mai ieftină piesă de la o marcă cunoscută din primele 30 (după preț);
-// dacă niciuna din primele 30 nu e de la o marcă cunoscută, cade pe cea mai ieftină overall (mai bine decât nimic).
-async function gasestePretOrientativ(catId, textCautat) {
+// Interoghează piese_automobilus cu filtrele date (fiecare apel pornește de la un query nou, ca să nu se
+// suprapună filtrele între încercări succesive din gasestePretOrientativ).
+async function fetchPretCandidati(catId, textCautat, carBrand) {
+  let q = supabaseClient.from('piese_automobilus').select('titlu,pret,brand');
+  if(catId) q = q.eq('categorie_app', catId);
+  else if(textCautat) q = q.ilike('titlu', `%${textCautat}%`);
+  if(carBrand) q = q.ilike('titlu', `%${carBrand}%`);
+  const { data } = await q.order('pret', { ascending: true }).limit(50);
+  return data;
+}
+
+// Caută preț orientativ: preferă cea mai ieftină piesă de la o marcă cunoscută, dar întâi elimină outlier-ii
+// de preț foarte mici — accesorii mici (tampoane, burdufuri, role/întinzătoare separate) care conțin din
+// întâmplare cuvântul-cheie al categoriei în titlu, dar nu sunt piesa principală (ex: "tampon amortizor" la
+// categoria Amortizoare nu e un amortizor propriu-zis). Pragul e relativ la mediană, ca să se adapteze automat
+// la nivelul de preț al fiecărei categorii.
+// Dacă avem marca mașinii, încerc întâi doar produse care o menționează în titlu (feed-ul nu are o coloană
+// separată de compatibilitate auto, deci e o potrivire pe text) — ca prețul să difere Dacia vs Audi, nu identic.
+// Dacă nu găsesc nimic specific mărcii, cad pe rezultatul general (mai bine un preț aproximativ decât niciunul).
+async function gasestePretOrientativ(catId, textCautat, carBrand) {
   if(typeof supabaseClient === 'undefined') return null;
   try {
-    let query = supabaseClient.from('piese_automobilus').select('titlu,pret,brand');
-    if(catId) query = query.eq('categorie_app', catId);
-    else if(textCautat) query = query.ilike('titlu', `%${textCautat}%`);
-    else return null;
-    const { data } = await query.order('pret', { ascending: true }).limit(30);
+    let data = null;
+    if(carBrand) data = await fetchPretCandidati(catId, textCautat, carBrand);
+    if(!data || !data.length) data = await fetchPretCandidati(catId, textCautat, null);
     if(!data || !data.length) return null;
-    return data.find(p => esteMarcaCunoscuta(p.brand)) || data[0];
+
+    const preturi = data.map(p => Number(p.pret)).sort((a,b) => a-b);
+    const mediana = preturi[Math.floor(preturi.length/2)];
+    const rezonabile = data.filter(p => Number(p.pret) >= mediana * 0.35);
+    const setFinal = rezonabile.length ? rezonabile : data;
+
+    return setFinal.find(p => esteMarcaCunoscuta(p.brand)) || setFinal[0];
   } catch(e) { return null; /* tabelul poate să nu existe încă / sincronizarea încă rulează */ }
 }
 
@@ -906,8 +927,8 @@ async function pieseCautaLiber() {
   const emagUrl = EMAG_LINK;
 
   // Preț orientativ — încerc întâi pe categoria detectată (mai multe șanse de match), apoi pe textul brut
-  let produsGasit = catId ? await gasestePretOrientativ(catId) : null;
-  if(!produsGasit) produsGasit = await gasestePretOrientativ(null, q);
+  let produsGasit = catId ? await gasestePretOrientativ(catId, null, car?.brand) : null;
+  if(!produsGasit) produsGasit = await gasestePretOrientativ(null, q, car?.brand);
 
   // AutoDoc scos temporar — nu avem confirmare că a fost aprobat pe Awin, nici structura reală de URL verificată
   showStoreChooser(q, produsGasit, [
@@ -924,8 +945,8 @@ async function pieseAlegeMagazinCategorie(catId, catLabel, carBrand, carModel) {
   const emagUrl = EMAG_LINK;
   const masina = [carBrand, carModel].filter(Boolean).join(' ');
 
-  // Preț orientativ pentru categoria exactă (dacă avem sync-ul de piese Automobilus în Supabase)
-  const produsGasit = await gasestePretOrientativ(catId);
+  // Preț orientativ pentru categoria exactă și marca mașinii (dacă avem sync-ul de piese Automobilus în Supabase)
+  const produsGasit = await gasestePretOrientativ(catId, null, carBrand);
 
   showStoreChooser(catLabel, produsGasit, [
     { nume: 'Automobilus.ro', icon: '🟢', url: automobilusUrl },
