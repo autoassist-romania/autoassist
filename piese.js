@@ -2,6 +2,9 @@
 // Link static generat din Profitshare — spre deosebire de 2Performant, nu am confirmat un tipar
 // de "wrapper" pentru link-uri personalizate pe categorie/căutare, deci folosim link-ul fix peste tot.
 const EMAG_LINK = 'https://l.profitshare.ro/l/16322119';
+// Link dedicat categoriei de anvelope pe eMAG (generat separat prin Generatorul de link-uri Profitshare,
+// pentru pagina https://www.emag.ro/anvelope/c) — folosit doar unde vorbim explicit de anvelope.
+const EMAG_ANVELOPE_LINK = 'https://l.profitshare.ro/l/16327523';
 
 // ═══ PIESE AUTO ═══
 const AUTODOC_AFILIAT = 'AFILIAT_ID';
@@ -861,6 +864,24 @@ function esteMarcaCunoscuta(brand) {
   return MARCI_CUNOSCUTE.some(m => b===m || b.includes(m));
 }
 
+// ═══ REGULI PE CATEGORIE — include/exclude cuvinte din titlu ═══
+// Media de preț nu prinde tot: un produs de alt tip poate fi și SCUMP, nu doar ieftin (ex: NISSENS face
+// răcitoare/radiatoare de ulei — titlul conține "ulei motor" din întâmplare, prețul e mare pentru un radiator,
+// deci trece de filtrul de outlier ieftin, deși nu e ulei propriu-zis). Aici filtrez pe TIP de produs, nu pe preț.
+const PRET_REGULI_CATEGORIE = {
+  'ulei-motor':        { exclude: ['radiator', 'racitor', 'răcitor', 'furtun', 'pompa ulei', 'pompă ulei', 'senzor', 'garnitura', 'garnitură', 'capac', 'buson'] },
+  'curea-distributie': { include: ['kit'] },
+  'amortizoare':       { exclude: ['tampon', 'burduf', 'opritor', 'rulment', 'capac praf', 'arc amortizor', 'suport amortizor'] },
+};
+function treceRegulaCategorie(titlu, catId) {
+  const regula = PRET_REGULI_CATEGORIE[catId];
+  if(!regula) return true;
+  const t = (titlu || '').toLowerCase();
+  if(regula.exclude && regula.exclude.some(k => t.includes(k))) return false;
+  if(regula.include && !regula.include.some(k => t.includes(k))) return false;
+  return true;
+}
+
 // Interoghează piese_automobilus cu filtrele date (fiecare apel pornește de la un query nou, ca să nu se
 // suprapună filtrele între încercări succesive din gasestePretOrientativ).
 async function fetchPretCandidati(catId, textCautat, carBrand) {
@@ -872,14 +893,11 @@ async function fetchPretCandidati(catId, textCautat, carBrand) {
   return data;
 }
 
-// Caută preț orientativ: preferă cea mai ieftină piesă de la o marcă cunoscută, dar întâi elimină outlier-ii
-// de preț foarte mici — accesorii mici (tampoane, burdufuri, role/întinzătoare separate) care conțin din
-// întâmplare cuvântul-cheie al categoriei în titlu, dar nu sunt piesa principală (ex: "tampon amortizor" la
-// categoria Amortizoare nu e un amortizor propriu-zis). Pragul e relativ la mediană, ca să se adapteze automat
-// la nivelul de preț al fiecărei categorii.
-// Dacă avem marca mașinii, încerc întâi doar produse care o menționează în titlu (feed-ul nu are o coloană
-// separată de compatibilitate auto, deci e o potrivire pe text) — ca prețul să difere Dacia vs Audi, nu identic.
-// Dacă nu găsesc nimic specific mărcii, cad pe rezultatul general (mai bine un preț aproximativ decât niciunul).
+// Caută preț orientativ: 1) elimină produse de tip greșit (regulile de mai sus), 2) elimină outlier-ii de
+// preț foarte mici pe ce rămâne, 3) preferă o marcă cunoscută. Dacă avem marca mașinii, încerc întâi doar
+// produse care o menționează în titlu (feed-ul nu are o coloană separată de compatibilitate auto, deci e o
+// potrivire pe text) — ca prețul să difere Dacia vs Audi, nu identic. Dacă nu găsesc nimic specific mărcii,
+// cad pe rezultatul general (mai bine un preț aproximativ decât niciunul).
 async function gasestePretOrientativ(catId, textCautat, carBrand) {
   if(typeof supabaseClient === 'undefined') return null;
   try {
@@ -888,10 +906,13 @@ async function gasestePretOrientativ(catId, textCautat, carBrand) {
     if(!data || !data.length) data = await fetchPretCandidati(catId, textCautat, null);
     if(!data || !data.length) return null;
 
-    const preturi = data.map(p => Number(p.pret)).sort((a,b) => a-b);
+    const filtratTip = data.filter(p => treceRegulaCategorie(p.titlu, catId));
+    const setDupaTip = filtratTip.length ? filtratTip : data;
+
+    const preturi = setDupaTip.map(p => Number(p.pret)).sort((a,b) => a-b);
     const mediana = preturi[Math.floor(preturi.length/2)];
-    const rezonabile = data.filter(p => Number(p.pret) >= mediana * 0.35);
-    const setFinal = rezonabile.length ? rezonabile : data;
+    const rezonabile = setDupaTip.filter(p => Number(p.pret) >= mediana * 0.35);
+    const setFinal = rezonabile.length ? rezonabile : setDupaTip;
 
     return setFinal.find(p => esteMarcaCunoscuta(p.brand)) || setFinal[0];
   } catch(e) { return null; /* tabelul poate să nu existe încă / sincronizarea încă rulează */ }
@@ -911,7 +932,7 @@ async function pieseCautaLiber() {
       { nume: 'Janta.ro — Vară',        icon: '☀️', url: buildJantaLink(`/wheelsportal/84677/tyres/${lat}/${prof}R${diam}/vara`) },
       { nume: 'Janta.ro — Iarnă',       icon: '❄️', url: buildJantaLink(`/wheelsportal/84677/tyres/${lat}/${prof}R${diam}/iarna`) },
       { nume: 'AutoEco — Anvelope',     icon: '🟣', url: buildAutoEcoTireUrl(lat, prof, diam) },
-      { nume: 'eMAG — Anvelope',        icon: '🟠', url: EMAG_LINK, sub: 'Sau orice alt produs de pe eMAG' },
+      { nume: 'eMAG — Anvelope',        icon: '🟠', url: EMAG_ANVELOPE_LINK, sub: 'Categoria de anvelope de pe eMAG' },
       { nume: 'Janta.ro — Set complet', icon: '🛞', url: buildJantaLink(jantaSetPath), sub: 'Jantă + anvelopă, gata montate' },
     ], car ? `${car.brand} ${car.model}` : '');
     return;

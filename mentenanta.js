@@ -1251,8 +1251,8 @@ function anvOpenStore(store) {
     const path = car?.brand ? `/wheelsportal/84677/home/${encodeURIComponent(car.brand.toUpperCase())}` : '/wheelsportal/84677/home';
     url = (typeof buildJantaLink === 'function') ? buildJantaLink(path) : `https://www.janta.ro${path}`;
   } else if(store === 'emag') {
-    // Link de afiliat Profitshare — nu avem confirmat un tipar de link personalizat pe dimensiune, folosim link-ul fix peste tot
-    url = (typeof EMAG_LINK !== 'undefined') ? EMAG_LINK : 'https://l.profitshare.ro/l/16322119';
+    // Link de afiliat dedicat categoriei de anvelope pe eMAG (nu avem filtrare pe dimensiune, dar măcar deschide categoria corectă, nu homepage-ul)
+    url = (typeof EMAG_ANVELOPE_LINK !== 'undefined') ? EMAG_ANVELOPE_LINK : 'https://l.profitshare.ro/l/16327523';
   } else if(store === 'automobilus') {
     const carId = document.getElementById('anv-car')?.value;
     const car = (typeof cars !== 'undefined' ? cars : []).find(c => c.id == carId);
