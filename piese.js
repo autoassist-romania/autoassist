@@ -7,6 +7,13 @@ const EMAG_LINK = 'https://l.profitshare.ro/l/16322119';
 const AUTODOC_AFILIAT = 'AFILIAT_ID';
 const AUTODOC_BASE = 'https://www.autodoc24.ro';
 
+// ═══ JANTA.RO (afiliat 2Performant) ═══
+const JANTA_AFF_CODE = 'da6b1b8eb';
+const JANTA_UNIQUE   = 'de929938e';
+function buildJantaLink(path) {
+  return `https://event.2performant.com/events/click?ad_type=quicklink&aff_code=${JANTA_AFF_CODE}&unique=${JANTA_UNIQUE}&redirect_to=https%253A//www.janta.ro${path||''}`;
+}
+
 // ═══ AUTOMOBILUS.RO (afiliat 2Performant) ═══
 const AUTOMOBILUS_AFF_CODE = 'da6b1b8eb';
 const AUTOMOBILUS_UNIQUE   = 'ef2621c0a';
@@ -441,20 +448,17 @@ function renderPieseGrid() {
     </div>`:''}
 
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px">
-      ${categoriiCalc.map(cat => {
+      ${(() => { const escBrand = (car.brand||'').replace(/'/g,"\\'"); const escModel = (car.model||'').replace(/'/g,"\\'"); return categoriiCalc.map(cat => {
+        const escLabel = cat.label.replace(/'/g,"\\'");
         if(cat.id==='accesorii') {
-          const url = buildAutoEcoUrl(car.brand, cat.id);
-          const urlAuto = buildAutomobilusUrl(car.brand, cat.id);
           return `<div style="
             position:relative;background:var(--s2);border-radius:14px;padding:16px;
-            border:1.5px solid var(--b2);transition:all 0.15s;text-align:center"
-            onmouseover="this.style.borderColor='${cat.color}'" onmouseout="this.style.borderColor='var(--b2)'">
-            <div onclick="deschidePiesa('${url}','${cat.label}','${car.brand} ${car.model}')" style="cursor:pointer">
-              <div style="font-size:28px;margin-bottom:6px">${cat.icon}</div>
-              <div style="font-weight:700;font-size:12px;color:var(--t1);margin-bottom:3px">${cat.label}</div>
-              <div style="font-size:10px;color:var(--t3)">Vezi pe AutoEco →</div>
-            </div>
-            <div onclick="deschidePiesa('${urlAuto}','${cat.label}','${car.brand} ${car.model}')" style="cursor:pointer;margin-top:6px;padding-top:6px;border-top:1px dashed var(--b2);font-size:10px;color:var(--accent);font-weight:700">🅰️ Automobilus →</div>
+            border:1.5px solid var(--b2);transition:all 0.15s;text-align:center;cursor:pointer"
+            onmouseover="this.style.borderColor='${cat.color}'" onmouseout="this.style.borderColor='var(--b2)'"
+            onclick="pieseAlegeMagazinCategorie('${cat.id}','${escLabel}','${escBrand}','${escModel}')">
+            <div style="font-size:28px;margin-bottom:6px">${cat.icon}</div>
+            <div style="font-weight:700;font-size:12px;color:var(--t1);margin-bottom:3px">${cat.label}</div>
+            <div style="font-size:10px;color:var(--accent);font-weight:700">🛒 Vezi magazine →</div>
           </div>`;
         }
 
@@ -481,8 +485,6 @@ function renderPieseGrid() {
             ${cat.ultimaData?' · '+cat.ultimaData:''}
           </div>` : `<div style="font-size:9px;color:var(--t3);margin-top:3px">Neinregistrat</div>`;
 
-        const url = buildAutoEcoUrl(car.brand, cat.id);
-        const urlAuto = buildAutomobilusUrl(car.brand, cat.id);
         return `
           <div style="position:relative;background:var(--s2);border-radius:14px;padding:14px;
             border:1.5px solid ${cat.urgenta===2?'rgba(255,71,87,0.3)':cat.urgenta===1?'rgba(240,180,41,0.3)':'var(--b2)'};transition:all 0.15s">
@@ -498,26 +500,20 @@ function renderPieseGrid() {
             </div>
             ${barHtml}
             ${ultimaInfo}
-            <button onclick="deschidePiesa('${url}','${cat.label}','${car.brand} ${car.model}')" style="
-              width:100%;margin-top:8px;padding:6px;background:rgba(168,85,247,0.1);
-              border:1px solid rgba(168,85,247,0.2);border-radius:8px;color:#a855f7;
-              font-size:10px;font-weight:700;cursor:pointer">
-              🟣 AutoEco →
-            </button>
-            <button onclick="deschidePiesa('${urlAuto}','${cat.label}','${car.brand} ${car.model}')" style="
-              width:100%;margin-top:5px;padding:6px;background:rgba(0,200,100,0.1);
-              border:1px solid rgba(0,200,100,0.2);border-radius:8px;color:var(--green);
-              font-size:10px;font-weight:700;cursor:pointer">
-              🅰️ Automobilus →
+            <button onclick="pieseAlegeMagazinCategorie('${cat.id}','${escLabel}','${escBrand}','${escModel}')" style="
+              width:100%;margin-top:8px;padding:7px;background:rgba(79,125,255,0.1);
+              border:1px solid rgba(79,125,255,0.25);border-radius:8px;color:var(--accent);
+              font-size:10.5px;font-weight:700;cursor:pointer">
+              🛒 Vezi magazine →
             </button>
           </div>`;
-      }).join('')}
+      }); })().join('')}
     </div>
 
     <div style="margin-top:16px;padding:12px 16px;background:var(--s2);border-radius:12px;display:flex;gap:10px;align-items:flex-start">
       <span style="font-size:18px;flex-shrink:0">🔍</span>
       <div style="font-size:11px;color:var(--t3);line-height:1.5">
-        AutoEco și Automobilus verifică amândouă compatibilitatea pieselor cu <strong>${car.brand} ${car.model} ${car.year||''}</strong>.
+        AutoEco, Automobilus și eMAG verifică compatibilitatea pieselor cu <strong>${car.brand} ${car.model} ${car.year||''}</strong>.
         ${car.vin?`VIN: <strong>${car.vin}</strong> — folosește-l pe magazine pentru precizie maximă.`:'Adaugă VIN-ul în Garaj pentru filtrare precisă.'}
         <br>Apasă ⚙️ pe orice piesă pentru a seta intervalul și data ultimei schimbări.
       </div>
@@ -860,7 +856,8 @@ async function pieseCautaLiber() {
       { nume: 'Anvelope.ro — Iarnă', icon: '❄️', url: `https://www.anvelope.ro/anvelope-iarna/${lat}-${prof}-r${diam}/` },
       { nume: 'AutoEco — Anvelope',  icon: '🟣', url: buildAutoEcoTireUrl(lat, prof, diam) },
       { nume: 'eMAG — Anvelope',     icon: '🟠', url: EMAG_LINK, sub: 'Sau orice alt produs de pe eMAG' },
-    ]);
+      { nume: 'Janta.ro — Jante',    icon: '🛞', url: buildJantaLink(), sub: `Jante pentru R${diam}` },
+    ], car ? `${car.brand} ${car.model}` : '');
     return;
   }
 
@@ -896,11 +893,45 @@ async function pieseCautaLiber() {
     { nume: 'Automobilus.ro', icon: '🟢', url: automobilusUrl },
     { nume: 'AutoEco',        icon: '🟣', url: autoEcoUrl },
     { nume: 'eMAG',           icon: '🟠', url: emagUrl, sub: 'Nu doar piese — comanzi orice de pe eMAG' },
-  ]);
+  ], car ? `${car.brand} ${car.model}` : '');
+}
+
+// ═══ BUTON UNIC PE CARDUL DE CATEGORIE → popup cu toate magazinele (AutoEco, Automobilus, eMAG) ═══
+async function pieseAlegeMagazinCategorie(catId, catLabel, carBrand, carModel) {
+  const automobilusUrl = buildAutomobilusUrl(carBrand, catId);
+  const autoEcoUrl = buildAutoEcoUrl(carBrand, catId);
+  const emagUrl = EMAG_LINK;
+  const masina = [carBrand, carModel].filter(Boolean).join(' ');
+
+  // Preț orientativ pentru categoria exactă (dacă avem sync-ul de piese Automobilus în Supabase)
+  let produsGasit = null;
+  if(typeof supabaseClient !== 'undefined') {
+    try {
+      const { data } = await supabaseClient.from('piese_automobilus').select('titlu,pret,brand')
+        .eq('categorie_app', catId).order('pret', { ascending: true }).limit(1);
+      if(data && data.length) produsGasit = data[0];
+    } catch(e) { /* tabelul poate să nu existe încă / sincronizarea încă rulează — nu blocăm popup-ul din cauza asta */ }
+  }
+
+  showStoreChooser(catLabel, produsGasit, [
+    { nume: 'Automobilus.ro', icon: '🟢', url: automobilusUrl },
+    { nume: 'AutoEco',        icon: '🟣', url: autoEcoUrl },
+    { nume: 'eMAG',           icon: '🟠', url: emagUrl, sub: 'Nu doar piese — comanzi orice de pe eMAG' },
+  ], masina);
+}
+
+// ── escapare sigură pt string-uri inserate în onclick="" (ghilimele simple) ──
+function escJs(s) { return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+// ── istoric local al clickurilor pe magazine (nu se citește încă nicăieri, e rezervă pt analytics viitoare) ──
+function logPieseClick(magazin, categorie, masina) {
+  const stats = JSON.parse(localStorage.getItem('piese_clicks')||'[]');
+  stats.unshift({ magazin, categorie, masina, data: new Date().toISOString() });
+  localStorage.setItem('piese_clicks', JSON.stringify(stats.slice(0,50)));
 }
 
 // ═══ ALEGE MAGAZINUL (popup centrat, cu preț orientativ dacă îl avem) ═══
-function showStoreChooser(query, produsGasit, magazine) {
+function showStoreChooser(query, produsGasit, magazine, masina) {
   document.getElementById('compat-notice')?.remove();
   if(!document.getElementById('compat-notice-style')) {
     const style = document.createElement('style');
@@ -927,7 +958,7 @@ function showStoreChooser(query, produsGasit, magazine) {
     }
     <div style="display:flex;flex-direction:column;gap:8px;margin:12px 0">
       ${magazine.map(m => `
-        <a href="${m.url}" target="_blank" onclick="document.getElementById('compat-notice')?.remove()" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:#fff;font-weight:700;font-size:13px">
+        <a href="${m.url}" target="_blank" onclick="logPieseClick('${escJs(m.nume)}','${escJs(query)}','${escJs(masina||'')}');document.getElementById('compat-notice')?.remove()" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:#fff;font-weight:700;font-size:13px">
           <span style="font-size:16px">${m.icon}</span>
           <div style="flex:1">
             <div>${m.nume}</div>
@@ -937,7 +968,8 @@ function showStoreChooser(query, produsGasit, magazine) {
     </div>
     <div style="font-size:10px;color:#fff;opacity:0.85;line-height:1.5;margin-top:4px">
       ⚠️ Verifică pe site-ul ales compatibilitatea exactă (VIN/marcă/model) înainte să comanzi.<br>
-      Dacă nu găsește piesa automat, selectează manual caracteristicile mașinii și piesa dorită, direct pe site-ul care se deschide.
+      Dacă nu găsește piesa automat, selectează manual caracteristicile mașinii și piesa dorită, direct pe site-ul care se deschide.<br>
+      Dacă un magazin nu se deschide, ai probabil un blocator de reclame (AdBlock) activ — dezactivează-l pentru acest site.
     </div>
     <button onclick="document.getElementById('compat-notice')?.remove()" style="
       margin-top:12px;padding:6px 18px;background:transparent;border:1px solid var(--b2);
