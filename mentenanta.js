@@ -1235,11 +1235,21 @@ function anvOpenStore(store) {
   const diam = document.getElementById('anv-diam')?.value?.trim();
   const sezon = document.getElementById('anv-sezon')?.value || 'vara';
   const areDimensiuni = !!(lat && prof && diam);
+  const sezonSlug = sezon === 'iarna' ? 'iarna' : sezon === 'all' ? 'all-season' : 'vara';
 
   let url;
-  if(store === 'anvelope') {
-    const sezonSlug = sezon === 'iarna' ? 'anvelope-iarna' : sezon === 'all' ? 'anvelope-all-season' : 'anvelope-vara';
-    url = areDimensiuni ? `https://www.anvelope.ro/${sezonSlug}/${lat}-${prof}-r${diam}/` : `https://www.anvelope.ro/${sezonSlug}/`;
+  if(store === 'janta') {
+    // URL verificat direct pe janta.ro (magazin real de anvelope + jante, afiliat 2Performant)
+    const path = areDimensiuni
+      ? `/wheelsportal/84677/tyres/${lat}/${prof}R${diam}/${sezonSlug}`
+      : `/wheelsportal/84677/products/anvelope/${sezonSlug === 'all-season' ? 'vara' : sezonSlug}`;
+    url = (typeof buildJantaLink === 'function') ? buildJantaLink(path) : `https://www.janta.ro${path}`;
+  } else if(store === 'janta-set') {
+    // "Roți complete" (jantă + anvelopă gata montate) — pagina reală verificată pe janta.ro, filtrată pe marcă dacă o știm
+    const carId = document.getElementById('anv-car')?.value;
+    const car = (typeof cars !== 'undefined' ? cars : []).find(c => c.id == carId);
+    const path = car?.brand ? `/wheelsportal/84677/home/${encodeURIComponent(car.brand.toUpperCase())}` : '/wheelsportal/84677/home';
+    url = (typeof buildJantaLink === 'function') ? buildJantaLink(path) : `https://www.janta.ro${path}`;
   } else if(store === 'emag') {
     // Link de afiliat Profitshare — nu avem confirmat un tipar de link personalizat pe dimensiune, folosim link-ul fix peste tot
     url = (typeof EMAG_LINK !== 'undefined') ? EMAG_LINK : 'https://l.profitshare.ro/l/16322119';
@@ -1250,7 +1260,7 @@ function anvOpenStore(store) {
   }
   if(!url) return;
 
-  if(!areDimensiuni && store !== 'automobilus' && typeof showNotification === 'function') {
+  if(!areDimensiuni && store !== 'automobilus' && store !== 'janta-set' && typeof showNotification === 'function') {
     showNotification('📐 Completează dimensiunile', 'Introdu lățime, profil și diametru pentru rezultate exacte — te trimit spre pagina generală de anvelope.');
   }
 

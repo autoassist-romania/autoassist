@@ -906,12 +906,13 @@ async function pieseCautaLiber() {
   const dim = parseTireDimension(q);
   if(dim) {
     const { lat, prof, diam } = dim;
+    const jantaSetPath = car?.brand ? `/wheelsportal/84677/home/${encodeURIComponent(car.brand.toUpperCase())}` : '/wheelsportal/84677/home';
     showStoreChooser(q, null, [
-      { nume: 'Anvelope.ro — Vară',  icon: '☀️', url: `https://www.anvelope.ro/anvelope-vara/${lat}-${prof}-r${diam}/` },
-      { nume: 'Anvelope.ro — Iarnă', icon: '❄️', url: `https://www.anvelope.ro/anvelope-iarna/${lat}-${prof}-r${diam}/` },
-      { nume: 'AutoEco — Anvelope',  icon: '🟣', url: buildAutoEcoTireUrl(lat, prof, diam) },
-      { nume: 'eMAG — Anvelope',     icon: '🟠', url: EMAG_LINK, sub: 'Sau orice alt produs de pe eMAG' },
-      { nume: 'Janta.ro — Jante',    icon: '🛞', url: buildJantaLink(), sub: `Jante pentru R${diam}` },
+      { nume: 'Janta.ro — Vară',        icon: '☀️', url: buildJantaLink(`/wheelsportal/84677/tyres/${lat}/${prof}R${diam}/vara`) },
+      { nume: 'Janta.ro — Iarnă',       icon: '❄️', url: buildJantaLink(`/wheelsportal/84677/tyres/${lat}/${prof}R${diam}/iarna`) },
+      { nume: 'AutoEco — Anvelope',     icon: '🟣', url: buildAutoEcoTireUrl(lat, prof, diam) },
+      { nume: 'eMAG — Anvelope',        icon: '🟠', url: EMAG_LINK, sub: 'Sau orice alt produs de pe eMAG' },
+      { nume: 'Janta.ro — Set complet', icon: '🛞', url: buildJantaLink(jantaSetPath), sub: 'Jantă + anvelopă, gata montate' },
     ], car ? `${car.brand} ${car.model}` : '');
     return;
   }

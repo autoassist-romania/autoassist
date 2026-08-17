@@ -763,19 +763,27 @@ function loadFuelMini(carId) {
 }
 
 
+// Butoane de acțiune per document — extinctor/trusă mergeau direct pe epiesa.ro (fără afiliere, fără colaborare
+// confirmată); acum trec prin popup-ul cu magazinele partenere (AutoEco, Automobilus, eMAG), toate cu link
+// de afiliere, la fel ca restul cererilor de piese din aplicație.
+function actLinkFor(k, car){
+  const eb = s => String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const links = {
+    rca:`<button class="btn btn-green btn-sm" onclick="goTo('asigurari')">🛡️ Asigurare RCA</button>`,
+    itp:`<button class="btn btn-green btn-sm" onclick="goTo('itp')">🔬 Programează ITP</button>`,
+    rov:`<button class="btn btn-green btn-sm" onclick="window.open('https://www.erovinieta.ro','_blank')">🔄 Reînnoiește Rovinietă</button>`,
+    ext:`<button class="btn btn-green btn-sm" onclick="pieseAlegeMagazinCategorie('accesorii','Extinctor auto','${eb(car.brand)}','${eb(car.model)}')">🧯 Cumpără Extinctor</button>`,
+    trz:`<button class="btn btn-green btn-sm" onclick="pieseAlegeMagazinCategorie('accesorii','Trusă medicală auto','${eb(car.brand)}','${eb(car.model)}')">🩺 Cumpără Trusă</button>`
+  };
+  return links[k];
+}
+
 function rDocs(){
   const el=document.getElementById('docs-body');
   if(!cars.length){el.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:36px;color:var(--t3)">Adaugă o mașină pentru a vedea documentele</td></tr>`;return;}
   const cm={ok:'var(--green)',warn:'var(--amber)',danger:'var(--red)'};
   const im={ok:'✅',warn:'⚠️',danger:'🚨'};
   const lm={ok:'Valid',warn:'Atenție',danger:'Critic'};
-  const actLinks={
-    rca:`<button class="btn btn-green btn-sm" onclick="goTo('asigurari')">🛡️ Asigurare RCA</button>`,
-    itp:`<button class="btn btn-green btn-sm" onclick="goTo('itp')">🔬 Programează ITP</button>`,
-    rov:`<button class="btn btn-green btn-sm" onclick="window.open('https://www.erovinieta.ro','_blank')">🔄 Reînnoiește Rovinietă</button>`,
-    ext:`<button class="btn btn-green btn-sm" onclick="window.open('https://www.epiesa.ro/extinctoare-auto','_blank')">🧯 Cumpără Extinctor</button>`,
-    trz:`<button class="btn btn-green btn-sm" onclick="window.open('https://www.epiesa.ro/truse-medicale-auto','_blank')">🩺 Cumpără Trusă</button>`
-  };
   const rows=[];
   cars.forEach((c,ci)=>{
     // Header separator per mașină
@@ -793,7 +801,7 @@ function rDocs(){
     </td></tr>`);
     Object.entries(c.docs).forEach(([k,v])=>{
       const d=dl(v);const cc=cls(d);
-      const act=cc!=='ok'?(actLinks[k]||`<button class="btn btn-green btn-sm" onclick="goTo('asigurari')">🛡️ Acționează</button>`):`<span style="color:var(--t3)">—</span>`;
+      const act=cc!=='ok'?(actLinkFor(k,c)||`<button class="btn btn-green btn-sm" onclick="goTo('asigurari')">🛡️ Acționează</button>`):`<span style="color:var(--t3)">—</span>`;
       rows.push(`<tr>
         <td style="font-weight:600;padding-left:16px">${DN[k]}</td>
         <td style="font-family:'JetBrains Mono';font-size:12px">${v||'—'}</td>
