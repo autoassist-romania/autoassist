@@ -40,12 +40,12 @@ PREȚURI:
 - Plan Premium: 49 RON/an (≈4 RON/lună)
 - Raport verificare SH (Checklist Mecanic): 10 RON
 - Primul raport SH gratuit la înregistrare
-- Prima verificare CarVertical gratuită la înregistrare
+- Prima verificare carVertical gratuită la înregistrare
 - Primul anunț vânzare gratuit
 
 SURSE DE VENIT AUTOASSIST:
 - Comision RCA: negociat cu partenerii autorizați ASF
-- Comision CarVertical: 3-8 EUR per verificare
+- Comision carVertical: 5 EUR per raport achiziționat (cod AUTOASSIST, reducere 20% pentru utilizatori)
 - Comision vânzare mașini: 20-50 RON per anunț (de la OLX/Autovit)
 - Abonament Premium: 49 RON/an
 - Asistență rutieră: 50 RON per colaborare confirmată
@@ -54,7 +54,7 @@ SURSE DE VENIT AUTOASSIST:
 
 PARTENERI:
 - Brokeri RCA: Allianz, Euroins, Groupama, Omniasig, Generali, GRAWE, Uniqa
-- Verificare istorică: CarVertical (reducere -20% exclusiv AutoAssist)
+- Verificare istorică: carVertical (reducere -20% exclusiv AutoAssist)
 - Publicare anunțuri: OLX.ro, Autovit.ro, Storia.ro
 - Piese auto: ePiesa, AutoKarma
 - Stații ITP autorizate RAR în zona ta
@@ -112,7 +112,7 @@ function buildAgentPrompt(agent) {
   }
 
   // ── BAZA DE CUNOȘTINȚE PLATFORMA ──
-  const platformCtx = '\n\n== PLATFORMA AUTOASSIST ==\nEști integrat în AutoAssist — platformă română de management auto cu: Garaj virtual, Documente (RCA/ITP/Rovinietă), Asigurări RCA, CarVertical, Vânzare mașini, Service & Mentenanță, Asistență rutieră, Calculator costuri, Modul EV, Asistent vocal. Premium: 49 RON/an.';
+  const platformCtx = '\n\n== PLATFORMA AUTOASSIST ==\nEști integrat în AutoAssist — platformă română de management auto cu: Garaj virtual, Documente (RCA/ITP/Rovinietă), Asigurări RCA, carVertical, Vânzare mașini, Service & Mentenanță, Asistență rutieră, Calculator costuri, Modul EV, Asistent vocal. Premium: 49 RON/an.';
 
   // ── INSTRUCȚIUNI GENERALE ──
   const now = new Date();

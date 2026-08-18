@@ -1,9 +1,20 @@
 // ═══ CV ═══
 function deschideCV(){
   const v=(document.getElementById('cv-in')||{}).value||'';
-  const base='https://www.carvertical.com/ro/getting-started?vin='+encodeURIComponent(v)+'&utm_source=autoassist&utm_medium=referral&promo=AUTOASSIST20';
+  // Link real de afiliat Everflow (aprobat de carVertical) — cu VIN/nr. înmatriculare dacă îl avem, altfel link general
+  const base = v
+    ? 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?uid=256&source_id=AFF&sub1=autoassist&sub3='+encodeURIComponent(v)
+    : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist';
   window.open(base,'_blank');
-  showNotification('🔗 CarVertical -20%!','Reducere aplicată automat prin AutoAssist!');
+  showNotification('🔗 carVertical -20%!','Cod AUTOASSIST aplicat automat prin AutoAssist!');
+}
+// Deschide carVertical cu numărul deja introdus în secțiunea "Verificare Nr. Înmatr." (nu-l mai retastezi)
+function deschideCVdinNr(){
+  const plate = (document.getElementById('verif-plate-input')||{}).value||'';
+  const url = plate
+    ? 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?uid=256&source_id=AFF&sub1=autoassist&sub3='+encodeURIComponent(plate.replace(/\s/g,'').toUpperCase())
+    : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist';
+  window.open(url,'_blank');
 }
 function cumpRaport(){alert('✅ Raport Verificare SH — 10 RON\n\nRedirecționare spre plată securizată...\nRaportul PDF complet este trimis instant pe email!\n\n🔧 AutoAssist — Mecanicul tău din buzunar!');}
 
@@ -111,22 +122,6 @@ function vanzEstimPret(){
   document.getElementById('vanz-pret-hint').textContent=`💡 Estimare AI: ${base.toLocaleString()} - ${(base*1.2).toLocaleString()} EUR pentru acest model`;
 }
 
-function vanzAdaugaRaportService() {
-  const c = cars.find(x=>x.id===selCarId);
-  if(!c) { showNotification('❌','Selectează mai întâi o mașină.'); return; }
-  const raport = typeof getRaportServiceText === 'function' ? getRaportServiceText(c.id) : null;
-  if(!raport) {
-    showNotification('ℹ️ Fără date service', 'Nu există intervenții înregistrate pentru această mașină. Adaugă din secțiunea Întreținere & Service.');
-    return;
-  }
-  window._vanzRaportService = raport;
-  const statusEl = document.getElementById('vanz-raport-status');
-  const btn = document.getElementById('vanz-raport-btn');
-  if(statusEl) statusEl.style.display = 'block';
-  if(btn) { btn.style.background='rgba(0,200,100,0.15)'; btn.style.borderColor='rgba(0,200,100,0.4)'; btn.style.color='var(--green)'; btn.textContent='✅ Raport adăugat'; }
-  showNotification('✅ Raport adăugat!', 'Cumpărătorii vor putea vedea istoricul complet de service.');
-}
-
 async function vanzGenDesc(){
   const c=cars.find(x=>x.id===selCarId);
   if(!c)return;
@@ -182,7 +177,6 @@ async function vanzPublica(){
     data:new Date().toLocaleDateString('ro-RO'),
     status:'activ',
     foto:window._vanzFotoData||null,
-    raport_service: window._vanzRaportService || null,
     created_at: new Date().toISOString()
   };
 
@@ -235,17 +229,6 @@ async function vanzPublica(){
         <button class="btn btn-ghost btn-sm btn-full" onclick="copyVanzText()">📋 Copiază textul anunțului</button>
       </div>
 
-      ${window._vanzRaportService ? `
-      <div style="background:rgba(79,125,255,0.08);border:1px solid rgba(79,125,255,0.25);border-radius:14px;padding:16px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:4px">🔧 Raport Service inclus</div>
-        <div style="font-size:12px;color:var(--t2);margin-bottom:10px">Cumpărătorii pot solicita raportul complet de service. Acesta crește încrederea și valoarea mașinii.</div>
-        <button class="btn btn-ghost btn-sm btn-full" onclick="copyRaportVanz()">📋 Copiază raportul service</button>
-      </div>` : `
-      <div style="background:var(--s2);border:1px solid var(--b2);border-radius:14px;padding:16px;opacity:0.7">
-        <div style="font-size:13px;font-weight:700;margin-bottom:4px">🔧 Raport Service (opțional)</div>
-        <div style="font-size:12px;color:var(--t2)">Nu ai adăugat un raport service. Poți reveni și adăuga intervenții din <strong>Întreținere & Service</strong>.</div>
-      </div>`}
-
       <div style="background:var(--s2);border:1px solid var(--b2);border-radius:14px;padding:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:4px">👁️ Vizualizează anunțul</div>
         <div style="font-size:12px;color:var(--t2);margin-bottom:10px">Vezi cum arată anunțul tău în marketplace-ul AutoAssist.</div>
@@ -260,13 +243,6 @@ async function vanzPublica(){
   loadDashVanzari();
 }
 
-function copyRaportVanz() {
-  const text = window._vanzRaportService || '';
-  if(navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(()=>showNotification('✅ Copiat!','Raportul service a fost copiat în clipboard.')).catch(()=>{});
-  }
-}
-
 function copyVanzText() {
   const text = window._vanzTextAnunt || '';
   if(navigator.clipboard) {
@@ -276,7 +252,6 @@ function copyVanzText() {
 
 function vanzNouAnunt(){
   window._vanzFotoData=null;
-  window._vanzRaportService=null;
   document.getElementById('vanz-foto-preview').style.display='none';
   const fi=document.getElementById('vanz-foto-input');if(fi)fi.value='';
   document.getElementById('vanz-step1').style.display='block';

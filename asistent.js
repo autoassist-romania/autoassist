@@ -292,7 +292,7 @@ async function sendMsg(){
     chatHistory.push({role:'assistant',content:reply});
     const t=document.getElementById(tid);
     if(t)t.querySelector('.mbu').innerHTML=reply.split('\n').join('<br>');
-    showApiSt('✅ Agent conectat și activ','var(--green)');
+    showApiSt('✅ Agent conectat și activ cu Claude API','var(--green)');
     
     // Save to localStorage always (backup)
     const histKey = 'chat_' + curAgent;
@@ -545,7 +545,7 @@ function showAnuntModal(a) {
               <div style="font-size:13px;font-weight:700;color:var(--amber)">🔍 Raport Istoric Auto</div>
               <div style="font-size:11px;color:var(--t3);margin-top:2px">Verifică km reali, accidente, proprietari anteriori</div>
             </div>
-            <a href="https://www.carvertical.com/ro/landing?vin=${a.vin||''}&campaign=AUTOASSIST20" target="_blank" style="background:var(--amber);color:#000;font-size:12px;font-weight:800;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0">CV -20%</a>
+            <a href="${a.vin ? 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?uid=256&source_id=AFF&sub1=autoassist&sub3='+encodeURIComponent(a.vin) : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist'}" target="_blank" style="background:var(--amber);color:#000;font-size:12px;font-weight:800;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0">CV -20%</a>
           </div>
 
           <!-- CONTACT -->
