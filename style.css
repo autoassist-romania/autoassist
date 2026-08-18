@@ -249,8 +249,7 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
 .cv-hero:hover{border-color:rgba(255,115,0,0.4);transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,115,0,0.1);}
 .cv-info{position:relative;z-index:1;}
 .cv-title{font-family:'Bebas Neue';font-size:32px;letter-spacing:2px;color:#ff8c20;line-height:1;}
-.cv-logo{height:30px;width:auto;display:block;margin:0 auto;}
-.cv-sub-label{font-size:11px;font-weight:700;color:rgba(255,140,32,0.6);letter-spacing:2px;text-transform:uppercase;margin:6px 0 5px;}
+.cv-logo{height:26px;width:auto;display:block;}
 .cv-desc{font-size:12px;color:var(--t2);font-weight:500;max-width:420px;}
 .cv-disc{background:rgba(255,115,0,0.14);color:#ff8c20;border:1px solid rgba(255,140,32,0.35);font-family:'Bebas Neue';font-size:15px;letter-spacing:1.5px;padding:5px 16px;border-radius:20px;margin-top:4px;}
 
@@ -269,6 +268,23 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
 .svc.orange:hover{border-color:rgba(255,115,0,0.3);}
 .svc.red::after{background:linear-gradient(90deg,var(--red),#cc0033);}
 .svc.red:hover{border-color:rgba(255,79,109,0.3);}
+
+/* STAT ITEM (Servicii de Stat) — grid intern, ca titlul+subtitlul să stea lângă iconiță, nu sub ea */
+.stat-item{
+  display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:0;align-items:center;
+  padding:12px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;
+  cursor:pointer;transition:all 0.15s;touch-action:manipulation;
+}
+.stat-item:hover{border-color:rgba(79,125,255,0.4);background:var(--s3);transform:translateY(-1px);}
+.stat-icon{grid-row:1/3;font-size:20px;line-height:1;}
+.stat-title{grid-column:2;font-size:13px;font-weight:700;color:var(--text);align-self:end;line-height:1.3;}
+.stat-sub{grid-column:2;font-size:11px;color:var(--t3);align-self:start;margin-top:1px;}
+
+/* DASHBOARD SCROLL — Alerte Expirare / Mașinile Mele nu mai cresc nelimitat, scroll intern după un plafon */
+.dash-scroll{max-height:300px;overflow-y:auto;}
+.dash-scroll::-webkit-scrollbar{width:6px;}
+.dash-scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:10px;}
+.dash-scroll::-webkit-scrollbar-track{background:transparent;}
 .svc-ico{font-size:28px;margin-bottom:10px;}
 .svc-t{font-family:'Bebas Neue';font-size:17px;letter-spacing:1.5px;margin-bottom:5px;}
 .svc-d{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;font-weight:500;}

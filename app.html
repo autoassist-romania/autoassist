@@ -428,11 +428,11 @@
   <div class="g2">
     <div class="card">
       <div class="ch"><span class="ct">🚨 Alerte Expirare</span><span class="cl" onclick="goTo('documente')">Vezi toate →</span></div>
-      <div id="d-al"></div>
+      <div id="d-al" class="dash-scroll"></div>
     </div>
     <div class="card">
       <div class="ch"><span class="ct">🚗 Mașinile Mele</span><span class="cl" onclick="goTo('garaj')">Garaj complet →</span></div>
-      <div id="d-c"></div>
+      <div id="d-c" class="dash-scroll"></div>
     </div>
   </div>
 
@@ -463,12 +463,8 @@
       </div>
       <div class="svc orange" onclick="goTo('verificare')">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="width:42px;height:42px;background:linear-gradient(135deg,#ff7300,#ff3300);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:18px;color:#fff;box-shadow:0 4px 12px rgba(255,115,0,0.4)">CV</div>
-          <div>
-            <div style="line-height:1"><svg style="height:20px;width:auto;display:block"><use href="#cv-logo-svg"/></svg></div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,140,32,0.6);letter-spacing:1.5px;text-transform:uppercase">Verificare SH</div>
-          </div>
-          <div style="margin-left:auto;background:linear-gradient(135deg,#ff7300,#ff3300);color:#fff;font-family:'Bebas Neue';font-size:16px;padding:4px 10px;border-radius:8px">-20%</div>
+          <svg style="height:22px;width:auto;display:block"><use href="#cv-logo-svg"/></svg>
+          <div style="margin-left:auto;background:rgba(255,115,0,0.14);color:#ff8c20;border:1px solid rgba(255,140,32,0.35);font-family:'Bebas Neue';font-size:14px;letter-spacing:1px;padding:4px 12px;border-radius:16px">-20%</div>
         </div>
         <div class="svc-d">Kilometraj real · Daune · ITP · Proprietari · Furturi · Raport complet istoric vehicul</div>
         <span class="btn btn-cv btn-sm">Verifică acum →</span>
@@ -1077,12 +1073,11 @@
 <!-- VERIFICARE CARVERTICAL -->
 <section class="sec" id="sec-verificare">
   <button class="back-btn" onclick="goTo('dashboard')">← Înapoi</button>
-  <div class="topbar"><div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><svg style="height:24px;width:auto;display:block"><use href="#cv-logo-svg"/></svg><span class="pt" style="font-size:22px">/ Verificare SH</span></div><div class="ps">Istoricul complet al oricărei mașini second-hand</div></div></div>
+  <div class="topbar"><div><div style="display:inline-flex;align-items:center;background:rgba(0,0,0,0.35);border-radius:10px;padding:9px 18px"><svg style="height:22px;width:auto;display:block"><use href="#cv-logo-svg"/></svg></div><div class="ps" style="margin-top:8px">Istoricul complet al oricărei mașini second-hand</div></div></div>
   <div class="cv-hero" onclick="deschideCV()">
     <div class="cv-info">
-      <div class="cv-title"><svg class="cv-logo"><use href="#cv-logo-svg"/></svg></div>
-      <div class="cv-sub-label">Verificare SH</div>
-      <div class="cv-desc">Kilometraj real · Daune · Accidente · ITP · Proprietari · Furturi · Raport complet istoric vehicul</div>
+      <div class="cv-title"><div style="display:inline-flex;background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 22px"><svg class="cv-logo"><use href="#cv-logo-svg"/></svg></div></div>
+      <div class="cv-desc" style="margin-top:14px">Kilometraj real · Daune · Accidente · ITP · Proprietari · Furturi · Raport complet istoric vehicul</div>
     </div>
     <div class="cv-disc">-20%</div>
   </div>
