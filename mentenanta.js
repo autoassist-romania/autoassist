@@ -52,7 +52,7 @@ function mntTab(tab) {
 }
 
 function populateMntSelects() {
-  ['mnt-car-sel','rem-car-sel','fuel-car-sel','anv-car','anv2-car'].forEach(id => {
+  ['mnt-car-sel','rem-car-sel','fuel-car-sel','anv-car','anv2-car','cv-car'].forEach(id => {
     const sel = document.getElementById(id);
     if(!sel) return;
     const cur = sel.value;

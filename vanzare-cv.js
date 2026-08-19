@@ -1,16 +1,61 @@
 // ═══ CV ═══
+// VIN valid: 17 caractere alfanumerice, fără literele I, O, Q (conform standardului internațional)
+function looksLikeVin(v) {
+  const clean = (v||'').replace(/\s/g,'').toUpperCase();
+  return /^[A-HJ-NPR-Z0-9]{17}$/.test(clean);
+}
+
+// Avertisment live sub câmp, dacă ce s-a scris nu arată a VIN
+function cvCheckVinWarn(){
+  const v = (document.getElementById('cv-in')||{}).value||'';
+  const warn = document.getElementById('cv-vin-warn');
+  if(!warn) return;
+  warn.style.display = (v.trim() && !looksLikeVin(v)) ? 'block' : 'none';
+}
+
+// Arată selectorul "Alege din garaj" doar dacă userul chiar are mașini salvate
+function cvToggleCarSelect(){
+  const wrap = document.getElementById('cv-car-wrap');
+  if(!wrap) return;
+  wrap.style.display = (typeof cars !== 'undefined' && cars.length > 0) ? 'block' : 'none';
+}
+
+// Completează automat VIN-ul mașinii alese din garaj, dacă îl avem salvat (din scanarea talonului)
+function cvAutoFillVin(){
+  const carId = (document.getElementById('cv-car')||{}).value;
+  const input = document.getElementById('cv-in');
+  if(!carId || !input) return;
+  const car = (typeof cars !== 'undefined' ? cars : []).find(c => c.id == carId);
+  if(car && car.vin){
+    input.value = car.vin;
+  } else if(car){
+    input.value = '';
+    showNotification('ℹ️ Nu avem VIN salvat', 'Mașina asta nu are VIN completat în Documente Mașină. Adaugă-l acolo, sau scrie-l manual mai jos.');
+  }
+  cvCheckVinWarn();
+}
+
 function deschideCV(){
   const v=(document.getElementById('cv-in')||{}).value||'';
-  // Link real de afiliat Everflow (aprobat de carVertical) — cu VIN/nr. înmatriculare dacă îl avem, altfel link general
+  const esteVin = looksLikeVin(v);
+  // Link real de afiliat Everflow (aprobat de carVertical) — cu VIN dacă îl avem, altfel link general
   const base = v
     ? 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?uid=256&source_id=AFF&sub1=autoassist&sub3='+encodeURIComponent(v)
     : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist';
   window.open(base,'_blank');
-  showNotification('🔗 carVertical -20%!','Cod AUTOASSIST aplicat automat prin AutoAssist!');
+  if(v.trim() && !esteVin) {
+    showNotification('⚠️ Ai nevoie de VIN', 'carVertical caută doar după seria de șasiu (VIN), nu după numărul de înmatriculare. Introdu VIN-ul direct pe pagina care s-a deschis.');
+  } else {
+    showNotification('🔗 carVertical -20%!','Cod AUTOASSIST aplicat automat prin AutoAssist!');
+  }
 }
-// Deschide carVertical cu numărul deja introdus în secțiunea "Verificare Nr. Înmatr." (nu-l mai retastezi)
+// Deschide carVertical cu numărul deja introdus în secțiunea "Verificare Nr. Înmatr." — atenție: carVertical
+// caută doar după VIN, deci un număr de înmatriculare nu se va căuta automat, doar trece ca parametru de tracking
 function deschideCVdinNr(){
   const plate = (document.getElementById('verif-plate-input')||{}).value||'';
+  if(plate.trim()) {
+    showNotification('⚠️ Ai nevoie de VIN', 'carVertical caută doar după seria de șasiu (VIN). Pe pagina care se deschide, introdu VIN-ul mașinii, nu numărul de înmatriculare.');
+  }
   const url = plate
     ? 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?uid=256&source_id=AFF&sub1=autoassist&sub3='+encodeURIComponent(plate.replace(/\s/g,'').toUpperCase())
     : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist';

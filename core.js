@@ -192,6 +192,7 @@ function _applySection(sec){
   if(sec==='asistent') { setTimeout(loadVoices, 200); }
   if(sec==='mentenanta') { populateMntSelects(); mntTab('istoric'); }
   if(sec==='anvelope') { populateMntSelects(); updateAnvLink(); }
+  if(sec==='verificare') { populateMntSelects(); if(typeof cvToggleCarSelect==='function') cvToggleCarSelect(); }
   if(sec==='detailing') { setTimeout(()=>{ if(typeof populateDetailingCar==='function') populateDetailingCar(); }, 100); }
   if(sec==='setari') { renderDashConfigList(); }
   if(sec==='docpersonale') { docTab('buletin'); loadDocData('buletin'); renderAltDocs(); }

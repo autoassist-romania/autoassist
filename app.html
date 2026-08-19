@@ -1083,7 +1083,11 @@
   </div>
   <div class="card">
     <div class="ch"><span class="ct">Introduceți vehiculul</span></div>
-    <div class="fg"><label class="fl">Serie șasiu (VIN) sau Număr înmatriculare</label><input class="fi" id="cv-in" placeholder="B 123 ABC sau WBA3A5C5XDF126235"></div>
+    <div class="fg" id="cv-car-wrap" style="display:none">
+      <label class="fl">Alege din garaj (completează VIN-ul automat)</label>
+      <select class="fi" id="cv-car" onchange="cvAutoFillVin()"><option value="">-- Selectează --</option></select>
+    </div>
+    <div class="fg"><label class="fl">Serie șasiu (VIN)</label><input class="fi" id="cv-in" oninput="cvCheckVinWarn()" placeholder="WBA3A5C5XDF126235 (17 caractere)"><div id="cv-vin-warn" style="display:none;font-size:11px;color:var(--amber);margin-top:6px">⚠️ CarVertical caută doar după VIN (serie șasiu), nu funcționează cu numărul de înmatriculare. Găsești VIN-ul pe talon, pe parbriz sau pe stâlpul ușii șoferului.</div></div>
     <button class="btn btn-cv btn-full" onclick="deschideCV()">Verifică acum cu reducere -20% →</button>
     <div style="text-align:center;font-size:11px;color:var(--t3);margin-top:8px">Sau folosește codul <strong style="color:var(--amber)">AUTOASSIST</strong> direct pe carvertical.com pentru -20%</div>
   </div>
