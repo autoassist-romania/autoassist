@@ -191,6 +191,7 @@
     <div class="ni" onclick="goTo('asigurari')"><span class="ni-i">🛡️</span>Asigurări RCA</div>
     <div class="ni" onclick="goTo('verificare')" style="color:var(--cv)"><span class="ni-i">🚘</span>carVertical / Verificare SH</div>
     <div class="ni" onclick="goTo('vanzare')"><span class="ni-i">💰</span>Vânzare mașini</div>
+    <div class="ni" onclick="goTo('piata')"><span class="ni-i">🏪</span>Piața Auto</div>
     <div class="ni" onclick="goTo('asistenta')"><span class="ni-i">🆘</span>Asistență rutieră</div>
     <div class="ni" onclick="goTo('servicii-stat')"><span class="ni-i">🏛️</span>Servicii de Stat</div>
     <div class="ns">Cont</div>
@@ -440,7 +441,10 @@
   <div class="card" style="margin-top:0">
     <div class="ch">
       <span class="ct">💰 Mașini de Vânzare pe AutoAssist</span>
-      <span class="cl" onclick="goTo('vanzare')">Vinde mașina ta →</span>
+      <div style="display:flex;gap:14px">
+        <span class="cl" onclick="goTo('piata')">Vezi toate →</span>
+        <span class="cl" onclick="goTo('vanzare')">Vinde mașina ta →</span>
+      </div>
     </div>
     <div id="dash-vanz-lista">
       <div style="text-align:center;padding:28px;color:var(--t3)">
@@ -1247,6 +1251,55 @@
   </div><!-- end coloana dreapta -->
 
   </div><!-- end grid -->
+</section>
+
+<!-- PIAȚA AUTO -->
+<section class="sec" id="sec-piata">
+  <button class="back-btn" onclick="goTo('dashboard')">← Înapoi</button>
+  <div class="topbar" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+    <div><div class="pt">🏪 Piața Auto</div><div class="ps">Toate anunțurile active de pe AutoAssist</div></div>
+    <button class="btn btn-primary btn-sm" onclick="goTo('vanzare')">+ Publică anunțul tău</button>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <input class="fi" id="piata-search" placeholder="🔍 Caută după marcă, model..." style="flex:1;min-width:200px" oninput="piataSearchDebounce()" onkeydown="if(event.key==='Enter')piataLoad(true)">
+      <button class="btn btn-primary btn-sm" onclick="piataLoad(true)">🔍 Caută</button>
+      <button class="btn btn-ghost btn-sm" onclick="piataToggleFiltre()" id="piata-filtre-btn">🎚️ Filtre</button>
+    </div>
+    <div id="piata-filtre-panel" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Marcă</div><select class="fi" id="piata-f-brand" style="padding:8px 10px;font-size:13px"><option value="">Toate</option></select></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Preț min (EUR)</div><input class="fi" id="piata-f-pretmin" type="number" placeholder="0" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Preț max (EUR)</div><input class="fi" id="piata-f-pretmax" type="number" placeholder="fără limită" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">An min</div><input class="fi" id="piata-f-anmin" type="number" placeholder="ex: 2010" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Județ</div>
+          <select class="fi" id="piata-f-judet" style="padding:8px 10px;font-size:13px">
+            <option value="">Toate</option>
+            <option>Alba</option><option>Arad</option><option>Argeș</option><option>Bacău</option><option>Bihor</option><option>Bistrița-Năsăud</option><option>Botoșani</option><option>Brăila</option><option>Brașov</option><option>București</option><option>Buzău</option><option>Călărași</option><option>Caraș-Severin</option><option>Cluj</option><option>Constanța</option><option>Covasna</option><option>Dâmbovița</option><option>Dolj</option><option>Galați</option><option>Giurgiu</option><option>Gorj</option><option>Harghita</option><option>Hunedoara</option><option>Ialomița</option><option>Iași</option><option>Ilfov</option><option>Maramureș</option><option>Mehedinți</option><option>Mureș</option><option>Neamț</option><option>Olt</option><option>Prahova</option><option>Sălaj</option><option>Satu Mare</option><option>Sibiu</option><option>Suceava</option><option>Teleorman</option><option>Timiș</option><option>Tulcea</option><option>Vâlcea</option><option>Vaslui</option><option>Vrancea</option>
+          </select>
+        </div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Sortare</div>
+          <select class="fi" id="piata-f-sort" style="padding:8px 10px;font-size:13px">
+            <option value="recent">Cele mai recente</option>
+            <option value="pret_asc">Preț crescător</option>
+            <option value="pret_desc">Preț descrescător</option>
+            <option value="km_asc">Kilometraj (mai puțin)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary btn-sm" onclick="piataLoad(true)">Aplică filtre</button>
+        <button class="btn btn-ghost btn-sm" onclick="piataResetFiltre()">Resetează</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="piata-count" style="font-size:12px;color:var(--t3);margin-bottom:10px"></div>
+  <div id="piata-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px"></div>
+  <div style="text-align:center;margin-top:20px">
+    <button class="btn btn-ghost" id="piata-mai-multe" onclick="piataLoad(false)" style="display:none">Vezi mai multe →</button>
+  </div>
 </section>
 
 <!-- ASISTENTA -->

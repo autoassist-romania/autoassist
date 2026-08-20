@@ -357,3 +357,133 @@ async function vanzSterge(id){
   loadDashVanzari();
 }
 
+// ═══ PIAȚA AUTO — pagină separată, cu căutare, filtre și toate anunțurile active ═══
+let _piataOffset = 0;
+let _piataSearchTimer = null;
+const PIATA_PAGE_SIZE = 24;
+
+function piataToggleFiltre(){
+  const panel = document.getElementById('piata-filtre-panel');
+  if(!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function piataResetFiltre(){
+  ['piata-f-brand','piata-f-pretmin','piata-f-pretmax','piata-f-anmin','piata-f-judet'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  const sort = document.getElementById('piata-f-sort'); if(sort) sort.value = 'recent';
+  const search = document.getElementById('piata-search'); if(search) search.value = '';
+  piataLoad(true);
+}
+
+function piataSearchDebounce(){
+  clearTimeout(_piataSearchTimer);
+  _piataSearchTimer = setTimeout(()=>piataLoad(true), 400);
+}
+
+async function piataPopulateBrands(){
+  const sel = document.getElementById('piata-f-brand');
+  if(!sel || sel.options.length > 1) return; // deja populat
+  if(typeof supabaseClient === 'undefined') return;
+  try {
+    const { data } = await supabaseClient.from('listings').select('brand').eq('status','activ');
+    if(!data) return;
+    const branduri = [...new Set(data.map(d=>d.brand).filter(Boolean))].sort();
+    branduri.forEach(b => sel.innerHTML += `<option value="${b}">${b}</option>`);
+  } catch(e) { /* tabelul poate fi indisponibil momentan */ }
+}
+
+async function piataLoad(reset){
+  const grid = document.getElementById('piata-lista');
+  const moreBtn = document.getElementById('piata-mai-multe');
+  const countEl = document.getElementById('piata-count');
+  if(!grid) return;
+
+  if(reset){
+    _piataOffset = 0;
+    window._piataRezultate = [];
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--t3)">Se încarcă...</div>`;
+  }
+
+  const q = (document.getElementById('piata-search')?.value||'').trim();
+  const brand = document.getElementById('piata-f-brand')?.value||'';
+  const pretMin = document.getElementById('piata-f-pretmin')?.value;
+  const pretMax = document.getElementById('piata-f-pretmax')?.value;
+  const anMin = document.getElementById('piata-f-anmin')?.value;
+  const judet = document.getElementById('piata-f-judet')?.value||'';
+  const sort = document.getElementById('piata-f-sort')?.value||'recent';
+
+  let rezultate = [];
+  let totalCount = null;
+
+  if(typeof supabaseClient !== 'undefined'){
+    try {
+      let query = supabaseClient.from('listings').select('*', { count: 'exact' }).eq('status','activ');
+      if(q) query = query.or(`brand.ilike.%${q}%,model.ilike.%${q}%`);
+      if(brand) query = query.eq('brand', brand);
+      if(pretMin) query = query.gte('pret', Number(pretMin));
+      if(pretMax) query = query.lte('pret', Number(pretMax));
+      if(anMin) query = query.gte('year', Number(anMin));
+      if(judet) query = query.eq('judet', judet);
+
+      if(sort==='pret_asc') query = query.order('pret', { ascending: true });
+      else if(sort==='pret_desc') query = query.order('pret', { ascending: false });
+      else if(sort==='km_asc') query = query.order('km', { ascending: true });
+      else query = query.order('created_at', { ascending: false });
+
+      query = query.range(_piataOffset, _piataOffset + PIATA_PAGE_SIZE - 1);
+
+      const { data, count, error } = await query;
+      if(!error && data) { rezultate = data; totalCount = count; }
+    } catch(e) { console.error('Eroare piata:', e); }
+  }
+
+  // Fallback local — doar la prima încărcare, dacă Supabase e indisponibil (fără filtrare avansată)
+  if(!rezultate.length && _piataOffset === 0 && typeof supabaseClient === 'undefined'){
+    rezultate = JSON.parse(localStorage.getItem('vanz_anunturi')||'[]').filter(a=>a.status==='activ');
+  }
+
+  if(reset) grid.innerHTML = '';
+
+  if(!rezultate.length && _piataOffset === 0 && !window._piataRezultate.length){
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">
+      <div style="font-size:40px;margin-bottom:10px">🔍</div>
+      <div style="font-size:14px;font-weight:600">Niciun anunț găsit</div>
+      <div style="font-size:12px;margin-top:4px">Încearcă alte filtre sau caută altceva</div>
+    </div>`;
+    if(moreBtn) moreBtn.style.display = 'none';
+    if(countEl) countEl.textContent = '';
+    return;
+  }
+
+  const startIdx = window._piataRezultate.length;
+  window._piataRezultate = window._piataRezultate.concat(rezultate);
+
+  const carEmojis={'Dacia':'🚗','Renault':'🚙','BMW':'🏎️','Mercedes':'🏎️','Volkswagen':'🚗','Audi':'🏎️','Toyota':'🚙','Ford':'🚗','Opel':'🚗','Peugeot':'🚗','Skoda':'🚗','Hyundai':'🚙','Kia':'🚙','Seat':'🚗','Fiat':'🚗'};
+
+  grid.innerHTML += rezultate.map((a, i) => {
+    const idx = startIdx + i;
+    const emoji = carEmojis[a.brand] || '🚗';
+    const esteAlMeu = a.user_id === currentUser?.id;
+    return `<div onclick="showAnuntModal(window._piataRezultate[${idx}])" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div style="height:130px;background:linear-gradient(135deg,rgba(79,125,255,0.12),rgba(200,150,12,0.08));display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid rgba(255,255,255,0.06);overflow:hidden">
+        ${(a.fotos&&a.fotos[0])||a.foto?`<img src="${(a.fotos&&a.fotos[0])||a.foto}" style="width:100%;height:100%;object-fit:cover">`:`<div style="font-size:56px">${emoji}</div>`}
+        ${esteAlMeu?`<div style="position:absolute;top:8px;left:8px;background:rgba(79,125,255,0.9);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px">AL MEU</div>`:''}
+        <div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.65);color:var(--gold);font-size:14px;font-weight:800;padding:3px 10px;border-radius:8px">${a.pret} EUR</div>
+      </div>
+      <div style="padding:11px 13px">
+        <div style="font-size:14px;font-weight:800;margin-bottom:2px">${a.brand||''} ${a.model||''}</div>
+        <div style="font-size:12px;color:var(--t2)">${a.year||''} · ${a.km?Number(a.km).toLocaleString()+' km':''}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px">📍 ${a.judet||'România'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  _piataOffset += rezultate.length;
+  if(countEl && totalCount !== null) countEl.textContent = `${window._piataRezultate.length} din ${totalCount} anunțuri`;
+  if(moreBtn) moreBtn.style.display = (totalCount !== null && window._piataRezultate.length < totalCount) ? 'inline-block' : 'none';
+
+  piataPopulateBrands();
+}
+
