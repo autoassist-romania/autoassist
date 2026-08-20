@@ -428,11 +428,11 @@
   </div>
   <div class="g2" style="align-items:start">
     <div class="card">
-      <div class="ch"><span class="ct">🚨 Alerte Expirare</span><span class="cl" onclick="goTo('documente')">Vezi toate →</span></div>
+      <div class="ch"><span class="ct ct-btn" onclick="goTo('documente')">🚨 Alerte Expirare</span><span class="cl" onclick="goTo('documente')">Vezi toate →</span></div>
       <div id="d-al" class="dash-scroll"></div>
     </div>
     <div class="card">
-      <div class="ch"><span class="ct">🚗 Mașinile Mele</span><span class="cl" onclick="goTo('garaj')">Garaj complet →</span></div>
+      <div class="ch"><span class="ct ct-btn" onclick="goTo('garaj')">🚗 Mașinile Mele</span><span class="cl" onclick="goTo('garaj')">Garaj complet →</span></div>
       <div id="d-c" class="dash-scroll"></div>
     </div>
   </div>
@@ -440,7 +440,7 @@
   <!-- RUBRICA VANZARI PE DASHBOARD -->
   <div class="card" style="margin-top:0">
     <div class="ch">
-      <span class="ct" onclick="goTo('piata')" style="cursor:pointer">💰 Mașini de Vânzare pe AutoAssist</span>
+      <span class="ct ct-btn" onclick="goTo('piata')">💰 Mașini de Vânzare pe AutoAssist</span>
       <div style="display:flex;gap:14px">
         <span class="cl" onclick="goTo('piata')">Vezi toate →</span>
         <span class="cl" onclick="goTo('vanzare')">Vinde mașina ta →</span>
@@ -1157,8 +1157,9 @@
       <!-- Detalii tehnice auto -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px">
         <div class="fg" style="margin:0"><label class="fl">🎨 Culoare</label><input class="fi" id="vanz-culoare" placeholder="ex: Negru, Alb, Gri..."></div>
-        <div class="fg" style="margin:0"><label class="fl">⛽ Combustibil</label><input class="fi" id="vanz-combustibil" placeholder="ex: Benzină, Diesel..."></div>
+        <div class="fg" style="margin:0"><label class="fl">⛽ Combustibil</label><select class="fi" id="vanz-combustibil"><option value="">Selectează...</option><option>Benzină</option><option>Diesel</option><option>Hibrid</option><option>Electric</option><option>GPL</option></select></div>
         <div class="fg" style="margin:0"><label class="fl">⚙️ Cutie viteze</label><select class="fi" id="vanz-cutie"><option value="">Selectează...</option><option>Manuală</option><option>Automată</option><option>Semi-automată</option></select></div>
+        <div class="fg" style="margin:0"><label class="fl">🚘 Caroserie</label><select class="fi" id="vanz-caroserie"><option value="">Selectează...</option><option>Berlină</option><option>Break</option><option>Hatchback</option><option>SUV</option><option>Coupe</option><option>Cabrio</option><option>Monovolum</option><option>Pick-up</option><option>Off-road</option></select></div>
         <div class="fg" style="margin:0"><label class="fl">🔧 Motor (cm³)</label><input class="fi" id="vanz-motor" type="number" placeholder="ex: 1600"></div>
         <div class="fg" style="margin:0"><label class="fl">💪 Putere (CP)</label><input class="fi" id="vanz-putere" type="number" placeholder="ex: 116"></div>
         <div class="fg" style="margin:0"><label class="fl">🪑 Nr. locuri</label><select class="fi" id="vanz-locuri"><option value="">Selectează...</option><option>2</option><option>4</option><option>5</option><option>7</option><option>8</option><option>9</option></select></div>
@@ -1269,10 +1270,34 @@
     </div>
     <div id="piata-filtre-panel" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
-        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Marcă</div><select class="fi" id="piata-f-brand" style="padding:8px 10px;font-size:13px"><option value="">Toate</option></select></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Marcă</div><select class="fi" id="piata-f-brand" style="padding:8px 10px;font-size:13px" onchange="piataPopulateModels()"><option value="">Toate</option></select></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Model</div><select class="fi" id="piata-f-model" style="padding:8px 10px;font-size:13px"><option value="">Toate</option></select></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Caroserie</div>
+          <select class="fi" id="piata-f-caroserie" style="padding:8px 10px;font-size:13px">
+            <option value="">Toate</option><option>Berlină</option><option>Break</option><option>Hatchback</option><option>SUV</option><option>Coupe</option><option>Cabrio</option><option>Monovolum</option><option>Pick-up</option><option>Off-road</option>
+          </select>
+        </div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Combustibil</div>
+          <select class="fi" id="piata-f-combustibil" style="padding:8px 10px;font-size:13px">
+            <option value="">Toate</option><option>Benzină</option><option>Diesel</option><option>Hibrid</option><option>Electric</option><option>GPL</option>
+          </select>
+        </div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Cutie de viteze</div>
+          <select class="fi" id="piata-f-cutie" style="padding:8px 10px;font-size:13px">
+            <option value="">Toate</option><option>Manuală</option><option>Automată</option><option>Semi-automată</option>
+          </select>
+        </div>
         <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Preț min (EUR)</div><input class="fi" id="piata-f-pretmin" type="number" placeholder="0" style="padding:8px 10px;font-size:13px"></div>
         <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Preț max (EUR)</div><input class="fi" id="piata-f-pretmax" type="number" placeholder="fără limită" style="padding:8px 10px;font-size:13px"></div>
-        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">An min</div><input class="fi" id="piata-f-anmin" type="number" placeholder="ex: 2010" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">An de la</div><input class="fi" id="piata-f-anmin" type="number" placeholder="ex: 2010" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">An până la</div><input class="fi" id="piata-f-anmax" type="number" placeholder="ex: 2024" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Rulaj de la (km)</div><input class="fi" id="piata-f-kmmin" type="number" placeholder="0" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Rulaj până la (km)</div><input class="fi" id="piata-f-kmmax" type="number" placeholder="fără limită" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Capacitate motor de la (cm³)</div><input class="fi" id="piata-f-motormin" type="number" placeholder="0" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Capacitate motor până la (cm³)</div><input class="fi" id="piata-f-motormax" type="number" placeholder="fără limită" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Putere de la (CP)</div><input class="fi" id="piata-f-puteremin" type="number" placeholder="0" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Putere până la (CP)</div><input class="fi" id="piata-f-puteremax" type="number" placeholder="fără limită" style="padding:8px 10px;font-size:13px"></div>
+        <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Culoare</div><input class="fi" id="piata-f-culoare" placeholder="ex: Negru" style="padding:8px 10px;font-size:13px"></div>
         <div><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Județ</div>
           <select class="fi" id="piata-f-judet" style="padding:8px 10px;font-size:13px">
             <option value="">Toate</option>
@@ -1285,6 +1310,7 @@
             <option value="pret_asc">Preț crescător</option>
             <option value="pret_desc">Preț descrescător</option>
             <option value="km_asc">Kilometraj (mai puțin)</option>
+            <option value="an_desc">An (mai nou)</option>
           </select>
         </div>
       </div>

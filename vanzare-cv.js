@@ -215,13 +215,26 @@ async function vanzPublica(){
   const dotari=[...document.querySelectorAll('#vanz-dotari input:checked')].map(x=>x.value).join(', ');
   const titlu=`${c.brand||'Auto'} ${c.model||''} ${c.year||''} - ${c.km?c.km.toLocaleString()+' km':''} - ${pret} EUR`;
 
+  // Detalii mașină — culese din formular, ca să funcționeze filtrele din Piața Auto
+  const culoare = document.getElementById('vanz-culoare')?.value || null;
+  const combustibil = document.getElementById('vanz-combustibil')?.value || null;
+  const cutie_viteze = document.getElementById('vanz-cutie')?.value || null;
+  const caroserie = document.getElementById('vanz-caroserie')?.value || null;
+  const motor_cm3 = document.getElementById('vanz-motor')?.value ? Number(document.getElementById('vanz-motor').value) : null;
+  const putere_cp = document.getElementById('vanz-putere')?.value ? Number(document.getElementById('vanz-putere').value) : null;
+  const locuri = document.getElementById('vanz-locuri')?.value ? Number(document.getElementById('vanz-locuri').value) : null;
+  const vin = document.getElementById('vanz-vin')?.value || null;
+  const fotos = window._vanzFotoData ? [window._vanzFotoData] : null;
+
   const anunt={
     user_id: currentUser?.id || 'anonim',
     plate:c.plate, brand:c.brand, model:c.model, year:c.year, km:c.km,
     pret, descriere:desc, tel, judet, dotari,
+    culoare, combustibil, cutie_viteze, caroserie, motor_cm3, putere_cp, locuri, vin,
     data:new Date().toLocaleDateString('ro-RO'),
     status:'activ',
     foto:window._vanzFotoData||null,
+    fotos,
     created_at: new Date().toISOString()
   };
 
@@ -369,7 +382,7 @@ function piataToggleFiltre(){
 }
 
 function piataResetFiltre(){
-  ['piata-f-brand','piata-f-pretmin','piata-f-pretmax','piata-f-anmin','piata-f-judet'].forEach(id=>{
+  ['piata-f-brand','piata-f-model','piata-f-caroserie','piata-f-combustibil','piata-f-cutie','piata-f-pretmin','piata-f-pretmax','piata-f-anmin','piata-f-anmax','piata-f-kmmin','piata-f-kmmax','piata-f-motormin','piata-f-motormax','piata-f-puteremin','piata-f-puteremax','piata-f-culoare','piata-f-judet'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value = '';
   });
   const sort = document.getElementById('piata-f-sort'); if(sort) sort.value = 'recent';
@@ -394,6 +407,24 @@ async function piataPopulateBrands(){
   } catch(e) { /* tabelul poate fi indisponibil momentan */ }
 }
 
+// Modelele disponibile depind de marca aleasă (ca la OLX) — se reactualizează la schimbarea mărcii
+async function piataPopulateModels(){
+  const brandSel = document.getElementById('piata-f-brand');
+  const modelSel = document.getElementById('piata-f-model');
+  if(!modelSel) return;
+  modelSel.innerHTML = '<option value="">Toate</option>';
+  if(typeof supabaseClient === 'undefined') return;
+  const brand = brandSel?.value || '';
+  try {
+    let q = supabaseClient.from('listings').select('model').eq('status','activ');
+    if(brand) q = q.eq('brand', brand);
+    const { data } = await q;
+    if(!data) return;
+    const modele = [...new Set(data.map(d=>d.model).filter(Boolean))].sort();
+    modele.forEach(m => modelSel.innerHTML += `<option value="${m}">${m}</option>`);
+  } catch(e) { /* tabelul poate fi indisponibil momentan */ }
+}
+
 async function piataLoad(reset){
   const grid = document.getElementById('piata-lista');
   const moreBtn = document.getElementById('piata-mai-multe');
@@ -408,9 +439,21 @@ async function piataLoad(reset){
 
   const q = (document.getElementById('piata-search')?.value||'').trim();
   const brand = document.getElementById('piata-f-brand')?.value||'';
+  const model = document.getElementById('piata-f-model')?.value||'';
+  const caroserie = document.getElementById('piata-f-caroserie')?.value||'';
+  const combustibil = document.getElementById('piata-f-combustibil')?.value||'';
+  const cutie = document.getElementById('piata-f-cutie')?.value||'';
   const pretMin = document.getElementById('piata-f-pretmin')?.value;
   const pretMax = document.getElementById('piata-f-pretmax')?.value;
   const anMin = document.getElementById('piata-f-anmin')?.value;
+  const anMax = document.getElementById('piata-f-anmax')?.value;
+  const kmMin = document.getElementById('piata-f-kmmin')?.value;
+  const kmMax = document.getElementById('piata-f-kmmax')?.value;
+  const motorMin = document.getElementById('piata-f-motormin')?.value;
+  const motorMax = document.getElementById('piata-f-motormax')?.value;
+  const putereMin = document.getElementById('piata-f-puteremin')?.value;
+  const putereMax = document.getElementById('piata-f-puteremax')?.value;
+  const culoare = (document.getElementById('piata-f-culoare')?.value||'').trim();
   const judet = document.getElementById('piata-f-judet')?.value||'';
   const sort = document.getElementById('piata-f-sort')?.value||'recent';
 
@@ -422,14 +465,27 @@ async function piataLoad(reset){
       let query = supabaseClient.from('listings').select('*', { count: 'exact' }).eq('status','activ');
       if(q) query = query.or(`brand.ilike.%${q}%,model.ilike.%${q}%`);
       if(brand) query = query.eq('brand', brand);
+      if(model) query = query.eq('model', model);
+      if(caroserie) query = query.eq('caroserie', caroserie);
+      if(combustibil) query = query.eq('combustibil', combustibil);
+      if(cutie) query = query.eq('cutie_viteze', cutie);
       if(pretMin) query = query.gte('pret', Number(pretMin));
       if(pretMax) query = query.lte('pret', Number(pretMax));
       if(anMin) query = query.gte('year', Number(anMin));
+      if(anMax) query = query.lte('year', Number(anMax));
+      if(kmMin) query = query.gte('km', Number(kmMin));
+      if(kmMax) query = query.lte('km', Number(kmMax));
+      if(motorMin) query = query.gte('motor_cm3', Number(motorMin));
+      if(motorMax) query = query.lte('motor_cm3', Number(motorMax));
+      if(putereMin) query = query.gte('putere_cp', Number(putereMin));
+      if(putereMax) query = query.lte('putere_cp', Number(putereMax));
+      if(culoare) query = query.ilike('culoare', `%${culoare}%`);
       if(judet) query = query.eq('judet', judet);
 
       if(sort==='pret_asc') query = query.order('pret', { ascending: true });
       else if(sort==='pret_desc') query = query.order('pret', { ascending: false });
       else if(sort==='km_asc') query = query.order('km', { ascending: true });
+      else if(sort==='an_desc') query = query.order('year', { ascending: false });
       else query = query.order('created_at', { ascending: false });
 
       query = query.range(_piataOffset, _piataOffset + PIATA_PAGE_SIZE - 1);
@@ -475,6 +531,7 @@ async function piataLoad(reset){
       <div style="padding:11px 13px">
         <div style="font-size:14px;font-weight:800;margin-bottom:2px">${a.brand||''} ${a.model||''}</div>
         <div style="font-size:12px;color:var(--t2)">${a.year||''} · ${a.km?Number(a.km).toLocaleString()+' km':''}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px">${[a.combustibil,a.cutie_viteze,a.caroserie].filter(Boolean).join(' · ')}</div>
         <div style="font-size:11px;color:var(--t3);margin-top:4px">📍 ${a.judet||'România'}</div>
       </div>
     </div>`;
@@ -485,5 +542,6 @@ async function piataLoad(reset){
   if(moreBtn) moreBtn.style.display = (totalCount !== null && window._piataRezultate.length < totalCount) ? 'inline-block' : 'none';
 
   piataPopulateBrands();
+  if(document.getElementById('piata-f-model')?.options.length <= 1) piataPopulateModels();
 }
 
