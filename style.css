@@ -281,7 +281,7 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
 .stat-sub{grid-column:2;font-size:11px;color:var(--t3);align-self:start;margin-top:1px;}
 
 /* DASHBOARD SCROLL — Alerte Expirare / Mașinile Mele nu mai cresc nelimitat, scroll intern după un plafon */
-.dash-scroll{height:220px;overflow-y:auto;}
+.dash-scroll{height:160px;overflow-y:auto;}
 .dash-scroll::-webkit-scrollbar{width:6px;}
 .dash-scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:10px;}
 .dash-scroll::-webkit-scrollbar-track{background:transparent;}
