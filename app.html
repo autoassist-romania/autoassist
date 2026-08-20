@@ -2433,59 +2433,122 @@
   </div>
 </div>
 
+<!-- Buton mic, discret, fix — instalare la cerere, oricând -->
+<button id="pwa-install-pill" onclick="pwaOpenInstallFromPill()" style="display:none;position:fixed;top:14px;right:14px;z-index:900;background:rgba(79,125,255,0.14);border:1px solid rgba(79,125,255,0.3);color:var(--accent,#4f7dff);font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;cursor:pointer;backdrop-filter:blur(8px)">📲 Instalează aplicația</button>
+
 <!-- PWA Install Banner -->
-<div id="install-banner" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:1000;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border-radius:16px;padding:14px 16px;box-shadow:0 8px 32px rgba(79,125,255,0.5);align-items:center;gap:10px;max-width:340px;width:92%">
-  <img src="/icon-192.png" style="width:38px;height:38px;border-radius:9px;flex-shrink:0">
-  <div style="flex:1">
-    <div style="font-weight:800;font-size:13px;color:#fff">Instalează AutoAssist</div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:1px">Adaugă pe ecranul principal</div>
+<div id="install-banner" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:1000;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border-radius:16px;padding:14px 16px;box-shadow:0 8px 32px rgba(79,125,255,0.5);max-width:340px;width:92%;flex-direction:column;gap:10px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <img src="/icon-192.png" style="width:38px;height:38px;border-radius:9px;flex-shrink:0">
+    <div style="flex:1">
+      <div data-pwa-title style="font-weight:800;font-size:13px;color:#fff">Instalează AutoAssist</div>
+      <div data-pwa-sub style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:1px">Adaugă pe ecranul principal</div>
+    </div>
+    <button data-pwa-btn onclick="installApp()" style="background:#fff;border:none;color:#4f7dff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;cursor:pointer;white-space:nowrap;flex-shrink:0">Instalează</button>
+    <button onclick="pwaCloseBanner()" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:20px;padding:0 4px;flex-shrink:0">×</button>
   </div>
-  <button onclick="installApp()" style="background:#fff;border:none;color:#4f7dff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;cursor:pointer;white-space:nowrap;flex-shrink:0">Instalează</button>
-  <button onclick="document.getElementById('install-banner').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:20px;padding:0 4px;flex-shrink:0">×</button>
+  <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.75);cursor:pointer;padding-left:2px">
+    <input type="checkbox" onchange="if(this.checked) pwaDontShowAgain()" style="cursor:pointer">
+    Nu mai arăta acest mesaj
+  </label>
 </div>
 
 <script>
-// PWA Install — versiune robusta
+// ═══ PWA INSTALL PROMPT ═══
+// Apare la fiecare intrare pe site cât timp aplicația NU e instalată. Se oprește definitiv doar
+// dacă: (a) userul chiar instalează aplicația, sau (b) bifează "Nu mai arăta acest mesaj".
+// Detectăm live dacă rulează instalată (standalone) — asta acoperă și dezinstalarea automat:
+// dacă userul dezinstalează, la următoarea vizită din browser (nu de pe ecranul principal)
+// modul standalone nu mai e activ, deci popup-ul poate reapărea, fără tracking separat.
+// În plus, un buton mic și discret rămâne mereu vizibil (sus dreapta) cât timp nu e instalată,
+// ca opțiune de instalare oricând, chiar dacă userul a bifat "nu mai arăta" popup-ul automat.
+
+function isRunningStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOSDevice(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+function pwaPromptDismissedPermanently(){
+  return localStorage.getItem('aa_pwa_prompt_dismissed') === '1';
+}
+
+function pwaConfigureBannerForDevice(){
+  if(!isIOSDevice()) return;
+  const banner = document.getElementById('install-banner');
+  if(!banner) return;
+  const titleEl = banner.querySelector('[data-pwa-title]');
+  const subEl = banner.querySelector('[data-pwa-sub]');
+  const btn = banner.querySelector('[data-pwa-btn]');
+  if(titleEl) titleEl.textContent = 'Adaugă AutoAssist pe ecranul principal';
+  if(subEl) subEl.textContent = 'Apasă Distribuie, apoi "Adaugă pe ecranul principal"';
+  if(btn) btn.style.display = 'none'; // pe iOS nu există buton automat de instalare
+}
+
+function showInstallBanner(force){
+  if(isRunningStandalone()) return;
+  if(!force && pwaPromptDismissedPermanently()) return;
+  const banner = document.getElementById('install-banner');
+  if(!banner) return;
+  banner.style.display = 'flex';
+}
+function pwaCloseBanner(){
+  const banner = document.getElementById('install-banner');
+  if(banner) banner.style.display = 'none';
+}
+function pwaDontShowAgain(){
+  localStorage.setItem('aa_pwa_prompt_dismissed', '1');
+  pwaCloseBanner();
+  pwaUpdateInstallPill();
+}
+function pwaUpdateInstallPill(){
+  const pill = document.getElementById('pwa-install-pill');
+  if(!pill) return;
+  pill.style.display = isRunningStandalone() ? 'none' : 'inline-block';
+}
+// Click pe butonul mic — forțează popup-ul să apară, chiar dacă userul bifase "nu mai arăta"
+function pwaOpenInstallFromPill(){
+  showInstallBanner(true);
+}
+
 let deferredPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   showInstallBanner();
+  pwaUpdateInstallPill();
 });
-
-function showInstallBanner(){
-  // Chrome handles PWA install natively
-}
 
 async function installApp(){
   if(deferredPrompt){
     deferredPrompt.prompt();
     const {outcome} = await deferredPrompt.userChoice;
     deferredPrompt = null;
-    document.getElementById('install-banner').style.display='none';
-  } else {
-    // Ascunde bannerul - Chrome nu e gata inca
-    document.getElementById('install-banner').style.display='none';
   }
+  pwaCloseBanner();
 }
 
 document.getElementById('install-btn')?.addEventListener('click', installApp);
 
 window.addEventListener('appinstalled', () => {
-  document.getElementById('install-banner').style.display='none';
+  pwaCloseBanner();
+  localStorage.setItem('aa_pwa_prompt_dismissed', '1'); // deja instalată, nu mai are rost popup-ul
+  pwaUpdateInstallPill();
 });
 
-// Arata bannerul DOAR cand Chrome e gata sa instaleze (beforeinstallprompt)
-// Nu mai arata automat dupa 2 secunde
+// La încărcare: pregătim bannerul (text diferit pe iOS), arătăm pill-ul dacă nu e instalată,
+// și pe iOS arătăm popup-ul cu instrucțiuni manuale (nu există beforeinstallprompt pe iOS)
+pwaConfigureBannerForDevice();
+pwaUpdateInstallPill();
+if(isIOSDevice() && !isRunningStandalone()){
+  setTimeout(() => showInstallBanner(), 1500);
+}
 
-// Register Service Worker + Push Notifications
-// Dezregistrează orice Service Worker existent și curăță cache
+// Register Service Worker — cache minimal, network-first (actualizările se văd instant după
+// deploy, cache-ul e doar fallback offline, nu mai blochează update-urile ca versiunea veche)
 if('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
-  });
-  caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+  navigator.serviceWorker.register('/sw-cache.js').catch(err => console.error('SW registration failed:', err));
 }
 
 function checkDocumentAlerts() {
