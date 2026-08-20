@@ -229,7 +229,7 @@ async function vanzPublica(){
   const anunt={
     user_id: currentUser?.id || 'anonim',
     plate:c.plate, brand:c.brand, model:c.model, year:c.year, km:c.km,
-    pret, descriere:desc, tel, judet, dotari,
+    pret: Number(pret), descriere:desc, tel, judet, dotari,
     culoare, combustibil, cutie_viteze, caroserie, motor_cm3, putere_cp, locuri, vin,
     data:new Date().toLocaleDateString('ro-RO'),
     status:'activ',
