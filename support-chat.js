@@ -48,12 +48,26 @@ function scToggle() {
     panel.classList.add('sc-open');
     if (scHistory.length === 0) scWelcome();
     setTimeout(() => document.getElementById('sc-input')?.focus(), 250);
+    // Împinge o stare în istoric — dacă userul apasă back-ul telefonului cât timp chat-ul e
+    // deschis, vrem să închidem chat-ul, nu să iasă din toată aplicația.
+    history.pushState({ scChat: true }, '');
   } else {
     btn.classList.remove('sc-open');
     btn.textContent = '💬';
     panel.classList.remove('sc-open');
   }
 }
+
+// Back-ul telefonului cât timp chat-ul e deschis → închide doar chat-ul, nu navighează departe
+window.addEventListener('popstate', function () {
+  if (scOpen) {
+    scOpen = false;
+    const btn = document.getElementById('support-chat-btn');
+    const panel = document.getElementById('support-chat-panel');
+    if (btn) { btn.classList.remove('sc-open'); btn.textContent = '💬'; }
+    if (panel) panel.classList.remove('sc-open');
+  }
+});
 
 function scWelcome() {
   const userName = (typeof currentUser !== 'undefined' && currentUser)
