@@ -1593,13 +1593,15 @@
 <section class="sec" id="sec-agenti">
   <button class="back-btn" onclick="goTo('dashboard')">← Înapoi</button>
   <div class="topbar"><div><div class="pt">Agenți AI AutoAssist</div><div class="ps">Echipa ta de asistenți inteligenți — conectați la Claude API</div></div></div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <div style="font-size:12px;color:var(--t2);font-weight:600" id="mem-status">🧠 Memoria agenților este <span style="color:var(--green)">activă</span> — conversațiile se salvează automat</div>
-    <div id="agent-limit-status" style="font-size:11px;color:var(--t3)"></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost btn-sm" onclick="newConversation()" style="font-size:11px">✏️ Conversație nouă</button>
-      <button class="btn btn-ghost btn-sm" onclick="showConvHistory()" style="font-size:11px">📂 Conversații</button>
-      <button class="btn btn-ghost btn-sm" onclick="clearAgentHistory()" style="font-size:11px">🗑️ Șterge tot</button>
+  <div style="margin-bottom:12px">
+    <div style="font-size:11px;color:var(--t2);font-weight:600;margin-bottom:9px" id="mem-status">🧠 Memoria agenților este <span style="color:var(--green)">activă</span> — conversațiile se salvează automat</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div id="agent-limit-status" style="font-size:11px;color:var(--t3)"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="newConversation()" style="font-size:11px">✏️ Conversație nouă</button>
+        <button class="btn btn-ghost btn-sm" onclick="showConvHistory()" style="font-size:11px">📂 Conversații</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearAgentHistory()" style="font-size:11px">🗑️ Șterge tot</button>
+      </div>
     </div>
   </div>
   <div class="agent-chips">
