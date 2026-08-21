@@ -18,6 +18,12 @@
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" }
       ]
+    },
+    {
+      "source": "/(app.html|core.js|rca-itp.js|vanzare-cv.js|asistent.js|documente.js|mentenanta.js|piese.js|ev-vocal-init.js|style.css)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
     }
   ]
 }
