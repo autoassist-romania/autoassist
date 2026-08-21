@@ -102,6 +102,7 @@ function selectVanzCar(id){
   loadVanzCars();
   document.getElementById('vanz-step1').style.display='none';
   document.getElementById('vanz-step2').style.display='block';
+  vanzPrefillBrandModel(c);
   const info = document.getElementById('vanz-car-info');
   if(info) info.innerHTML = `<div style="font-weight:700">${c.brand} ${c.model} ${c.year}</div><div style="font-size:12px;color:var(--t3)">${c.plate} · ${c.km?c.km.toLocaleString()+' km':''}${c.fuel?' · '+c.fuel:''}</div>`;
   const titlu = document.getElementById('vanz-titlu');
@@ -132,6 +133,20 @@ function selectVanzFoto(src) {
   });
 }
 
+// Precompletează Marcă/Model/An/Km (și pregătește sugestiile de model) când se alege mașina de vândut
+function vanzPrefillBrandModel(c){
+  if(typeof populateBrandDatalist==='function') populateBrandDatalist('dl-brands-vanz');
+  const brandEl = document.getElementById('vanz-brand');
+  const modelEl = document.getElementById('vanz-model');
+  const anEl = document.getElementById('vanz-an');
+  const kmEl = document.getElementById('vanz-km');
+  if(brandEl) brandEl.value = c.brand || '';
+  if(modelEl) modelEl.value = c.model || '';
+  if(anEl) anEl.value = c.year || '';
+  if(kmEl) kmEl.value = c.km || '';
+  if(typeof updateModelDatalist==='function') updateModelDatalist(c.brand || '', 'dl-models-vanz');
+}
+
 function openVanz(id){
   selCarId=id;
   const c=cars.find(x=>x.id===id);
@@ -142,6 +157,7 @@ function openVanz(id){
     document.getElementById('vanz-step2').style.display='block';
     document.getElementById('vanz-step3').style.display='none';
     loadVanzCars();
+    vanzPrefillBrandModel(c);
   },150);
 }
 
@@ -213,7 +229,11 @@ async function vanzPublica(){
   if(!tel){alert('Te rugăm să introduci numărul de telefon!');return;}
 
   const dotari=[...document.querySelectorAll('#vanz-dotari input:checked')].map(x=>x.value).join(', ');
-  const titlu=`${c.brand||'Auto'} ${c.model||''} ${c.year||''} - ${c.km?c.km.toLocaleString()+' km':''} - ${pret} EUR`;
+  const brand = document.getElementById('vanz-brand')?.value || c.brand;
+  const model = document.getElementById('vanz-model')?.value || c.model;
+  const an = document.getElementById('vanz-an')?.value ? Number(document.getElementById('vanz-an').value) : c.year;
+  const km = document.getElementById('vanz-km')?.value ? Number(document.getElementById('vanz-km').value) : c.km;
+  const titlu=`${brand||'Auto'} ${model||''} ${an||''} - ${km?km.toLocaleString()+' km':''} - ${pret} EUR`;
 
   // Detalii mașină — culese din formular, ca să funcționeze filtrele din Piața Auto
   const culoare = document.getElementById('vanz-culoare')?.value || null;
@@ -228,7 +248,7 @@ async function vanzPublica(){
 
   const anunt={
     user_id: currentUser?.id || 'anonim',
-    plate:c.plate, brand:c.brand, model:c.model, year:c.year, km:c.km,
+    plate:c.plate, brand, model, year:an, km,
     pret: Number(pret), descriere:desc, tel, judet, dotari,
     culoare, combustibil, cutie_viteze, caroserie, motor_cm3, putere_cp, locuri, vin,
     data:new Date().toLocaleDateString('ro-RO'),
@@ -395,34 +415,22 @@ function piataSearchDebounce(){
   _piataSearchTimer = setTimeout(()=>piataLoad(true), 400);
 }
 
-async function piataPopulateBrands(){
+// Marca și modelul din filtre — lista completă (aceeași ca la Garaj/Vânzare), nu doar ce e deja postat
+function piataPopulateBrands(){
   const sel = document.getElementById('piata-f-brand');
   if(!sel || sel.options.length > 1) return; // deja populat
-  if(typeof supabaseClient === 'undefined') return;
-  try {
-    const { data } = await supabaseClient.from('listings').select('brand').eq('status','activ');
-    if(!data) return;
-    const branduri = [...new Set(data.map(d=>d.brand).filter(Boolean))].sort();
-    branduri.forEach(b => sel.innerHTML += `<option value="${b}">${b}</option>`);
-  } catch(e) { /* tabelul poate fi indisponibil momentan */ }
+  Object.keys(CAR_BRANDS_MODELS).sort().forEach(b => sel.innerHTML += `<option value="${b}">${b}</option>`);
 }
 
 // Modelele disponibile depind de marca aleasă (ca la OLX) — se reactualizează la schimbarea mărcii
-async function piataPopulateModels(){
+function piataPopulateModels(){
   const brandSel = document.getElementById('piata-f-brand');
   const modelSel = document.getElementById('piata-f-model');
   if(!modelSel) return;
   modelSel.innerHTML = '<option value="">Toate</option>';
-  if(typeof supabaseClient === 'undefined') return;
   const brand = brandSel?.value || '';
-  try {
-    let q = supabaseClient.from('listings').select('model').eq('status','activ');
-    if(brand) q = q.eq('brand', brand);
-    const { data } = await q;
-    if(!data) return;
-    const modele = [...new Set(data.map(d=>d.model).filter(Boolean))].sort();
-    modele.forEach(m => modelSel.innerHTML += `<option value="${m}">${m}</option>`);
-  } catch(e) { /* tabelul poate fi indisponibil momentan */ }
+  const modele = brand ? (CAR_BRANDS_MODELS[brand] || []) : Object.values(CAR_BRANDS_MODELS).flat().sort();
+  [...new Set(modele)].forEach(m => modelSel.innerHTML += `<option value="${m}">${m}</option>`);
 }
 
 async function piataLoad(reset){

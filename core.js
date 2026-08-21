@@ -1,3 +1,87 @@
+// ═══ MĂRCI ȘI MODELE AUTO — listă comună, folosită în Garaj, Vânzare mașini și Piața Auto ═══
+// Lista e un ajutor de căutare (nu o restricție — câmpurile rămân libere, oricine poate scrie orice
+// model, chiar dacă nu apare aici). Am extins-o cât mai mult, inclusiv modele mai vechi/discontinuate,
+// des întâlnite pe piața de second-hand din România.
+const CAR_BRANDS_MODELS = {
+  'Dacia': ['1300','1310','1410','Nova','Solenza','SupeRNova','Logan','Logan MCV','Logan Van','Sandero','Sandero Stepway','Duster','Duster Oroch','Spring','Jogger','Lodgy','Dokker','Pick Up'],
+  'Renault': ['4','5','9','11','12','14','18','19','21','25','Clio','Clio Symbol','Megane','Megane Scenic','Captur','Kadjar','Scenic','Grand Scenic','Talisman','Twingo','Laguna','Espace','Koleos','Arkana','Zoe','Symbol','Fluence','Vel Satis','Modus','Kangoo','Trafic','Master','Safrane','Avantime','Wind'],
+  'Volkswagen': ['Golf','Golf Plus','Golf Sportsvan','Golf Variant','Polo','Passat','Passat CC','Tiguan','Touran','Jetta','Arteon','T-Roc','T-Cross','Taigo','Touareg','Up!','Caddy','Sharan','Bora','Beetle','New Beetle','ID.3','ID.4','ID.5','Vento','Corrado','Scirocco','Phaeton','Lupo','Fox','Eos','Amarok','Transporter','Multivan','California'],
+  'Audi': ['50','80','90','100','200','A1','A2','A3','A4','A4 Allroad','A5','A6','A6 Allroad','A7','A8','Q2','Q3','Q4 e-tron','Q5','Q7','Q8','TT','TT RS','e-tron','e-tron GT','S3','S4','S5','S6','S8','RS3','RS4','RS6','RS7','Cabriolet','V8'],
+  'BMW': ['Seria 1','Seria 2','Seria 3','Seria 4','Seria 5','Seria 6','Seria 7','Seria 8','X1','X2','X3','X4','X5','X6','X7','Z1','Z3','Z4','Z8','i3','i4','i8','iX','iX3','M3','M4','M5','M6','E30','E36','E46','E90'],
+  'Mercedes-Benz': ['Clasa A','Clasa B','Clasa C','Clasa CL','Clasa CLA','Clasa CLK','Clasa CLS','Clasa E','Clasa G','Clasa GL','Clasa GLA','Clasa GLB','Clasa GLC','Clasa GLE','Clasa GLK','Clasa GLS','Clasa M (ML)','Clasa R','Clasa S','Clasa SL','Clasa SLK','Clasa V','Vito','Viano','Sprinter','190','200','Vaneo','Citan'],
+  'Opel': ['Corsa','Astra','Astra GTC','Insignia','Mokka','Crossland','Grandland','Zafira','Zafira Life','Meriva','Vectra','Omega','Combo','Adam','Agila','Antara','Frontera','Signum','Tigra','Karl','Ampera','Cascada','Kadett','Calibra','Manta'],
+  'Ford': ['Fiesta','Focus','Focus C-Max','Mondeo','Kuga','Puma','EcoSport','Galaxy','S-Max','Ka','Ka+','Edge','Transit','Transit Connect','C-Max','B-Max','Escort','Sierra','Orion','Scorpio','Cougar','Maverick','Ranger','Explorer','Mustang','Streetka'],
+  'Peugeot': ['104','106','107','108','204','205','206','206+','207','208','2008','301','305','306','307','308','3008','309','405','406','407','408','5008','504','508','605','607','806','807','Partner','Boxer','Expert','RCZ','iOn'],
+  'Citroen': ['AX','BX','C1','C2','C3','C3 Picasso','C4','C4 Cactus','C4 Picasso','C5','C5 Aircross','C6','C8','C-Elysee','C-Zero','Berlingo','DS3','DS4','DS5','Xsara','Xsara Picasso','Xantia','ZX','Saxo','Jumper','Jumpy','Nemo'],
+  'Skoda': ['105','120','130','Favorit','Felicia','Fabia','Fabia Combi','Octavia','Octavia Combi','Superb','Superb Combi','Kodiaq','Karoq','Kamiq','Rapid','Rapid Spaceback','Yeti','Roomster','Scala','Citigo','Enyaq'],
+  'Toyota': ['Yaris','Yaris Cross','Corolla','Corolla Verso','Camry','RAV4','C-HR','Auris','Avensis','Avensis Verso','Land Cruiser','Hilux','Prius','Prius+','Aygo','Aygo X','Verso','Verso-S','Celica','MR2','Supra','Starlet','Previa','Picnic','Carina','Highlander','Proace'],
+  'Honda': ['Civic','Civic Type R','Accord','CR-V','HR-V','Jazz','Insight','FR-V','CR-Z','Legend','Prelude','Integra','S2000','Stream','Concerto'],
+  'Hyundai': ['Accent','Atos','Elantra','Getz','i10','i20','i30','i40','ix20','ix35','ix55','Kona','Matrix','Santa Fe','Sonata','Terracan','Trajet','Tucson','Coupe','Bayon','Lantra'],
+  'Kia': ['Carens','Carnival','Ceed','Cerato','EV6','Magentis','Niro','Opirus','Optima','Picanto','Pride','Rio','Sephia','Sorento','Soul','Sportage','Stonic','Venga','XCeed'],
+  'Nissan': ['Almera','Micra','Note','Qashqai','Qashqai+2','X-Trail','Juke','Leaf','Navara','Primera','Pathfinder','Patrol','Pixo','Note','Terrano','Sunny','350Z','370Z','GT-R','Murano','Kubistar','NV200'],
+  'Mazda': ['2','3','5','6','121','323','626','929','CX-3','CX-30','CX-5','CX-60','CX-7','CX-9','MX-3','MX-5','MX-6','Xedos 6','Xedos 9','Premacy','Tribute','Demio'],
+  'Fiat': ['126','500','500C','500L','500X','600','Albea','Barchetta','Brava','Bravo','Croma','Doblo','Ducato','Fiorino','Freemont','Grande Punto','Idea','Linea','Marea','Multipla','Panda','Punto','Punto Evo','Qubo','Scudo','Sedici','Seicento','Siena','Stilo','Tempra','Tipo','Ulysse','Uno'],
+  'Seat': ['Alhambra','Altea','Arona','Arosa','Ateca','Cordoba','Exeo','Ibiza','Inca','Leon','Malaga','Marbella','Mii','Tarraco','Toledo'],
+  'Volvo': ['240','340','440','460','480','740','850','940','960','C30','C70','S40','S60','S70','S80','S90','V40','V50','V60','V70','V90','XC40','XC60','XC70','XC90'],
+  'Mitsubishi': ['3000GT','ASX','Carisma','Colt','Eclipse','Eclipse Cross','Galant','Grandis','L200','Lancer','Lancer Evolution','Outlander','Pajero','Pajero Pinin','Pajero Sport','Space Star','Space Wagon'],
+  'Suzuki': ['Alto','Baleno','Celerio','Grand Vitara','Ignis','Jimny','Kizashi','Liana','SX4','SX4 S-Cross','Splash','Swift','Swace','Vitara','Wagon R+'],
+  'Land Rover': ['Defender','Discovery','Discovery Sport','Freelander','Range Rover','Range Rover Evoque','Range Rover Sport','Range Rover Velar'],
+  'Jeep': ['Cherokee','Commander','Compass','Grand Cherokee','Liberty','Patriot','Renegade','Wrangler'],
+  'Chevrolet': ['Aveo','Camaro','Captiva','Cruze','Epica','Evanda','Kalos','Lacetti','Lanos','Malibu','Matiz','Nubira','Orlando','Rezzo','Spark','Tacuma','Trax'],
+  'Alfa Romeo': ['33','75','145','146','147','155','156','159','164','166','Brera','GT','Giulia','Giulietta','GTV','MiTo','Spider','Stelvio'],
+  'Mini': ['Clubman','Convertible','Cooper','Countryman','One','Paceman'],
+  'Porsche': ['356','911','718','924','928','944','968','Boxster','Cayenne','Cayman','Macan','Panamera','Taycan'],
+  'Jaguar': ['E-Pace','F-Pace','F-Type','I-Pace','S-Type','X-Type','XE','XF','XJ','XJS','XK'],
+  'Lexus': ['CT','ES','GS','IS','LC','LS','NX','RC','RX','UX'],
+  'Subaru': ['BRZ','Forester','Impreza','Justy','Legacy','Levorg','Outback','SVX','Tribeca','XV'],
+  'Dodge': ['Avenger','Caliber','Challenger','Charger','Journey','Nitro','Stratus','Viper'],
+  'Chrysler': ['300C','Crossfire','Grand Voyager','Neon','PT Cruiser','Sebring','Stratus','Voyager'],
+  'Smart': ['ForTwo','ForFour','Roadster'],
+  'Daewoo': ['Espero','Kalos','Lanos','Leganza','Matiz','Nexia','Nubira','Racer','Tico'],
+  'Isuzu': ['D-Max','Trooper'],
+  'SsangYong': ['Actyon','Chairman','Korando','Kyron','Musso','Rexton','Rodius','Tivoli'],
+  'Lancia': ['Delta','Dedra','K','Kappa','Lybra','Musa','Phedra','Thema','Thesis','Y','Ypsilon','Zeta'],
+  'Saab': ['9-3','9-5','900','9000'],
+  'Cadillac': ['ATS','BLS','CTS','Escalade','SRX','XT4','XT5'],
+  'Infiniti': ['EX30','FX','G','M','Q30','Q50','Q60','Q70','QX30','QX50','QX70'],
+  'Tesla': ['Model 3','Model S','Model X','Model Y'],
+  'DS': ['DS3','DS4','DS5','DS7','DS9'],
+  'Rover': ['25','45','75','200','214','216','218','220','400','600','800'],
+  'Daihatsu': ['Applause','Charade','Cuore','Feroza','Sirion','Terios','YRV'],
+  'MG': ['3','5','6','HS','MG3','MG5','MGF','ZR','ZS','ZT'],
+  'BYD': ['Atto 3','Dolphin','Han','Seal','Tang'],
+  'Lada': ['Niva','Samara','2101','2104','2105','2106','2107','2109','2110','Kalina','Priora','Vesta'],
+  'UAZ': ['Patriot','Hunter','469'],
+  'Trabant': ['601','1.1'],
+  'Wartburg': ['353','1.3'],
+  'ARO': ['10','24','244'],
+  'Cupra': ['Ateca','Formentor','Leon','Born'],
+  'Genesis': ['G70','G80','G90','GV70','GV80'],
+  'Abarth': ['500','595','695','124 Spider'],
+  'Aston Martin': ['DB9','DB11','Vantage','Rapide','DBX'],
+  'Bentley': ['Continental','Flying Spur','Bentayga'],
+  'Ferrari': ['California','488','F430','812','Roma'],
+  'Lamborghini': ['Gallardo','Huracan','Urus','Aventador'],
+  'Maserati': ['Ghibli','Quattroporte','Levante','GranTurismo'],
+  'Maybach': ['57','62'],
+  'Bugatti': ['Veyron','Chiron'],
+};
+
+// Populează sugestiile de marcă (datalist) o singură dată — folosit peste tot (Garaj, Vânzare)
+function populateBrandDatalist(datalistId){
+  const dl = document.getElementById(datalistId);
+  if(!dl || dl.dataset.populated) return;
+  Object.keys(CAR_BRANDS_MODELS).sort().forEach(b => dl.innerHTML += `<option value="${b}">`);
+  dl.dataset.populated = '1';
+}
+// Actualizează sugestiile de model, în funcție de marca aleasă
+function updateModelDatalist(brandValue, datalistId){
+  const dl = document.getElementById(datalistId);
+  if(!dl) return;
+  const modele = CAR_BRANDS_MODELS[brandValue] || [];
+  dl.innerHTML = modele.map(m => `<option value="${m}">`).join('');
+}
+
 // ═══ STATE ═══
 let cars=[];
 let currentUser = null;
@@ -241,6 +325,7 @@ function closeMD(){document.getElementById('msheet').classList.remove('open');}
 function openM(id){
   document.getElementById('mo-'+id).classList.add('open');
   if(id==='login'||id==='signup') document.body.classList.add('auth-open');
+  if(id==='add-car') populateBrandDatalist('dl-brands-garaj');
 }
 function closeM(id){
   document.getElementById('mo-'+id).classList.remove('open');
