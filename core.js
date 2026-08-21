@@ -308,6 +308,9 @@ window.addEventListener('popstate',function(e){
   if(e.state&&e.state.idx!==undefined) _navStack=_navStack.slice(0,e.state.idx+1);
   // Dacă userul e logat și back-ul duce la landing, redirectează la dashboard
   if(sec==='landing' && currentUser) sec='dashboard';
+  // Dacă userul NU e logat, nu-l lăsăm niciodată pe altă secțiune decât landing
+  // (fix bug: popstate fals-pozitiv la load pe Safari/PWA lăsa dashboard-ul vizibil fără login)
+  if(sec!=='landing' && !currentUser) sec='landing';
   // Dacă suntem pe asigurari și se face popstate, împinge înapoi starea curentă
   // pentru a preveni navigarea accidentală cu swipe
   const curSec = document.querySelector('.sec.active')?.id?.replace('sec-','');
