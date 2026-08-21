@@ -225,6 +225,7 @@
     <div class="lm" style="width:30px;height:30px;background:transparent;padding:0"><img src="/icon-192.png" style="width:30px;height:30px;border-radius:7px;object-fit:cover" alt="AutoAssist"></div>
     <div class="lt" style="font-size:19px">Auto<em>Assist</em></div>
   </div>
+  <button id="pwa-install-pill" onclick="pwaOpenInstallFromPill()" style="display:none;margin-left:10px;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;color:#fff;font-size:10px;font-weight:800;padding:6px 12px;border-radius:16px;cursor:pointer;white-space:nowrap;flex-shrink:0">📲 Instalează</button>
   <div style="flex:1"></div>
   <div id="mob-user-btn" onclick="toggleProfileMenu()" style="display:none;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f7dff,#7c5cfc);align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:14px;font-weight:800;color:#fff">?</div>
   <button id="mob-login-btn" onclick="openM('login')" class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:12px;padding:5px 10px">🔑 Login</button><button onclick="switchAuth('signup')" class="btn btn-primary btn-sm" id="mob-signup-btn" style="display:none;margin-right:8px;font-size:12px;padding:5px 10px">+ Cont nou</button>
@@ -2467,7 +2468,7 @@
 </div>
 
 <!-- Buton mic, discret, fix — instalare la cerere, oricând -->
-<button id="pwa-install-pill" onclick="pwaOpenInstallFromPill()" style="display:none;position:fixed;top:70px;right:14px;z-index:900;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;color:#fff;font-size:11px;font-weight:800;padding:8px 14px;border-radius:20px;cursor:pointer;box-shadow:0 4px 16px rgba(79,125,255,0.5)">📲 Instalează aplicația</button>
+
 
 <!-- PWA Install Banner -->
 <div id="install-banner" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:1000;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border-radius:16px;padding:14px 16px;box-shadow:0 8px 32px rgba(79,125,255,0.5);max-width:340px;width:92%;flex-direction:column;gap:10px">
@@ -2537,7 +2538,7 @@ function pwaDontShowAgain(){
 function pwaUpdateInstallPill(){
   const pill = document.getElementById('pwa-install-pill');
   if(!pill) return;
-  pill.style.display = isRunningStandalone() ? 'none' : 'inline-block';
+  pill.style.display = isRunningStandalone() ? 'none' : 'flex';
 }
 // Click pe butonul mic — forțează popup-ul să apară, chiar dacă userul bifase "nu mai arăta"
 function pwaOpenInstallFromPill(){
