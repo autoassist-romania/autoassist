@@ -226,8 +226,8 @@
     <div class="lt" style="font-size:19px">Auto<em>Assist</em></div>
   </div>
   <div style="flex:1"></div>
-  <div id="mob-user-btn" onclick="toggleProfileMenu()" style="display:none;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f7dff,#7c5cfc);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:14px;font-weight:800;color:#fff" id="mob-avatar">?</div>
-  <button id="mob-login-btn" onclick="openM('login')" class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:12px;padding:5px 10px">🔑 Login</button><button onclick="switchAuth('signup')" class="btn btn-primary btn-sm" style="margin-right:8px;font-size:12px;padding:5px 10px" id="mob-signup-btn" style="display:none">+ Cont nou</button>
+  <div id="mob-user-btn" onclick="toggleProfileMenu()" style="display:none;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f7dff,#7c5cfc);align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:14px;font-weight:800;color:#fff">?</div>
+  <button id="mob-login-btn" onclick="openM('login')" class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:12px;padding:5px 10px">🔑 Login</button><button onclick="switchAuth('signup')" class="btn btn-primary btn-sm" id="mob-signup-btn" style="display:none;margin-right:8px;font-size:12px;padding:5px 10px">+ Cont nou</button>
   <button onclick="openM('add-car')" id="mob-add-car-btn" class="btn btn-primary btn-sm" style="display:none">+ Adaugă</button>
 </div>
 
@@ -311,11 +311,12 @@
     <div style="font-size:15px;color:#a0aec0;margin-bottom:8px;line-height:1.5">Asistentul digital al șoferului român<br><span style="color:#c8960c;font-weight:600">Garaj • Documente • AI • Asistență rutieră</span></div>
 
     <!-- Assist tagline -->
-    <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(200,150,12,0.08);border:1px solid rgba(200,150,12,0.2);border-radius:30px;padding:8px 18px;margin-bottom:10px">
-      <span style="font-size:20px">🤖</span>
-      <span style="font-size:13px;color:#c8960c;font-weight:700;letter-spacing:0.5px">ASSIST</span>
-      <span style="width:1px;height:16px;background:rgba(200,150,12,0.3)"></span>
-      <span style="font-size:12px;color:#a0aec0">Inteligența artificială în serviciul șoferului tău</span>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;background:rgba(200,150,12,0.08);border:1px solid rgba(200,150,12,0.2);border-radius:16px;padding:10px 18px;margin:0 auto 10px;max-width:320px;text-align:center">
+      <span style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap">
+        <span style="font-size:20px">🤖</span>
+        <span style="font-size:13px;color:#c8960c;font-weight:700;letter-spacing:0.5px">ASSIST</span>
+      </span>
+      <span style="font-size:12px;color:#a0aec0;line-height:1.4">Inteligență artificială, gata oricând să te ajute</span>
     </div>
 
     <!-- CTA Buttons -->
