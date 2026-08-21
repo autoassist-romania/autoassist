@@ -227,10 +227,9 @@
   </div>
   <button id="pwa-install-pill" onclick="pwaOpenInstallFromPill()" style="display:none;margin-left:10px;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;color:#fff;font-size:10px;font-weight:800;padding:6px 12px;border-radius:16px;cursor:pointer;white-space:nowrap;flex-shrink:0">📲 Instalează</button>
   <div style="flex:1"></div>
-  <div id="mob-user-btn" onclick="toggleProfileMenu()" style="display:none;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f7dff,#7c5cfc);align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:14px;font-weight:800;color:#fff">?</div>
+  <div id="mob-user-btn" onclick="toggleProfileMenu()" style="display:none;width:32px;height:32px;min-width:32px;flex-shrink:0;border-radius:50%;background:linear-gradient(135deg,#4f7dff,#7c5cfc);align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:14px;font-weight:800;color:#fff">?</div>
   <button id="mob-login-btn" onclick="openM('login')" class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:12px;padding:5px 10px">🔑 Login</button><button onclick="switchAuth('signup')" class="btn btn-primary btn-sm" id="mob-signup-btn" style="display:none;margin-right:8px;font-size:12px;padding:5px 10px">+ Cont nou</button>
-  <button onclick="openM('add-car')" id="mob-add-car-btn" class="btn btn-primary btn-sm" style="display:none">+ Adaugă</button>
-</div>
+  </div>
 
 <!-- PROFILE DROPDOWN MENU -->
 <div id="profile-menu" style="display:none;position:fixed;top:60px;right:8px;z-index:9998;background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:8px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
