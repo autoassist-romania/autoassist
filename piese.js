@@ -244,8 +244,23 @@ async function pieseFeedSearch() {
     return;
   }
 
-  resultsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-    ${data.map(p => `
+  // Dacă exista termen de căutare ȘI o mașină activă, prioritizăm (fără să ascundem restul)
+  // rezultatele al căror titlu menționează marca mașinii — cele mai probabil relevante primele.
+  const activeCarForSort = typeof pieseGetActiveCar === 'function' ? pieseGetActiveCar() : null;
+  let sortedData = data;
+  let carContextLabel = '';
+  if(q && activeCarForSort?.brand) {
+    const brandLower = activeCarForSort.brand.toLowerCase();
+    sortedData = [...data].sort((a, b) => {
+      const aMatch = (a.titlu||'').toLowerCase().includes(brandLower) ? 0 : 1;
+      const bMatch = (b.titlu||'').toLowerCase().includes(brandLower) ? 0 : 1;
+      return aMatch - bMatch;
+    });
+    carContextLabel = `<div style="margin-bottom:10px;font-size:12px;color:var(--t3)">🚗 Rezultate pentru <strong style="color:var(--t2)">${activeCarForSort.brand} ${activeCarForSort.model||''}</strong> apar primele, dacă există</div>`;
+  }
+
+  resultsEl.innerHTML = carContextLabel + `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+    ${sortedData.map(p => `
       <a href="${p.link_cumparare}" target="_blank" onclick="event.preventDefault();showCompatNotice(this.href)" style="text-decoration:none;background:var(--s2);border:1.5px solid var(--b2);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--b2)'">
         <div style="width:100%;aspect-ratio:1;background:var(--s3);display:flex;align-items:center;justify-content:center;overflow:hidden">
           ${p.imagine ? `<img src="${p.imagine}" style="width:100%;height:100%;object-fit:contain" loading="lazy" onerror="this.style.display='none'">` : `<span style="font-size:32px">🔧</span>`}
@@ -274,7 +289,7 @@ function renderFeedCategoryChips() {
   const el = document.getElementById('feed-category-chips');
   if(!el) return;
   el.innerHTML = CATEGORII_CAUTARE_EXTRA.map(c => `
-    <button onclick="document.getElementById('feed-filter-cat').value='${c.id}';pieseFeedSearch()" style="
+    <button onclick="document.getElementById('feed-filter-cat').value='${c.id}';document.getElementById('feed-search-input').value='';pieseFeedSearch()" style="
       padding:6px 12px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;
       color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
       ${c.icon} ${c.label}
