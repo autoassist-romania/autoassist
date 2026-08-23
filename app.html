@@ -409,7 +409,7 @@
 <!-- DASHBOARD -->
 <section class="sec" id="sec-dashboard">
   <!-- SEASONAL ALERT -->
-  <div id="seasonal-banner" style="margin-bottom:16px;padding:12px 18px;border-radius:var(--r);display:flex;align-items:center;gap:12px;border:1px solid"></div>
+  <div id="seasonal-banner" onclick="handleSeasonalBannerClick(event)" style="cursor:pointer;margin-bottom:16px;padding:8px 14px;border-radius:var(--r);display:flex;align-items:center;gap:10px;border:1px solid;max-height:64px;overflow-y:auto"></div>
 
   <div class="topbar">
     <div style="min-width:0;max-width:100%;overflow:hidden"><div class="pt" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;background:linear-gradient(135deg,#c8960c,#ffd700,#c8960c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;overflow:hidden;text-overflow:clip">AutoAssist</div><div class="ps" style="white-space:normal;font-size:12px">Bine ai venit — asistentul tău auto din România</div></div>
@@ -2336,6 +2336,17 @@
 </main>
 
 <!-- MODAL ADD CAR -->
+<div class="mo" id="mo-anvelope-sezon">
+  <div class="md" style="max-width:480px">
+    <div class="md-handle"></div>
+    <div class="md-h">
+      <div class="md-t" id="anvelope-sezon-title">🏎️ Anvelope</div>
+      <div class="md-x" onclick="closeM('anvelope-sezon')">✕</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px" id="anvelope-sezon-list"></div>
+  </div>
+</div>
+
 <div class="mo" id="mo-add-car">
   <div class="md">
     <div class="md-handle"></div>

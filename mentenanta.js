@@ -1121,6 +1121,18 @@ function showSeasonalAlert() {
   }).join('');
 
   el.innerHTML = `${icon}${chipsHtml}`;
+
+  // Populăm și popup-ul (deschis la click pe casetă)
+  const modalTitle = document.getElementById('anvelope-sezon-title');
+  if(modalTitle) modalTitle.innerHTML = `${trebuieIarna?'❄️':'☀️'} Anvelope ${trebuieIarna?'iarnă':'vară'}`;
+  const modalList = document.getElementById('anvelope-sezon-list');
+  if(modalList) modalList.innerHTML = chipsHtml;
+}
+
+// Click pe casetă = deschide popup, DAR nu dacă s-a dat click pe un buton/checkbox/label din interior
+function handleSeasonalBannerClick(e){
+  if(e.target.closest('button, label, input')) return;
+  if(typeof openM === 'function') openM('anvelope-sezon');
 }
 
 function marcheazaSchimbatAnvelope(sezon, carId) {
