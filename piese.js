@@ -201,108 +201,12 @@ function buildAutodocUrl(brand, model, categorie) {
 
 function initPiese() {
   renderPieseCarTabs();
-  populateFeedCatFilter();
-  populateFeedBrandFilter();
-  renderFeedCategoryChips();
-  pieseFeedSearch();
 }
 
-// ═══ CĂUTARE PRODUSE REALE (feed Automobilus — preț, poză, link direct) ═══
-async function pieseFeedSearch() {
-  const resultsEl = document.getElementById('feed-results');
-  if(!resultsEl || typeof supabaseClient === 'undefined') return;
-
-  const q = document.getElementById('feed-search-input')?.value?.trim() || '';
-  const cat = document.getElementById('feed-filter-cat')?.value || '';
-  const brand = document.getElementById('feed-filter-brand')?.value || '';
-  const pretMin = document.getElementById('feed-filter-pret-min')?.value;
-  const pretMax = document.getElementById('feed-filter-pret-max')?.value;
-
-  resultsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--t3)">Se caută...</div>`;
-
-  let query = supabaseClient.from('piese_automobilus').select('*').limit(60);
-  if(q) {
-    query = query.ilike('titlu', `%${q}%`);
-  } else {
-    // Fără termen de căutare: arătăm piese relevante pentru mașina activă (după marcă),
-    // nu cele mai ieftine 60 din tot catalogul de 1.3M produse fără nicio legătură.
-    const activeCar = typeof pieseGetActiveCar === 'function' ? pieseGetActiveCar() : null;
-    if(activeCar?.brand) query = query.ilike('titlu', `%${activeCar.brand}%`);
-  }
-  if(cat) query = query.eq('categorie_app', cat);
-  if(brand) query = query.eq('brand', brand);
-  if(pretMin) query = query.gte('pret', parseFloat(pretMin));
-  if(pretMax) query = query.lte('pret', parseFloat(pretMax));
-  query = query.order('pret', { ascending: true });
-
-  const { data, error } = await query;
-  if(error) { resultsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--red)">Eroare la căutare. Verifică dacă tabelul piese_automobilus există și are date.</div>`; return; }
-  if(!data || !data.length) {
-    const activeCar = typeof pieseGetActiveCar === 'function' ? pieseGetActiveCar() : null;
-    const hint = (!q && activeCar?.brand) ? `<div style="margin-top:6px;font-size:12px">Nu am găsit piese cu "${activeCar.brand}" în titlu — încearcă o căutare directă mai jos.</div>` : '';
-    resultsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--t3)">Niciun rezultat. Încearcă alt termen sau filtru.${hint}</div>`;
-    return;
-  }
-
-  // Dacă exista termen de căutare ȘI o mașină activă, prioritizăm (fără să ascundem restul)
-  // rezultatele al căror titlu menționează marca mașinii — cele mai probabil relevante primele.
-  const activeCarForSort = typeof pieseGetActiveCar === 'function' ? pieseGetActiveCar() : null;
-  let sortedData = data;
-  let carContextLabel = '';
-  if(q && activeCarForSort?.brand) {
-    const brandLower = activeCarForSort.brand.toLowerCase();
-    sortedData = [...data].sort((a, b) => {
-      const aMatch = (a.titlu||'').toLowerCase().includes(brandLower) ? 0 : 1;
-      const bMatch = (b.titlu||'').toLowerCase().includes(brandLower) ? 0 : 1;
-      return aMatch - bMatch;
-    });
-    carContextLabel = `<div style="margin-bottom:10px;font-size:12px;color:var(--t3)">🚗 Rezultate pentru <strong style="color:var(--t2)">${activeCarForSort.brand} ${activeCarForSort.model||''}</strong> apar primele, dacă există</div>`;
-  }
-
-  resultsEl.innerHTML = carContextLabel + `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-    ${sortedData.map(p => `
-      <a href="${p.link_cumparare}" target="_blank" onclick="event.preventDefault();showCompatNotice(this.href)" style="text-decoration:none;background:var(--s2);border:1.5px solid var(--b2);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--b2)'">
-        <div style="width:100%;aspect-ratio:1;background:var(--s3);display:flex;align-items:center;justify-content:center;overflow:hidden">
-          ${p.imagine ? `<img src="${p.imagine}" style="width:100%;height:100%;object-fit:contain" loading="lazy" onerror="this.style.display='none'">` : `<span style="font-size:32px">🔧</span>`}
-        </div>
-        <div style="padding:10px;flex:1;display:flex;flex-direction:column">
-          ${p.brand ? `<div style="font-size:9px;color:var(--accent);font-weight:800;text-transform:uppercase;margin-bottom:2px">${p.brand}</div>` : ''}
-          <div style="font-size:11px;color:var(--t1);font-weight:600;line-height:1.3;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${p.titlu}</div>
-          <div style="margin-top:6px;display:flex;align-items:baseline;gap:6px">
-            <span style="font-family:'Bebas Neue';font-size:18px;color:var(--green)">${Number(p.pret).toFixed(2)} lei</span>
-            ${p.pret_vechi && p.pret_vechi > p.pret ? `<span style="font-size:10px;color:var(--t3);text-decoration:line-through">${Number(p.pret_vechi).toFixed(2)} lei</span>` : ''}
-          </div>
-        </div>
-      </a>`).join('')}
-  </div>`;
-}
-
-function populateFeedCatFilter() {
-  const sel = document.getElementById('feed-filter-cat');
-  if(!sel) return;
-  const mentenanta = CATEGORII_PIESE.filter(c=>c.id!=='accesorii').map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
-  const extra = CATEGORII_CAUTARE_EXTRA.map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
-  sel.innerHTML = `<option value="">Toate categoriile</option><optgroup label="Mentenanță">${mentenanta}</optgroup><optgroup label="Alte piese">${extra}</optgroup>`;
-}
-
-function renderFeedCategoryChips() {
-  const el = document.getElementById('feed-category-chips');
-  if(!el) return;
-  el.innerHTML = CATEGORII_CAUTARE_EXTRA.map(c => `
-    <button onclick="document.getElementById('feed-filter-cat').value='${c.id}';document.getElementById('feed-search-input').value='';pieseFeedSearch()" style="
-      padding:6px 12px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;
-      color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
-      ${c.icon} ${c.label}
-    </button>`).join('');
-}
-
-async function populateFeedBrandFilter() {
-  const sel = document.getElementById('feed-filter-brand');
-  if(!sel || typeof supabaseClient === 'undefined') return;
-  const { data } = await supabaseClient.from('piese_automobilus').select('brand').not('brand','is',null).limit(2000);
-  const brands = [...new Set((data||[]).map(r=>r.brand))].filter(Boolean).sort();
-  sel.innerHTML = '<option value="">Toate mărcile</option>' + brands.map(b=>`<option value="${b}">${b}</option>`).join('');
-}
+// ═══ Funcțiile de căutare în feed-ul de produse (piese_automobilus) au fost eliminate —
+// datele nu au compatibilitate reală pe mașină, doar potrivire de text, ceea ce dădea rezultate
+// nesigure. Rămân doar categoriile + linkurile directe către magazinele partenere (mai jos),
+// unde magazinul însuși face potrivirea corectă. ═══
 
 // Returnează mașina activă — fie una din garaj, fie una temporară introdusă manual
 function pieseGetActiveCar() {
@@ -405,7 +309,6 @@ function pieseSaveCustomCar() {
 function pieseSelectCar(carId) {
   window._pieseCarId = carId;
   renderPieseCarTabs();
-  if(typeof pieseFeedSearch === 'function') pieseFeedSearch();
 }
 
 function renderPieseGrid() {

@@ -2057,24 +2057,6 @@
     <div id="piese-grid"></div>
   </div>
 
-  <!-- Căutare produse reale, cu preț și poză (feed Automobilus) -->
-  <div class="card" style="margin-top:12px">
-    <div class="ch"><span class="ct">🔎 Caută produse cu preț real</span><span style="font-size:11px;color:var(--t3)">din catalogul Automobilus.ro</span></div>
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <input class="fi" id="feed-search-input" placeholder="Caută produs (ex: ulei castrol, placute brembo...)" style="flex:2;min-width:180px;margin:0"
-        onkeydown="if(event.key==='Enter') pieseFeedSearch()">
-      <select class="fi" id="feed-filter-cat" onchange="pieseFeedSearch()" style="flex:1;min-width:140px;margin:0"></select>
-      <select class="fi" id="feed-filter-brand" onchange="pieseFeedSearch()" style="flex:1;min-width:140px;margin:0"></select>
-    </div>
-    <div id="feed-category-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <input class="fi" id="feed-filter-pret-min" type="number" placeholder="Preț min" style="margin:0" onchange="pieseFeedSearch()">
-      <input class="fi" id="feed-filter-pret-max" type="number" placeholder="Preț max" style="margin:0" onchange="pieseFeedSearch()">
-      <button onclick="pieseFeedSearch()" class="btn btn-primary" style="flex-shrink:0;padding:0 20px">Caută</button>
-    </div>
-    <div id="feed-results"></div>
-  </div>
-
   <!-- Alte magazine partenere -->
   <div class="card" style="margin-top:12px">
     <div class="ch"><span class="ct">🏪 Alte surse de piese</span></div>
