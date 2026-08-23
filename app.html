@@ -2572,8 +2572,10 @@ async function installApp(){
     deferredPrompt.prompt();
     const {outcome} = await deferredPrompt.userChoice;
     deferredPrompt = null;
+  } else if(isIOSDevice()){
+    alert('Pe iPhone/iPad, Apple nu permite unui site să declanșeze instalarea automat.\n\nInstalezi manual, în 2 pași:\n\n1. Apasă butonul Distribuie (pătratul cu săgeata în sus, din bara de jos a Safari)\n2. Alege "Adaugă pe ecranul principal"\n\nAtenție: funcționează doar din Safari, nu din Chrome pe iPhone.');
   } else {
-    alert('Browserul consideră că AutoAssist e deja instalat pe acest dispozitiv (posibil dintr-o încercare veche).\n\nCa să reinstalezi corect:\n\n1. Windows: click dreapta pe iconița AutoAssist (desktop sau Start) → Dezinstalează\n   sau intră pe chrome://apps, click dreapta pe AutoAssist → Remove\n2. Android: șterge orice shortcut AutoAssist de pe ecranul principal\n3. Revino pe autoassist.ro și apasă din nou "Instalează"');
+    alert('Browserul tău nu a oferit promptul automat de instalare — motive posibile:\n\n• AutoAssist e deja instalat pe acest dispozitiv (verifică pe ecranul principal sau în lista de aplicații)\n• Browserul folosit nu suportă instalarea automată (încearcă Chrome sau Samsung Internet)\n\nDacă era deja instalat dintr-o încercare veche, dezinstalează-l întâi (Windows: click dreapta pe iconiță → Dezinstalează, sau chrome://apps; Android: șterge shortcut-ul de pe ecranul principal), apoi revino pe autoassist.ro și încearcă din nou.');
   }
   pwaCloseBanner();
 }
