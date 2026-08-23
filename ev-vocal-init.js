@@ -315,7 +315,7 @@ async function initAuth() {
     if(!document.querySelector('.sec.active')) {
       if(currentUser) {
         const saved = localStorage.getItem('aa_last_sec');
-        const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium'];
+        const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];
         _applySection((saved && validSections.includes(saved)) ? saved : 'dashboard');
       } else {
         _applySection('landing');
@@ -366,7 +366,7 @@ async function initAuth() {
           updateUserUI(data.session.user);
           await loadUserData(data.session.user.id);
           setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-          _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium'];return(s&&v.includes(s))?s:'dashboard';})());
+          _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];return(s&&v.includes(s))?s:'dashboard';})());
           dismissOverlay();
           return;
         }
@@ -397,7 +397,7 @@ async function initAuth() {
       await loadUserData(session.user.id);
       if(typeof vanzRenderTarif==='function') setTimeout(vanzRenderTarif, 300);
       setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-      _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium'];return(s&&v.includes(s))?s:'dashboard';})());
+      _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];return(s&&v.includes(s))?s:'dashboard';})());
       dismissOverlay();
       return;
     }
@@ -410,7 +410,7 @@ async function initAuth() {
     updateUserUI(session.user);
     await loadUserData(session.user.id);
     setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-    _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium'];return(s&&v.includes(s))?s:'dashboard';})());
+    _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];return(s&&v.includes(s))?s:'dashboard';})());
   } else {
     _applySection('landing');
   }
@@ -443,7 +443,7 @@ async function initAuth() {
       await loadAgentHistory(curAgent);
       if(typeof showDevBar==='function')showDevBar();
       const saved = localStorage.getItem('aa_last_sec');
-      const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium'];
+      const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];
       _applySection((saved && validSections.includes(saved)) ? saved : 'dashboard');
     } else {
       currentUser = null;
@@ -534,6 +534,13 @@ async function loadUserData(userId) {
           if(!error) console.log('Synced local car to Supabase:', lc.plate);
         });
       }
+      // Dacă vreo mașină avea poze doar local (nu erau încă în Supabase), le urc acum
+      // ca să nu mai depindă doar de acest dispozitiv/browser
+      supabaseCars.forEach(sc => {
+        const orig = data.find(d=>d.id==sc.id);
+        const hadFotosOnlyLocal = sc.fotos?.length && (!orig?.fotos || JSON.stringify(orig.fotos)!==JSON.stringify(sc.fotos));
+        if(hadFotosOnlyLocal && typeof saveCarToCloud === 'function') saveCarToCloud(sc);
+      });
       localStorage.setItem('autoassist-cars-' + userId, JSON.stringify(cars));
       renderAll();
     } else if(!cached) {
@@ -572,6 +579,7 @@ async function saveCarToCloud(car) {
       docs: car.docs,
       mnt: car.mnt,
       anvelope: car.anvelope || {},
+      fotos: car.fotos || [],
       added: car.added
     };
     await supabaseClient.from('cars').upsert(carData, { onConflict: 'id' });

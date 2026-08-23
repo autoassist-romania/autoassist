@@ -915,8 +915,14 @@ async function gasestePretOrientativ(catId, textCautat, carBrand) {
   if(typeof supabaseClient === 'undefined') return null;
   try {
     let data = null;
-    if(carBrand) data = await fetchPretCandidati(catId, textCautat, carBrand);
-    if(!data || !data.length) data = await fetchPretCandidati(catId, textCautat, null);
+    // Filtrarea după marca mașinii îngustează mult eșantionul (uneori doar 1-2 produse),
+    // ceea ce face mediana nesigură — cerem minim 4 candidați înainte să avem încredere în ea,
+    // altfel cădem pe eșantionul general (mai mare, deci mai stabil statistic).
+    if(carBrand) {
+      const dataMarca = await fetchPretCandidati(catId, textCautat, carBrand);
+      if(dataMarca && dataMarca.length >= 4) data = dataMarca;
+    }
+    if(!data) data = await fetchPretCandidati(catId, textCautat, null);
     if(!data || !data.length) return null;
 
     const filtratTip = data.filter(p => treceRegulaCategorie(p.titlu, catId));
@@ -924,7 +930,13 @@ async function gasestePretOrientativ(catId, textCautat, carBrand) {
 
     const preturi = setDupaTip.map(p => Number(p.pret)).sort((a,b) => a-b);
     const mediana = preturi[Math.floor(preturi.length/2)];
-    const rezonabile = setDupaTip.filter(p => Number(p.pret) >= mediana * 0.35);
+    // Eliminăm outlierii pe ambele direcții: prea ieftin (probabil accesoriu mărunt greșit
+    // categorisit) SAU prea scump (probabil produs greșit categorisit, ex. un radiator de ulei
+    // apărut la "ulei motor" din întâmplare, sau un ambalaj/pachet mare, nu bucata unică).
+    const rezonabile = setDupaTip.filter(p => {
+      const pr = Number(p.pret);
+      return pr >= mediana * 0.35 && pr <= mediana * 3;
+    });
     const setFinal = rezonabile.length ? rezonabile : setDupaTip;
 
     return setFinal.find(p => esteMarcaCunoscuta(p.brand)) || setFinal[0];
