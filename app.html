@@ -41,10 +41,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AutoAssist">
-<link rel="apple-touch-icon" href="/icon-180.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-<link rel="shortcut icon" href="/icon-32.png">
+<link rel="apple-touch-icon" href="/icon180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icon32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon192.png">
+<link rel="shortcut icon" href="/icon32.png">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -175,7 +175,7 @@
 <aside class="sidebar">
   <div class="logo" onclick="goTo('dashboard')">
     <div class="lm" style="background:transparent;border-radius:11px;display:flex;align-items:center;justify-content:center;overflow:hidden">
-  <img src="/icon-192.png" style="width:44px;height:44px;border-radius:10px;object-fit:contain;background:#000" alt="AutoAssist Logo">
+  <img src="/icon192.png" style="width:44px;height:44px;border-radius:10px;object-fit:contain;background:#000" alt="AutoAssist Logo">
 </div>
     <div class="lt">Auto<em>Assist</em></div>
   </div>
@@ -222,7 +222,7 @@
 <!-- MOBILE TOP -->
 <div class="mob-top">
   <div class="logo" onclick="goTo('dashboard')" style="border:none;padding:0;position:static">
-    <div class="lm" style="width:30px;height:30px;background:transparent;padding:0"><img src="/icon-192.png" style="width:30px;height:30px;border-radius:7px;object-fit:cover" alt="AutoAssist"></div>
+    <div class="lm" style="width:30px;height:30px;background:transparent;padding:0"><img src="/icon192.png" style="width:30px;height:30px;border-radius:7px;object-fit:cover" alt="AutoAssist"></div>
     <div class="lt" style="font-size:19px">Auto<em>Assist</em></div>
   </div>
   <button id="pwa-install-pill" onclick="pwaOpenInstallFromPill()" style="display:none;margin-left:10px;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;color:#fff;font-size:10px;font-weight:800;padding:6px 12px;border-radius:16px;cursor:pointer;white-space:nowrap;flex-shrink:0">📲 Instalează</button>
@@ -2483,7 +2483,7 @@
 <!-- PWA Install Banner -->
 <div id="install-banner" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:1000;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border-radius:16px;padding:14px 16px;box-shadow:0 8px 32px rgba(79,125,255,0.5);max-width:340px;width:92%;flex-direction:column;gap:10px">
   <div style="display:flex;align-items:center;gap:10px">
-    <img src="/icon-192.png" style="width:38px;height:38px;border-radius:9px;flex-shrink:0">
+    <img src="/icon192.png" style="width:38px;height:38px;border-radius:9px;flex-shrink:0">
     <div style="flex:1">
       <div data-pwa-title style="font-weight:800;font-size:13px;color:#fff">Instalează AutoAssist</div>
       <div data-pwa-sub style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:1px">Adaugă pe ecranul principal</div>
@@ -2623,8 +2623,8 @@ function showNotification(title, body) {
   if(Notification.permission === 'granted') {
     new Notification(title, {
       body,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: '/icon192.png',
+      badge: '/icon192.png',
       tag: title,
       requireInteraction: false
     });
