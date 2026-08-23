@@ -2572,6 +2572,8 @@ async function installApp(){
     deferredPrompt.prompt();
     const {outcome} = await deferredPrompt.userChoice;
     deferredPrompt = null;
+  } else {
+    alert('Browserul consideră că AutoAssist e deja instalat pe acest dispozitiv (posibil dintr-o încercare veche).\n\nCa să reinstalezi corect:\n\n1. Windows: click dreapta pe iconița AutoAssist (desktop sau Start) → Dezinstalează\n   sau intră pe chrome://apps, click dreapta pe AutoAssist → Remove\n2. Android: șterge orice shortcut AutoAssist de pe ecranul principal\n3. Revino pe autoassist.ro și apasă din nou "Instalează"');
   }
   pwaCloseBanner();
 }
