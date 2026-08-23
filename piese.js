@@ -221,7 +221,14 @@ async function pieseFeedSearch() {
   resultsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--t3)">Se caută...</div>`;
 
   let query = supabaseClient.from('piese_automobilus').select('*').limit(60);
-  if(q) query = query.ilike('titlu', `%${q}%`);
+  if(q) {
+    query = query.ilike('titlu', `%${q}%`);
+  } else {
+    // Fără termen de căutare: arătăm piese relevante pentru mașina activă (după marcă),
+    // nu cele mai ieftine 60 din tot catalogul de 1.3M produse fără nicio legătură.
+    const activeCar = typeof pieseGetActiveCar === 'function' ? pieseGetActiveCar() : null;
+    if(activeCar?.brand) query = query.ilike('titlu', `%${activeCar.brand}%`);
+  }
   if(cat) query = query.eq('categorie_app', cat);
   if(brand) query = query.eq('brand', brand);
   if(pretMin) query = query.gte('pret', parseFloat(pretMin));
@@ -230,7 +237,12 @@ async function pieseFeedSearch() {
 
   const { data, error } = await query;
   if(error) { resultsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--red)">Eroare la căutare. Verifică dacă tabelul piese_automobilus există și are date.</div>`; return; }
-  if(!data || !data.length) { resultsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--t3)">Niciun rezultat. Încearcă alt termen sau filtru.</div>`; return; }
+  if(!data || !data.length) {
+    const activeCar = typeof pieseGetActiveCar === 'function' ? pieseGetActiveCar() : null;
+    const hint = (!q && activeCar?.brand) ? `<div style="margin-top:6px;font-size:12px">Nu am găsit piese cu "${activeCar.brand}" în titlu — încearcă o căutare directă mai jos.</div>` : '';
+    resultsEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--t3)">Niciun rezultat. Încearcă alt termen sau filtru.${hint}</div>`;
+    return;
+  }
 
   resultsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
     ${data.map(p => `
@@ -378,6 +390,7 @@ function pieseSaveCustomCar() {
 function pieseSelectCar(carId) {
   window._pieseCarId = carId;
   renderPieseCarTabs();
+  if(typeof pieseFeedSearch === 'function') pieseFeedSearch();
 }
 
 function renderPieseGrid() {
