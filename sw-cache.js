@@ -21,9 +21,9 @@ const STATIC = [
   '/piese.js',
   '/ev-vocal-init.js',
   '/manifest.json',
-  '/icon32.png',
-  '/icon192.png',
-  '/icon180.png',
+  '/icon-32.png',
+  '/icon-192.png',
+  '/icon-180.png',
 ];
 
 self.addEventListener('install', e => {
