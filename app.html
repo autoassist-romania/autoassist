@@ -212,6 +212,7 @@
     <div class="ni" onclick="goTo('agenti')" style="border:1px solid rgba(79,125,255,0.15)"><span class="ni-i">🧠</span>Agenți AI<span class="nbadge g">LIVE</span></div>
   </nav>
   <div class="sf">
+    <button id="sidebar-install-btn" onclick="pwaOpenInstallFromPill()" style="display:none;width:100%;margin-bottom:8px;padding:10px;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;border-radius:11px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:6px">📲 Instalează aplicația</button>
     <div class="upill" id="user-pill" title="Click pentru cont/logout" onclick="userPillClick()">
       <div class="av" style="background:linear-gradient(135deg,#4f7dff,#7c5cfc);font-size:12px;font-weight:800" id="upill-avatar">AA</div>
       <div><div style="font-size:13px;font-weight:700" id="upill-name">Intră în cont</div><div style="font-size:11px;color:var(--t3)" id="upill-plan">Apasă pentru login</div><div style="font-size:10px;color:var(--t3);display:none" id="upill-email"></div></div>
@@ -2546,9 +2547,11 @@ function pwaDontShowAgain(){
   pwaUpdateInstallPill();
 }
 function pwaUpdateInstallPill(){
+  const show = !isRunningStandalone();
   const pill = document.getElementById('pwa-install-pill');
-  if(!pill) return;
-  pill.style.display = isRunningStandalone() ? 'none' : 'flex';
+  if(pill) pill.style.display = show ? 'flex' : 'none';
+  const sidebarBtn = document.getElementById('sidebar-install-btn');
+  if(sidebarBtn) sidebarBtn.style.display = show ? 'flex' : 'none';
 }
 // Click pe butonul mic — forțează popup-ul să apară, chiar dacă userul bifase "nu mai arăta"
 function pwaOpenInstallFromPill(){
