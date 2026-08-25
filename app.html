@@ -212,6 +212,7 @@
     <div class="ni" onclick="goTo('agenti')" style="border:1px solid rgba(79,125,255,0.15)"><span class="ni-i">🧠</span>Agenți AI<span class="nbadge g">LIVE</span></div>
   </nav>
   <div class="sf">
+    <button id="sidebar-install-btn" onclick="pwaOpenInstallFromPill()" style="display:none;width:100%;margin-bottom:8px;padding:10px;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;border-radius:11px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:6px">📲 Instalează aplicația</button>
     <div class="upill" id="user-pill" title="Click pentru cont/logout" onclick="userPillClick()">
       <div class="av" style="background:linear-gradient(135deg,#4f7dff,#7c5cfc);font-size:12px;font-weight:800" id="upill-avatar">AA</div>
       <div><div style="font-size:13px;font-weight:700" id="upill-name">Intră în cont</div><div style="font-size:11px;color:var(--t3)" id="upill-plan">Apasă pentru login</div><div style="font-size:10px;color:var(--t3);display:none" id="upill-email"></div></div>
@@ -225,8 +226,8 @@
     <div class="lm" style="width:30px;height:30px;background:transparent;padding:0"><img src="/icon-192.png" style="width:30px;height:30px;border-radius:7px;object-fit:cover" alt="AutoAssist"></div>
     <div class="lt" style="font-size:19px">Auto<em>Assist</em></div>
   </div>
-  <button id="pwa-install-pill" onclick="pwaOpenInstallFromPill()" style="display:none;margin-left:10px;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;color:#fff;font-size:10px;font-weight:800;padding:6px 12px;border-radius:16px;cursor:pointer;white-space:nowrap;flex-shrink:0">📲 Instalează</button>
   <div style="flex:1"></div>
+  <button id="pwa-install-pill" onclick="pwaOpenInstallFromPill()" style="display:none;margin-right:8px;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;color:#fff;font-size:10px;font-weight:800;padding:6px 12px;border-radius:16px;cursor:pointer;white-space:nowrap;flex-shrink:0">📲 Instalează</button>
   <div id="mob-user-btn" onclick="toggleProfileMenu()" style="display:none;width:32px;height:32px;min-width:32px;flex-shrink:0;border-radius:50%;background:linear-gradient(135deg,#4f7dff,#7c5cfc);align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:14px;font-weight:800;color:#fff">?</div>
   <button id="mob-login-btn" onclick="openM('login')" class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:12px;padding:5px 10px">🔑 Login</button><button onclick="switchAuth('signup')" class="btn btn-primary btn-sm" id="mob-signup-btn" style="display:none;margin-right:8px;font-size:12px;padding:5px 10px">+ Cont nou</button>
   </div>
@@ -305,7 +306,7 @@
 
     <!-- Logo -->
     <div style="margin-bottom:4px;position:relative;line-height:0">
-      <img src="/logo2.png" style="width:min(460px,92vw);height:auto;filter:drop-shadow(0 0 40px rgba(200,150,12,0.6))" alt="AutoAssist">
+      <img src="/logo2.png" style="width:min(460px,92vw);height:auto;filter:drop-shadow(0 0 40px rgba(200,150,12,0.6));position:relative;left:-10px" alt="AutoAssist">
     </div>
 
     <div style="font-size:15px;color:#a0aec0;margin-bottom:8px;line-height:1.5">Asistentul digital al șoferului român<br><span style="color:#c8960c;font-weight:600">Garaj • Documente • AI • Asistență rutieră</span></div>
@@ -409,7 +410,7 @@
 <!-- DASHBOARD -->
 <section class="sec" id="sec-dashboard">
   <!-- SEASONAL ALERT -->
-  <div id="seasonal-banner" style="margin-bottom:16px;padding:12px 18px;border-radius:var(--r);display:flex;align-items:center;gap:12px;border:1px solid"></div>
+  <div id="seasonal-banner" onclick="handleSeasonalBannerClick(event)" style="cursor:pointer;margin-bottom:16px;padding:8px 14px;border-radius:var(--r);display:flex;align-items:center;gap:10px;border:1px solid;max-height:64px;overflow-y:auto"></div>
 
   <div class="topbar">
     <div style="min-width:0;max-width:100%;overflow:hidden"><div class="pt" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;background:linear-gradient(135deg,#c8960c,#ffd700,#c8960c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;overflow:hidden;text-overflow:clip">AutoAssist</div><div class="ps" style="white-space:normal;font-size:12px">Bine ai venit — asistentul tău auto din România</div></div>
@@ -2056,24 +2057,6 @@
     <div id="piese-grid"></div>
   </div>
 
-  <!-- Căutare produse reale, cu preț și poză (feed Automobilus) -->
-  <div class="card" style="margin-top:12px">
-    <div class="ch"><span class="ct">🔎 Caută produse cu preț real</span><span style="font-size:11px;color:var(--t3)">din catalogul Automobilus.ro</span></div>
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <input class="fi" id="feed-search-input" placeholder="Caută produs (ex: ulei castrol, placute brembo...)" style="flex:2;min-width:180px;margin:0"
-        onkeydown="if(event.key==='Enter') pieseFeedSearch()">
-      <select class="fi" id="feed-filter-cat" onchange="pieseFeedSearch()" style="flex:1;min-width:140px;margin:0"></select>
-      <select class="fi" id="feed-filter-brand" onchange="pieseFeedSearch()" style="flex:1;min-width:140px;margin:0"></select>
-    </div>
-    <div id="feed-category-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <input class="fi" id="feed-filter-pret-min" type="number" placeholder="Preț min" style="margin:0" onchange="pieseFeedSearch()">
-      <input class="fi" id="feed-filter-pret-max" type="number" placeholder="Preț max" style="margin:0" onchange="pieseFeedSearch()">
-      <button onclick="pieseFeedSearch()" class="btn btn-primary" style="flex-shrink:0;padding:0 20px">Caută</button>
-    </div>
-    <div id="feed-results"></div>
-  </div>
-
   <!-- Alte magazine partenere -->
   <div class="card" style="margin-top:12px">
     <div class="ch"><span class="ct">🏪 Alte surse de piese</span></div>
@@ -2336,6 +2319,17 @@
 </main>
 
 <!-- MODAL ADD CAR -->
+<div class="mo" id="mo-anvelope-sezon">
+  <div class="md" style="max-width:480px">
+    <div class="md-handle"></div>
+    <div class="md-h">
+      <div class="md-t" id="anvelope-sezon-title">🏎️ Anvelope</div>
+      <div class="md-x" onclick="closeM('anvelope-sezon')">✕</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px" id="anvelope-sezon-list"></div>
+  </div>
+</div>
+
 <div class="mo" id="mo-add-car">
   <div class="md">
     <div class="md-handle"></div>
@@ -2502,6 +2496,9 @@ function isRunningStandalone(){
 function isIOSDevice(){
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 }
+function isSamsungInternet(){
+  return /SamsungBrowser/i.test(navigator.userAgent);
+}
 function pwaPromptDismissedPermanently(){
   return localStorage.getItem('aa_pwa_prompt_dismissed') === '1';
 }
@@ -2535,9 +2532,11 @@ function pwaDontShowAgain(){
   pwaUpdateInstallPill();
 }
 function pwaUpdateInstallPill(){
+  const show = !isRunningStandalone();
   const pill = document.getElementById('pwa-install-pill');
-  if(!pill) return;
-  pill.style.display = isRunningStandalone() ? 'none' : 'flex';
+  if(pill) pill.style.display = show ? 'flex' : 'none';
+  const sidebarBtn = document.getElementById('sidebar-install-btn');
+  if(sidebarBtn) sidebarBtn.style.display = show ? 'flex' : 'none';
 }
 // Click pe butonul mic — forțează popup-ul să apară, chiar dacă userul bifase "nu mai arăta"
 function pwaOpenInstallFromPill(){
@@ -2554,10 +2553,18 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 async function installApp(){
+  if(isSamsungInternet()){
+    alert('Pe Samsung Internet, instalarea poate declanșa un avertisment fals de la Google Play Protect ("Aplicație nesigură") — e o problemă cunoscută a acestui browser, nu a AutoAssist.\n\nRecomandăm să instalezi din Chrome:\n\n1. Deschide autoassist.ro în Chrome (nu Samsung Internet)\n2. Apasă din nou "Instalează"\n\nSau, dacă vrei doar un shortcut simplu fără avertisment: meniul (⋮) → "Adaugă pagina la" → "Ecran principal".');
+    return;
+  }
   if(deferredPrompt){
     deferredPrompt.prompt();
     const {outcome} = await deferredPrompt.userChoice;
     deferredPrompt = null;
+  } else if(isIOSDevice()){
+    alert('Pe iPhone/iPad, Apple nu permite unui site să declanșeze instalarea automat.\n\nInstalezi manual, în 2 pași:\n\n1. Apasă butonul Distribuie (pătratul cu săgeata în sus, din bara de jos a Safari)\n2. Alege "Adaugă pe ecranul principal"\n\nAtenție: funcționează doar din Safari, nu din Chrome pe iPhone.');
+  } else {
+    alert('Browserul tău nu a oferit promptul automat de instalare — motive posibile:\n\n• AutoAssist e deja instalat pe acest dispozitiv (verifică pe ecranul principal sau în lista de aplicații)\n• Browserul folosit nu suportă instalarea automată (încearcă Chrome)\n\nDacă era deja instalat dintr-o încercare veche, dezinstalează-l întâi (Windows: click dreapta pe iconiță → Dezinstalează, sau chrome://apps; Android: șterge shortcut-ul de pe ecranul principal), apoi revino pe autoassist.ro și încearcă din nou.');
   }
   pwaCloseBanner();
 }
