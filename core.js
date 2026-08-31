@@ -648,9 +648,20 @@ function rGaraj(){
   el.innerHTML=cars.map(c=>{
     const pills=Object.entries(c.docs).map(([k,v])=>{const d=dl(v);return`<span class="pill ${cls(d)}"><span class="pd"></span>${DN[k]}: ${dT(d)}</span>`;}).join('');
     const urgent = Object.values(c.docs).some(v=>{const d=dl(v);return d!==null&&d<=30;});
-    const _foto1 = c.fotos&&c.fotos.length?c.fotos[0]:null;
+    const fotosExist = (c.fotos||[]).map((f,i)=>f?{f,i}:null).filter(Boolean);
+    const fotoBox = fotosExist.length
+      ? `<div id="gcard-foto-${c.id}" style="height:210px;overflow:hidden;position:relative;background:#000">
+          <img id="gcard-img-${c.id}" src="${fotosExist[0].f}" style="width:100%;height:100%;object-fit:cover;object-position:${(c.fotoPos&&c.fotoPos[fotosExist[0].i])||'50% 50%'};cursor:pointer" onclick="openCar(${c.id})">
+          <button onclick="event.stopPropagation();gcardPozitioneaza(${c.id})" title="Poziționează poza" style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,0.75);border:none;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:12px;cursor:pointer">🎯 Poziționează</button>
+          ${fotosExist.length>1?`
+            <button onclick="event.stopPropagation();gcardNav(${c.id},-1)" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px">‹</button>
+            <button onclick="event.stopPropagation();gcardNav(${c.id},1)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px">›</button>
+            <div id="gcard-count-${c.id}" style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px">1/${fotosExist.length}</div>
+          `:''}
+        </div>`
+      : `<div style="height:100px;background:linear-gradient(135deg,rgba(79,125,255,0.1),rgba(200,150,12,0.06));display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:36px" onclick="openCar(${c.id})">🚗</div>`;
     return`<div class="cc" style="transition:transform 0.15s,box-shadow 0.15s;overflow:hidden;padding:0" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-      ${_foto1?`<div style="height:130px;overflow:hidden;cursor:pointer" onclick="openCar(${c.id})"><img src="${_foto1}" style="width:100%;height:100%;object-fit:cover"></div>`:`<div style="height:80px;background:linear-gradient(135deg,rgba(79,125,255,0.1),rgba(200,150,12,0.06));display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:36px" onclick="openCar(${c.id})">🚗</div>`}
+      ${fotoBox}
       <div style="padding:14px">
       <div style="display:flex;justify-content:space-between;align-items:start">
         <div style="cursor:pointer;flex:1" onclick="openCar(${c.id})">
@@ -672,6 +683,34 @@ function rGaraj(){
       </div>
     </div>`;
   }).join('');
+}
+
+// Navigare în mini-caruselul din cardul de garaj (fără să deschidem pagina mașinii)
+window._gcardIdx = {};
+function gcardNav(carId, dir) {
+  const car = cars.find(c=>c.id==carId);
+  if(!car) return;
+  const fotosExist = (car.fotos||[]).map((f,i)=>f?{f,i}:null).filter(Boolean);
+  if(!fotosExist.length) return;
+  const cur = window._gcardIdx[carId] || 0;
+  const next = Math.max(0, Math.min(fotosExist.length-1, cur+dir));
+  window._gcardIdx[carId] = next;
+  const img = document.getElementById(`gcard-img-${carId}`);
+  const cnt = document.getElementById(`gcard-count-${carId}`);
+  if(img) { img.src = fotosExist[next].f; img.style.objectPosition = (car.fotoPos&&car.fotoPos[fotosExist[next].i])||'50% 50%'; }
+  if(cnt) cnt.textContent = `${next+1}/${fotosExist.length}`;
+}
+
+// Poziționează poza curent afișată în cardul de garaj — deschide pagina mașinii și activează drag-ul
+function gcardPozitioneaza(carId) {
+  const car = cars.find(c=>c.id==carId);
+  if(!car) return;
+  const fotosExist = (car.fotos||[]).map((f,i)=>f?{f,i}:null).filter(Boolean);
+  if(!fotosExist.length) return;
+  const cur = window._gcardIdx[carId] || 0;
+  const realIndex = fotosExist[cur].i;
+  openCar(carId);
+  setTimeout(() => { if(typeof carFotoPozitioneaza === 'function') carFotoPozitioneaza(carId, realIndex); }, 250);
 }
 
 function openCar(id) {
