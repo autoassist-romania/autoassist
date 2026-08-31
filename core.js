@@ -678,6 +678,7 @@ function openCar(id) {
   const car = cars.find(c=>c.id==id);
   if(!car) return;
   window._currentCarId = id;
+  localStorage.setItem('aa_last_car_id', id);
   renderCarPage(car);
   // Navighează și scroll sus
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
@@ -747,13 +748,13 @@ function renderCarPage(car) {
           return `<div style="position:relative">
               <input type="file" id="car-foto-input-${i}-${car.id}" accept="image/*" style="display:none" onchange="addCarFoto(${car.id},${i},this)">
               ${foto
-                ? `<div style="position:relative;height:190px;border-radius:10px;overflow:hidden;background:#000">
+                ? `<div style="position:relative;height:240px;border-radius:10px;overflow:hidden;background:#000">
                     <img id="car-foto-img-${i}-${car.id}" src="${foto}" style="width:100%;height:100%;object-fit:cover;object-position:${pos};cursor:pointer;touch-action:none" onclick="carLightbox(${car.id},${i})">
                     <button onclick="event.stopPropagation();carFotoPozitioneaza(${car.id},${i})" title="Poziționează poza" style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.75);border:none;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:12px;cursor:pointer">🎯 Poziționează</button>
                     <button onclick="document.getElementById('car-foto-input-${i}-${car.id}').click()" title="Înlocuiește poza" style="position:absolute;top:4px;right:34px;background:rgba(0,0,0,0.75);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1">✏️</button>
                     <button onclick="removeCarFoto(${car.id},${i})" title="Șterge poza" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.75);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1">×</button>
                   </div>`
-                : `<div style="height:190px;background:var(--s2);border:2px dashed var(--b2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);gap:6px;transition:border-color 0.15s" onclick="document.getElementById('car-foto-input-${i}-${car.id}').click()" onmouseover="this.style.borderColor='rgba(79,125,255,0.5)'" onmouseout="this.style.borderColor='var(--b2)'">
+                : `<div style="height:240px;background:var(--s2);border:2px dashed var(--b2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);gap:6px;transition:border-color 0.15s" onclick="document.getElementById('car-foto-input-${i}-${car.id}').click()" onmouseover="this.style.borderColor='rgba(79,125,255,0.5)'" onmouseout="this.style.borderColor='var(--b2)'">
                     <span style="font-size:32px;line-height:1">+</span>
                     <span style="font-size:11px">Adaugă foto ${i+1}</span>
                   </div>`}
@@ -1455,11 +1456,13 @@ function carLightbox(carId, startIdx) {
       <button id="car-lb-prev" onclick="carLbNav(-1)" style="position:fixed;left:16px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:#fff;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:28px;z-index:10001" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">‹</button>
       <img id="car-lb-img" style="width:calc(100vw - 140px);height:88vh;border-radius:10px;object-fit:contain;display:block;background:#111">
       <button id="car-lb-next" onclick="carLbNav(1)" style="position:fixed;right:16px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:#fff;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:28px;z-index:10001" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">›</button>
+      <button onclick="carLbPozitioneaza()" style="position:fixed;bottom:20px;left:calc(50% + 60px);background:rgba(79,125,255,0.85);border:none;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:20px;cursor:pointer;z-index:10001">🎯 Poziționează</button>
       <div id="car-lb-count" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.6);font-size:14px;background:rgba(0,0,0,0.5);padding:4px 14px;border-radius:20px;z-index:10001"></div>
     </div>`);
 
   window._carLbData = existing;
   window._carLbCur = cur;
+  window._carLbCarId = carId;
   const update = () => {
     document.getElementById('car-lb-img').src = window._carLbData[window._carLbCur].f;
     document.getElementById('car-lb-count').textContent = `${window._carLbCur+1} / ${window._carLbData.length}`;
@@ -1474,6 +1477,21 @@ function carLbNav(dir) {
   const data = window._carLbData||[];
   window._carLbCur = Math.max(0, Math.min(data.length-1, (window._carLbCur||0)+dir));
   if(window._carLbUpdate) window._carLbUpdate();
+}
+
+// Deschide poziționarea (drag) pentru poza curent afișată în lightbox — închide lightbox-ul,
+// se asigură că suntem pe pagina mașinii respective, apoi activează modul de tras poza.
+function carLbPozitioneaza() {
+  const carId = window._carLbCarId;
+  const item = (window._carLbData||[])[window._carLbCur];
+  if(carId==null || !item) return;
+  const realIndex = item.i; // indexul real (0 sau 1) în array-ul car.fotos
+  document.getElementById('car-lb')?.remove();
+  const goAndPositionate = () => {
+    setTimeout(() => { if(typeof carFotoPozitioneaza === 'function') carFotoPozitioneaza(carId, realIndex); }, 250);
+  };
+  if(window._currentCarId != carId) { openCar(carId); goAndPositionate(); }
+  else { goAndPositionate(); }
 }
 
 // ═══ PREVIEW POZE MODAL ADD-CAR ═══
