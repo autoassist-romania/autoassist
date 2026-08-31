@@ -540,13 +540,13 @@ function showAnuntModal(a) {
           </div>`:''}
 
           <!-- CARVERTICAL -->
-          <div style="margin-bottom:16px;padding:12px;background:rgba(255,140,32,0.07);border:1px solid rgba(255,140,32,0.2);border-radius:10px">
+          <div onclick="window.open('${a.vin ? 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?uid=256&source_id=AFF&sub1=autoassist&sub3='+encodeURIComponent(a.vin) : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist'}', '_blank')" style="margin-bottom:16px;padding:12px;background:rgba(255,140,32,0.07);border:1px solid rgba(255,140,32,0.2);border-radius:10px;cursor:pointer">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
               <div>
                 <svg viewBox="0 0 288 40" style="height:16px;width:auto;display:block;margin-bottom:4px"><use href="#cv-logo-svg"/></svg>
                 <div style="font-size:11px;color:var(--t3)">Verifică km reali, accidente, proprietari anteriori</div>
               </div>
-              <a href="${a.vin ? 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?uid=256&source_id=AFF&sub1=autoassist&sub3='+encodeURIComponent(a.vin) : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist'}" target="_blank" style="background:var(--amber);color:#000;font-size:12px;font-weight:800;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0">-20%</a>
+              <span style="background:var(--amber);color:#000;font-size:12px;font-weight:800;padding:8px 14px;border-radius:8px;white-space:nowrap;flex-shrink:0;pointer-events:none">-20%</span>
             </div>
             <div style="font-size:10px;color:var(--t3);margin-top:8px">Sau folosește codul <strong style="color:var(--amber)">AUTOASSIST</strong> direct pe carvertical.com</div>
           </div>
