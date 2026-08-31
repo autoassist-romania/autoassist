@@ -743,16 +743,18 @@ function renderCarPage(car) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         ${[0,1].map(i=>{
           const foto = car.fotos&&car.fotos[i] ? car.fotos[i] : null;
-          return foto
-            ? `<div style="position:relative;height:140px;border-radius:10px;overflow:hidden">
-                <img src="${foto}" style="width:100%;height:100%;object-fit:cover;cursor:pointer" onclick="carLightbox(${car.id},${i})">
-                <button onclick="removeCarFoto(${car.id},${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.75);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1">×</button>
-              </div>`
-            : `<div style="height:140px;background:var(--s2);border:2px dashed var(--b2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);gap:6px;transition:border-color 0.15s" onclick="document.getElementById('car-foto-input-${i}-${car.id}').click()" onmouseover="this.style.borderColor='rgba(79,125,255,0.5)'" onmouseout="this.style.borderColor='var(--b2)'">
-                <span style="font-size:32px;line-height:1">+</span>
-                <span style="font-size:11px">Adaugă foto ${i+1}</span>
-                <input type="file" id="car-foto-input-${i}-${car.id}" accept="image/*" style="display:none" onchange="addCarFoto(${car.id},${i},this)">
-              </div>`;
+          return `<div style="position:relative">
+              <input type="file" id="car-foto-input-${i}-${car.id}" accept="image/*" style="display:none" onchange="addCarFoto(${car.id},${i},this)">
+              ${foto
+                ? `<div style="position:relative;height:140px;border-radius:10px;overflow:hidden">
+                    <img src="${foto}" style="width:100%;height:100%;object-fit:cover;cursor:pointer" onclick="carLightbox(${car.id},${i})">
+                    <button onclick="removeCarFoto(${car.id},${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.75);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1">×</button>
+                  </div>`
+                : `<div style="height:140px;background:var(--s2);border:2px dashed var(--b2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);gap:6px;transition:border-color 0.15s" onclick="document.getElementById('car-foto-input-${i}-${car.id}').click()" onmouseover="this.style.borderColor='rgba(79,125,255,0.5)'" onmouseout="this.style.borderColor='var(--b2)'">
+                    <span style="font-size:32px;line-height:1">+</span>
+                    <span style="font-size:11px">Adaugă foto ${i+1}</span>
+                  </div>`}
+            </div>`;
         }).join('')}
       </div>
       <button class="btn btn-ghost btn-sm btn-full" onclick="document.getElementById('car-foto-input-0-${car.id}').click()" style="font-size:12px">✏️ Editează imagini</button>
@@ -1349,6 +1351,7 @@ function addCarFoto(carId, index, input) {
     if(!car.fotos) car.fotos = [];
     car.fotos[index] = e.target.result;
     save();
+    if(typeof saveCarToCloud === 'function') saveCarToCloud(car);
     openCar(carId); // refresh pagina
   };
   reader.readAsDataURL(file);
@@ -1359,6 +1362,7 @@ function removeCarFoto(carId, index) {
   if(!car || !car.fotos) return;
   car.fotos[index] = null;
   save();
+  if(typeof saveCarToCloud === 'function') saveCarToCloud(car);
   openCar(carId);
 }
 
