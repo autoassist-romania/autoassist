@@ -522,7 +522,7 @@ async function loadUserData(userId) {
       const localCars = (() => { try { return JSON.parse(localStorage.getItem('autoassist-cars-'+userId)||'[]'); } catch(e){ return []; } })();
       const supabaseCars = data.map(c => {
         const local = localCars.find(l=>l.id==c.id);
-        return {...c, docs: c.docs||{}, mnt: c.mnt||{oilInt:10000, oilLast:0}, fotos: local?.fotos||c.fotos||[], anvelope: local?.anvelope||c.anvelope||{}};
+        return {...c, docs: c.docs||{}, mnt: c.mnt||{oilInt:10000, oilLast:0}, fotos: local?.fotos||c.fotos||[], fotoPos: local?.fotoPos||c.fotoPos||[], anvelope: local?.anvelope||c.anvelope||{}};
       });
       // Adaug mașinile locale care nu sunt în Supabase (salvate recent)
       const supabaseIds = new Set(supabaseCars.map(c=>String(c.id)));
@@ -580,6 +580,7 @@ async function saveCarToCloud(car) {
       mnt: car.mnt,
       anvelope: car.anvelope || {},
       fotos: car.fotos || [],
+      fotoPos: car.fotoPos || [],
       added: car.added
     };
     await supabaseClient.from('cars').upsert(carData, { onConflict: 'id' });

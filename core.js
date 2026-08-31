@@ -740,18 +740,20 @@ function renderCarPage(car) {
     <!-- Poze mașină -->
     <div class="card" style="margin-bottom:16px">
       <div class="ch"><span class="ct">📸 Fotografii mașină</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         ${[0,1].map(i=>{
           const foto = car.fotos&&car.fotos[i] ? car.fotos[i] : null;
+          const pos = (car.fotoPos&&car.fotoPos[i]) ? car.fotoPos[i] : '50% 50%';
           return `<div style="position:relative">
               <input type="file" id="car-foto-input-${i}-${car.id}" accept="image/*" style="display:none" onchange="addCarFoto(${car.id},${i},this)">
               ${foto
-                ? `<div style="position:relative;height:140px;border-radius:10px;overflow:hidden;background:#000">
-                    <img src="${foto}" style="width:100%;height:100%;object-fit:contain;cursor:pointer" onclick="carLightbox(${car.id},${i})">
+                ? `<div style="position:relative;height:190px;border-radius:10px;overflow:hidden;background:#000">
+                    <img id="car-foto-img-${i}-${car.id}" src="${foto}" style="width:100%;height:100%;object-fit:cover;object-position:${pos};cursor:pointer;touch-action:none" onclick="carLightbox(${car.id},${i})">
+                    <button onclick="event.stopPropagation();carFotoPozitioneaza(${car.id},${i})" title="Poziționează poza" style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.75);border:none;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:12px;cursor:pointer">🎯 Poziționează</button>
                     <button onclick="document.getElementById('car-foto-input-${i}-${car.id}').click()" title="Înlocuiește poza" style="position:absolute;top:4px;right:34px;background:rgba(0,0,0,0.75);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1">✏️</button>
                     <button onclick="removeCarFoto(${car.id},${i})" title="Șterge poza" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.75);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1">×</button>
                   </div>`
-                : `<div style="height:140px;background:var(--s2);border:2px dashed var(--b2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);gap:6px;transition:border-color 0.15s" onclick="document.getElementById('car-foto-input-${i}-${car.id}').click()" onmouseover="this.style.borderColor='rgba(79,125,255,0.5)'" onmouseout="this.style.borderColor='var(--b2)'">
+                : `<div style="height:190px;background:var(--s2);border:2px dashed var(--b2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);gap:6px;transition:border-color 0.15s" onclick="document.getElementById('car-foto-input-${i}-${car.id}').click()" onmouseover="this.style.borderColor='rgba(79,125,255,0.5)'" onmouseout="this.style.borderColor='var(--b2)'">
                     <span style="font-size:32px;line-height:1">+</span>
                     <span style="font-size:11px">Adaugă foto ${i+1}</span>
                   </div>`}
@@ -759,6 +761,7 @@ function renderCarPage(car) {
         }).join('')}
       </div>
     </div>
+
 
     <!-- Documente -->
     <div class="card" style="margin-bottom:16px">
@@ -1364,6 +1367,74 @@ function removeCarFoto(carId, index) {
   save();
   if(typeof saveCarToCloud === 'function') saveCarToCloud(car);
   openCar(carId);
+}
+
+// ═══ POZIȚIONARE POZĂ (drag pentru a alege ce parte din poză se vede în casetă) ═══
+function carFotoPozitioneaza(carId, index) {
+  const img = document.getElementById(`car-foto-img-${index}-${carId}`);
+  if(!img) return;
+  const car = cars.find(c=>c.id==carId);
+  if(!car) return;
+
+  // parsăm poziția curentă (ex: "50% 30%") în procente numerice
+  const curPos = (car.fotoPos && car.fotoPos[index]) || '50% 50%';
+  const [curX, curY] = curPos.split(' ').map(v => parseFloat(v));
+  let posX = isNaN(curX) ? 50 : curX;
+  let posY = isNaN(curY) ? 50 : curY;
+
+  img.style.cursor = 'grabbing';
+  const rect = img.getBoundingClientRect();
+  let startX, startY, startPosX, startPosY, dragging = false;
+
+  function getPoint(e) {
+    if(e.touches && e.touches[0]) return {x: e.touches[0].clientX, y: e.touches[0].clientY};
+    return {x: e.clientX, y: e.clientY};
+  }
+
+  function onDown(e) {
+    dragging = true;
+    const p = getPoint(e);
+    startX = p.x; startY = p.y;
+    startPosX = posX; startPosY = posY;
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if(!dragging) return;
+    const p = getPoint(e);
+    // tragi poza spre stânga = vrei să vezi mai mult din dreapta ei -> object-position crește
+    const dx = ((p.x - startX) / rect.width) * -100;
+    const dy = ((p.y - startY) / rect.height) * -100;
+    posX = Math.max(0, Math.min(100, startPosX + dx));
+    posY = Math.max(0, Math.min(100, startPosY + dy));
+    img.style.objectPosition = `${posX}% ${posY}%`;
+    e.preventDefault();
+  }
+  function onUp() {
+    if(!dragging) return;
+    dragging = false;
+    img.style.cursor = 'pointer';
+    if(!car.fotoPos) car.fotoPos = [];
+    car.fotoPos[index] = `${posX.toFixed(0)}% ${posY.toFixed(0)}%`;
+    save();
+    if(typeof saveCarToCloud === 'function') saveCarToCloud(car);
+    img.removeEventListener('mousedown', onDown);
+    img.removeEventListener('touchstart', onDown);
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('touchmove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    window.removeEventListener('touchend', onUp);
+    img.onclick = () => carLightbox(carId, index); // restaurăm click normal (deschide lightbox)
+    showNotification('✅ Poziție salvată', 'Trage din nou pe butonul 🎯 dacă vrei să o ajustezi.');
+  }
+
+  img.onclick = null; // dezactivăm temporar deschiderea lightbox-ului cât timp poziționăm
+  img.addEventListener('mousedown', onDown);
+  img.addEventListener('touchstart', onDown, {passive:false});
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, {passive:false});
+  window.addEventListener('mouseup', onUp);
+  window.addEventListener('touchend', onUp);
+  showNotification('🎯 Trage poza', 'Ține apăsat și trage cu mouse-ul/degetul pentru a alege ce parte se vede.');
 }
 
 // ═══ LIGHTBOX POZE MAȘINĂ DIN GARAJ ═══
