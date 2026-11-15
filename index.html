@@ -4,6 +4,25 @@
 <script>try{var m=location.search.match(/[?&]billing=(\w+)/);if(m)sessionStorage.setItem("aa_billing",m[1]);}catch(e){}</script>
 <meta charset="UTF-8">
 <script>
+// Link direct din email/notificare: ?go=asigurari deschide secțiunea după autentificare
+(function(){
+  try{
+    var gp=new URLSearchParams(location.search).get('go');
+    if(gp && /^[a-z0-9-]{2,30}$/.test(gp)){
+      sessionStorage.setItem('aa_deeplink',gp);
+      var ga=new URLSearchParams(location.search).get('a'), gc=new URLSearchParams(location.search).get('car');
+      if(ga && /^[a-z]{2,10}$/.test(ga)) sessionStorage.setItem('aa_deepact', JSON.stringify({a:ga,car:(gc||'').slice(0,60)}));
+      else sessionStorage.removeItem('aa_deepact');
+      var u=new URL(location.href); u.searchParams.delete('go'); u.searchParams.delete('a'); u.searchParams.delete('car');
+      history.replaceState(null,'',u.pathname+u.search+u.hash);
+    }
+  }catch(e){}
+  window.aaStartSec=function(){
+    var g=null;
+    try{ g=sessionStorage.getItem('aa_deeplink'); if(g) sessionStorage.removeItem('aa_deeplink'); }catch(e){}
+    return g || localStorage.getItem('aa_last_sec');
+  };
+})();
 // EARLY check - salvează hash OAuth înainte ca Service Worker să îl piardă
 (function(){
   var hash = window.location.hash;

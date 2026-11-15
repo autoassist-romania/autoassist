@@ -92,3 +92,25 @@
 
   document.addEventListener('DOMContentLoaded', function(){ setTimeout(aaPushRefreshStatus, 600); });
 })();
+
+// ── Acțiune directă din linkul din email (?go=piese&a=ext&car=ID): deschide direct magazinele ──
+(function(){
+  var ACTS = {
+    ext: ['accesorii','Extinctor auto'],
+    trz: ['accesorii','Trusă medicală auto']
+  };
+  var raw=null; try{ raw=sessionStorage.getItem('aa_deepact'); }catch(e){}
+  if(!raw) return;
+  var act; try{ act=JSON.parse(raw); }catch(e){ return; }
+  if(!act || !ACTS[act.a]) { try{sessionStorage.removeItem('aa_deepact');}catch(e){} return; }
+  var tries=0, t=setInterval(function(){
+    tries++;
+    if(tries>60){ clearInterval(t); return; }                       // renunț după ~18 s (ex. user nelogat)
+    if(typeof currentUser==='undefined' || !currentUser || typeof cars==='undefined' || !cars.length) return;
+    if(typeof pieseAlegeMagazinCategorie!=='function') return;
+    clearInterval(t);
+    try{ sessionStorage.removeItem('aa_deepact'); }catch(e){}
+    var car = cars.filter(function(c){ return String(c.id)===String(act.car); })[0] || cars[0];
+    setTimeout(function(){ pieseAlegeMagazinCategorie(ACTS[act.a][0], ACTS[act.a][1], car.brand||'', car.model||''); }, 500);
+  }, 300);
+})();
