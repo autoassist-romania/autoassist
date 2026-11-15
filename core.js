@@ -120,8 +120,9 @@ FUNCȚIONALITĂȚI PRINCIPALE:
 12. AGENȚI AI — Manager, Juridic, Auto, Cod, Documente
 
 PREȚURI:
-- Plan Gratuit: până la 2 mașini, alerte la 30 și 7 zile, verificare RCA de bază
-- Plan Premium: 49 RON/an (≈4 RON/lună)
+- Plan Gratuit: 1 mașină, alerte la 30 de zile, 5 mesaje AI/zi
+- Plan Premium: 99 RON/an (≈8 RON/lună, primele 2 luni gratis), până la 5 mașini
+- Pachete Flotă pentru firme (6–100 vehicule, mai mulți utilizatori): secțiunea Flote din meniu
 - Raport verificare SH (Checklist Mecanic): 10 RON
 - Primul raport SH gratuit la înregistrare
 - Prima verificare carVertical gratuită la înregistrare
@@ -131,7 +132,7 @@ SURSE DE VENIT AUTOASSIST:
 - Comision RCA: negociat cu partenerii autorizați ASF
 - Comision carVertical: 5 EUR per raport achiziționat (cod AUTOASSIST, reducere 20% pentru utilizatori)
 - Comision vânzare mașini: 20-50 RON per anunț (de la OLX/Autovit)
-- Abonament Premium: 49 RON/an
+- Abonament Premium: 99 RON/an
 - Asistență rutieră: 50 RON per colaborare confirmată
 - Raport SH: 10 RON per raport
 - Programare ITP: 15-25 RON comision per programare
@@ -196,7 +197,7 @@ function buildAgentPrompt(agent) {
   }
 
   // ── BAZA DE CUNOȘTINȚE PLATFORMA ──
-  const platformCtx = '\n\n== PLATFORMA AUTOASSIST ==\nEști integrat în AutoAssist — platformă română de management auto cu: Garaj virtual, Documente (RCA/ITP/Rovinietă), Asigurări RCA, carVertical, Vânzare mașini, Service & Mentenanță, Asistență rutieră, Calculator costuri, Modul EV, Asistent vocal. Premium: 49 RON/an.';
+  const platformCtx = '\n\n== PLATFORMA AUTOASSIST ==\nEști integrat în AutoAssist — platformă română de management auto cu: Garaj virtual, Documente (RCA/ITP/Rovinietă), Asigurări RCA, carVertical, Vânzare mașini, Service & Mentenanță, Asistență rutieră, Calculator costuri, Modul EV, Asistent vocal. Premium: 99 RON/an.';
 
   // ── INSTRUCȚIUNI GENERALE ──
   const now = new Date();
@@ -240,9 +241,60 @@ function loadSavedKey() {
   }
 }
 
+// ═══ Autentificare pentru funcția `asistent` (cheia utilizatorului logat, nu doar cheia publică) ═══
+const AA_ANON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzcGNrbmp1cWRqZnh0cXJxaGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MzI5NDcsImV4cCI6MjA1OTEwODk0N30.5YhiDJmZ4SKSCkm9H4d5FdBWZ0fJuWkSBhCL5bVFYxE';
+async function aaAuthHeader(){
+  try{
+    if(typeof supabaseClient !== 'undefined' && supabaseClient){
+      const r = await supabaseClient.auth.getSession();
+      const t = r && r.data && r.data.session && r.data.session.access_token;
+      if(t) return 'Bearer ' + t;
+    }
+  }catch(e){}
+  return 'Bearer ' + AA_ANON_JWT;
+}
+
+// ═══ „ÎN CURÂND" — funcții dezactivate la lansare ═══
+// Nu trimitem utilizatorii către servicii pentru care nu avem încă parteneriat/comision.
+// Ca să reactivezi o funcție: șterge intrarea din SOON_SECTIONS (și, pentru rovinietă, schimbă soonRov()).
+const SOON_SECTIONS = {
+  'asigurari': {t:'Reînnoire RCA',        d:'Reînnoirea RCA prin AutoAssist se activează în curând. Până atunci te anunțăm în aplicație când expiră asigurarea.'},
+  'itp':       {t:'Programare ITP',       d:'Programarea ITP prin AutoAssist se activează în curând. Până atunci te anunțăm în aplicație când expiră ITP-ul.'},
+  'asistenta': {t:'Asistență rutieră',    d:'Asistența rutieră se activează în curând, după ce încheiem parteneriatele cu firmele de tractări. Până atunci, în caz de urgență sună 112.'},
+  'verif-nr':  {t:'Verificare număr',     d:'Verificarea după numărul de înmatriculare se activează în curând.'}
+};
+function showSoon(title, desc){
+  let el=document.getElementById('aa-soon');
+  if(el) el.remove();
+  el=document.createElement('div');
+  el.id='aa-soon';
+  el.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.82);display:flex;align-items:center;justify-content:center;padding:20px';
+  el.innerHTML='<div style="background:linear-gradient(160deg,#0a0a10,#12100a);border:1px solid rgba(240,180,41,0.35);border-radius:18px;max-width:380px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.7)">'
+    +'<div style="font-size:42px;margin-bottom:8px">⏳</div>'
+    +'<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#f0b429;margin-bottom:6px">ÎN CURÂND</div>'
+    +'<div style="font-size:19px;font-weight:800;color:#fff;margin-bottom:10px"></div>'
+    +'<div style="font-size:13.5px;color:rgba(255,255,255,0.72);line-height:1.6;margin-bottom:20px"></div>'
+    +'<button class="btn btn-gold btn-full" style="padding:12px">Am înțeles</button></div>';
+  const divs=el.querySelectorAll('div');
+  divs[3].textContent=title||'Funcție nouă';
+  divs[4].textContent=desc||'Această funcție se activează în curând.';
+  el.querySelector('button').onclick=function(){el.remove();};
+  el.addEventListener('click',function(e){if(e.target===el)el.remove();});
+  document.body.appendChild(el);
+}
+function soonRov(){ showSoon('Reînnoire rovinietă','Reînnoirea rovinietei prin AutoAssist se activează în curând. Până atunci te anunțăm în aplicație când expiră.'); }
+// Pune true DUPĂ ce ai configurat Stripe (vezi PAȘI_FLOTE.md). Până atunci butoanele de plată afișează „în curând".
+const BILLING_LIVE = false;
+function cumpPrem(){
+  if(BILLING_LIVE && typeof billingCheckout==='function') return billingCheckout('premium');
+  showSoon('AutoAssist Premium','Plata Premium (99 RON/an, primele 2 luni gratis) se activează în curând. Până atunci poți folosi gratuit toate funcțiile planului de bază.');
+}
+function cumpRaport(){ showSoon('Checklist mecanic cumpărare SH','Checklistul complet pentru cumpărarea unei mașini second-hand se activează în curând.'); }
+
 // ─── NAVIGARE CU HISTORY API ───
 let _navStack = ['dashboard'];
 function _applySection(sec){
+  if(SOON_SECTIONS[sec]) sec='dashboard';
   if(!document.getElementById('sec-'+sec)) sec='dashboard';
   // Salvez pagina curentă (dacă userul e logat, nu pe landing)
   if(sec !== 'landing') localStorage.setItem('aa_last_sec', sec);
@@ -295,10 +347,12 @@ function _applySection(sec){
     selCarId = null;
   }
   renderAll(); 
+  if(sec==='flota' && typeof renderFlota==='function') renderFlota();
   // Nu face scroll la top pentru sectiuni cu iframe (asigurari)
   if(sec !== 'asigurari') window.scrollTo(0,0);
 }
 function goTo(sec){
+  if(SOON_SECTIONS[sec]){ showSoon(SOON_SECTIONS[sec].t, SOON_SECTIONS[sec].d); return; }
   _navStack.push(sec);
   try { history.pushState({sec:sec,idx:_navStack.length-1},'',window.location.pathname+'#'+sec); } catch(e){}
   _applySection(sec);
@@ -484,7 +538,7 @@ async function ocrTalon(input) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzcGNrbmp1cWRqZnh0cXJxaGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MzI5NDcsImV4cCI6MjA1OTEwODk0N30.5YhiDJmZ4SKSCkm9H4d5FdBWZ0fJuWkSBhCL5bVFYxE'
+        'Authorization': await aaAuthHeader()
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
@@ -545,8 +599,12 @@ async function ocrTalon(input) {
 
 function addCar(){
   // Verificare limită gratuit
-  if(!isPremium() && cars.length >= FREE_LIMITS.masini) {
-    showUpgradeModal('masini');
+  if(cars.length >= maxCars()) {
+    const f=window.myFleet;
+    if(!isPremium()) showUpgradeModal('masini');
+    else if(f && f._uid===currentUser.id && f.active && f.role!=='admin') showNotification('🚚','Doar administratorii flotei pot adăuga vehicule.');
+    else if(f && f._uid===currentUser.id && f.active) { showNotification('🚚','Flota ta a atins limita de '+f.max_cars+' vehicule. Poți trece la un pachet mai mare.'); goTo('flota'); }
+    else { showNotification('🚚','Premium include până la '+PREMIUM_MAX_CARS+' mașini. Pentru mai multe, alege un pachet Flotă.'); goTo('flota'); }
     return;
   }
   const plate=document.getElementById('m-pl').value.trim().toUpperCase();
@@ -564,7 +622,8 @@ function addCar(){
     docs:{rca:document.getElementById('m-rc').value,itp:document.getElementById('m-it').value,rov:document.getElementById('m-rv').value,ext:document.getElementById('m-ex').value,trz:document.getElementById('m-tr').value},
     mnt:{oilInt:parseInt(document.getElementById('m-oi').value)||10000,oilLast:parseInt(document.getElementById('m-ol').value)||0},
     added:new Date().toISOString().split('T')[0],
-    fotos: (window._carFotos||[]).filter(Boolean)
+    fotos: (window._carFotos||[]).filter(Boolean),
+    fleet_id: (window.myFleet && window.myFleet._uid===currentUser?.id && window.myFleet.active && window.myFleet.role==='admin') ? window.myFleet.id : null
   });
   save();
   // Salvează și în Supabase
@@ -572,7 +631,7 @@ function addCar(){
     const newCar = cars[cars.length-1];
     supabaseClient.from('cars').upsert([{
       id: newCar.id,
-      user_id: currentUser.id,
+      ...carOwnerFields(newCar),
       plate: newCar.plate,
       brand: newCar.brand,
       model: newCar.model,
@@ -592,10 +651,16 @@ function addCar(){
 }
 async function delCar(id){
   if(!confirm('Ștergi mașina din garaj?'))return;
+  const _del=cars.find(c=>c.id===id);
+  if(_del && _del.fleet_id && !(window.myFleet && window.myFleet.role==='admin')){ showNotification('🚚','Doar administratorii flotei pot șterge vehicule.'); return; }
   cars=cars.filter(c=>c.id!==id);
   save();renderAll();
   if(supabaseClient && currentUser) {
-    try { await supabaseClient.from('cars').delete().eq('id', id).eq('user_id', currentUser.id); } catch(e) {}
+    try {
+      let q = supabaseClient.from('cars').delete().eq('id', id);
+      if(!(_del && _del.fleet_id)) q = q.eq('user_id', currentUser.id); // mașinile de flotă: ștergerea o validează RLS (doar admin)
+      await q;
+    } catch(e) {}
   }
 }
 function save(){const _uid = currentUser?.id || 'local';
@@ -676,7 +741,7 @@ function rGaraj(){
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 8px">${pills}</div>
       <div style="display:flex;gap:7px;margin-bottom:8px">
         <button class="btn btn-green btn-sm" style="flex:1" onclick="goTo('asigurari')">🛡️ RCA</button>
-        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="window.open('https://www.erovinieta.ro','_blank')">🛣️ Rovinietă</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="soonRov()">🛣️ Rovinietă</button>
         <button class="btn btn-ghost btn-sm" style="flex:1" onclick="goTo('itp')">🔬 ITP</button>
       </div>
       <button class="btn btn-primary btn-full btn-sm" onclick="openCar(${c.id})">🚗 Vezi detalii complete</button>
@@ -906,7 +971,7 @@ function actLinkFor(k, car){
   const links = {
     rca:`<button class="btn btn-green btn-sm" onclick="goTo('asigurari')">🛡️ Asigurare RCA</button>`,
     itp:`<button class="btn btn-green btn-sm" onclick="goTo('itp')">🔬 Programează ITP</button>`,
-    rov:`<button class="btn btn-green btn-sm" onclick="window.open('https://www.erovinieta.ro','_blank')">🔄 Reînnoiește Rovinietă</button>`,
+    rov:`<button class="btn btn-green btn-sm" onclick="soonRov()">🔄 Reînnoiește Rovinietă</button>`,
     ext:`<button class="btn btn-green btn-sm" onclick="pieseAlegeMagazinCategorie('accesorii','Extinctor auto','${eb(car.brand)}','${eb(car.model)}')">🧯 Cumpără Extinctor</button>`,
     trz:`<button class="btn btn-green btn-sm" onclick="pieseAlegeMagazinCategorie('accesorii','Trusă medicală auto','${eb(car.brand)}','${eb(car.model)}')">🩺 Cumpără Trusă</button>`
   };
@@ -1035,7 +1100,7 @@ async function verificaViaSupabase(plate) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzcGNrbmp1cWRqZnh0cXJxaGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MzI5NDcsImV4cCI6MjA1OTEwODk0N30.5YhiDJmZ4SKSCkm9H4d5FdBWZ0fJuWkSBhCL5bVFYxE'
+        'Authorization': await aaAuthHeader()
       },
       body: JSON.stringify({
         messages: [{role:'user', content: `Numărul de înmatriculare este ${plate}. Verifică RCA pe aida.ro și rovinietă pe erovinieta.ro și returnează datele în format JSON: {rca:{valid:bool,expira:'YYYY-MM-DD',asigurator:'',zileRamase:N}, rovinieta:{valid:bool,expira:'YYYY-MM-DD',zileRamase:N}, itp:{valid:bool,expira:'YYYY-MM-DD'}, judet:''}. Răspunde DOAR cu JSON-ul, nimic altceva.`}],
@@ -1090,7 +1155,7 @@ function renderVerifResult(plate, data) {
 
   // Rovinieta detalii
   renderVerifCard('rov', data.rovinieta, {
-    actions: `<button class="btn btn-ghost btn-sm" onclick="window.open('https://www.erovinieta.ro','_blank')">🔄 Reînnoire Rovinietă</button>`
+    actions: `<button class="btn btn-ghost btn-sm" onclick="soonRov()">🔄 Reînnoire Rovinietă</button>`
   });
 
   // ITP detalii
@@ -1136,7 +1201,7 @@ function showVerifError(plate) {
       <div style="font-size:13px;color:var(--t2);margin-bottom:16px">Serverul de verificare este temporar indisponibil. Poți verifica manual:</div>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <a href="https://www.aida.info.ro/verificare-rca" target="_blank" class="btn btn-ghost btn-sm">🛡️ Verifică RCA pe AIDA</a>
-        <a href="https://www.erovinieta.ro" target="_blank" class="btn btn-ghost btn-sm">🛣️ Verifică Rovinietă</a>
+        <a href="https://www.erovinieta.ro" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">🛣️ Verifică Rovinietă</a>
         <a href="https://www.drpciv.ro" target="_blank" class="btn btn-ghost btn-sm">🔬 Verifică ITP pe DRPCIV</a>
       </div>
     </div>`;
@@ -1178,15 +1243,37 @@ function renderVerifRecent() {
 // ═══ PREMIUM & LIMITE ═══
 function isPremium() {
   if(!currentUser) return false;
-  const email = currentUser.email || currentUser.user_metadata?.email || '';
+  const email = currentUser.email || '';
+  // Conturi proprii (testare/admin)
   if(email === 'autoassist.romania@gmail.com') return true;
   if(email === 'calin_nicole93@yahoo.com') return true;
   if(email === 'calin_nicolae93@yahoo.com') return true;
   if(email === 'calin.catalin.romania@gmail.com') return true;
-  return currentUser.premium === true || currentUser.user_metadata?.premium === true;
+  // Premium prin flotă activă (administrator sau șofer)
+  if(window.myFleet && window.myFleet._uid === currentUser.id && window.myFleet.active) return true;
+  // Premium real: DOAR app_metadata (scris de server/webhook Stripe; utilizatorul NU îl poate modifica).
+  const am = currentUser.app_metadata || {};
+  if(am.premium !== true) return false;
+  return !am.premium_until || Date.parse(am.premium_until) > Date.now();
 }
 
 const FREE_LIMITS = { agenti_msg:5, vocal_queries:3, masini:1 };
+const PREMIUM_MAX_CARS = 5;
+// Limita de mașini: gratuit 1 · Premium 5 · Flotă = capacitatea pachetului (administrator)
+function maxCars(){
+  if(!isPremium()) return FREE_LIMITS.masini;
+  const email=(currentUser&&currentUser.email)||'';
+  if(['autoassist.romania@gmail.com','calin_nicole93@yahoo.com','calin_nicolae93@yahoo.com','calin.catalin.romania@gmail.com'].indexOf(email)>=0) return 9999;
+  const f=window.myFleet;
+  if(f && f._uid===currentUser.id && f.active) return f.role==='admin' ? f.max_cars : 0; // șoferii nu adaugă vehicule
+  return PREMIUM_MAX_CARS;
+}
+// Câmpurile de proprietate la salvarea în cloud: o mașină de flotă își păstrează proprietarul și flota
+function carOwnerFields(car){
+  const uid=currentUser&&currentUser.id;
+  if(car&&car.fleet_id) return { user_id: car.user_id||uid, fleet_id: car.fleet_id };
+  return { user_id: uid, fleet_id: null };
+}
 
 function getLimitKey(type) {
   const today = new Date().toDateString();
@@ -1202,7 +1289,7 @@ function showUpgradeModal(reason) {
   const msg = {
     agenti_msg:'Ai folosit toate cele 5 mesaje gratuite de azi. Activează Premium!',
     vocal_queries:'Ai folosit cele 3 întrebări vocale gratuite de azi. Activează Premium!',
-    masini:'Planul gratuit permite o singură mașină. Activează Premium!',
+    masini:'Planul gratuit permite o singură mașină. Premium include până la 5 mașini. Ai mai multe? Vezi pachetele Flotă.',
     export_pdf:'Exportul dosarului auto este disponibil doar în Premium.',
     sms:'Alertele SMS sunt disponibile doar în Premium.',
     raport_ai:'Raportul AI de stare mașină este disponibil doar în Premium.',
@@ -1363,7 +1450,7 @@ function saveEditDocs(id) {
   if(supabaseClient && currentUser) {
     supabaseClient.from('cars').upsert({
       id: car.id,
-      user_id: currentUser.id,
+      ...carOwnerFields(car),
       plate: car.plate,
       brand: car.brand,
       model: car.model,
@@ -1562,4 +1649,39 @@ function resetCarFotoPreviews() {
     if(txt) txt.style.display='';
     if(lbl) lbl.style.borderColor='rgba(255,255,255,0.15)';
   });
+}
+
+
+// ═══ FLOTĂ ═══
+const FLEET_TIERS = [
+  {id:'s',  name:'Flotă S',  range:'6–10 vehicule',   price:349,  max:10},
+  {id:'m',  name:'Flotă M',  range:'11–30 vehicule',  price:799,  max:30},
+  {id:'l',  name:'Flotă L',  range:'31–50 vehicule',  price:1299, max:50},
+  {id:'xl', name:'Flotă XL', range:'51–100 vehicule', price:2199, max:100}
+];
+function fleetPickTier(id){
+  document.querySelectorAll('.fleet-tier').forEach(function(el){ el.classList.toggle('sel', el.getAttribute('data-id')===id); });
+  const sel=document.getElementById('fl-tier'); if(sel) sel.value=id;
+  const f=document.getElementById('fl-form'); if(f) f.scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function fleetSubmit(){
+  const g=function(i){ const e=document.getElementById(i); return e?String(e.value||'').trim():''; };
+  const d={tier:g('fl-tier'),name:g('fl-name'),company:g('fl-company'),email:g('fl-email'),phone:g('fl-phone'),vehicles:g('fl-veh'),msg:g('fl-msg'),hp:g('fl-hp'),
+           account:(currentUser&&currentUser.email)||''};
+  if(!d.name||!d.email||!d.phone||!d.vehicles){ showNotification('⚠️','Completează numele, emailul, telefonul și numărul de vehicule.'); return; }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)){ showNotification('⚠️','Email invalid.'); return; }
+  const btn=document.getElementById('fl-btn'); btn.disabled=true; btn.textContent='⏳ Se trimite...';
+  try{
+    const r=await fetch('https://zspcknjuqdjfxtqrqhhm.supabase.co/functions/v1/support-chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':AA_ANON_JWT,'Authorization':'Bearer '+AA_ANON_JWT},
+      body:JSON.stringify({fleetRequest:d})
+    });
+    if(!r.ok) throw new Error('http '+r.status);
+    btn.textContent='✅ Cerere trimisă! Te contactăm în 24h.';
+    showNotification('✅','Cererea pentru flotă a fost trimisă.');
+  }catch(e){
+    btn.disabled=false; btn.textContent='Trimite cererea';
+    showNotification('⚠️','Nu s-a putut trimite. Scrie-ne la autoassist.romania@gmail.com');
+  }
 }

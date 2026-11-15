@@ -8,9 +8,9 @@
 // Nu interceptează request-uri către alte origini (Supabase, API-uri externe) — doar fișierele
 // proprii, same-origin, ca să nu strice autentificarea sau datele live.
 
-const CACHE = 'autoassist-v2';
+const CACHE = 'autoassist-v7';
 const STATIC = [
-  '/app.html',
+  '/',
   '/style.css',
   '/core.js',
   '/rca-itp.js',
@@ -20,6 +20,7 @@ const STATIC = [
   '/mentenanta.js',
   '/piese.js',
   '/ev-vocal-init.js',
+  '/flota.js',
   '/manifest.json',
   '/icon-32.png',
   '/icon-192.png',

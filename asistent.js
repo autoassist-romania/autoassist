@@ -244,7 +244,7 @@ async function sendMsg(){
       incrementUsage('agenti_msg');
       const msgs = document.getElementById('chat-msgs');
       msgs.innerHTML += `<div class="msg user"><div class="mav user">👤</div><div class="mb"><div class="mn" style="text-align:right">Tu</div><div class="mbu">${txt.replace(/</g,'&lt;')}</div></div></div>`;
-      msgs.innerHTML += `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[curAgent]||'🤖'}</div><div class="mb"><div class="mn">${AGENT_NAMES[curAgent]}</div><div class="mbu">Ai atins limita de <strong>5 mesaje gratuite</strong> pe zi. Revin mâine cu răspunsuri proaspete! 😊<br><br>Pentru conversații nelimitate, activează <strong>Premium — 49 RON/an</strong>.</div></div></div>`;
+      msgs.innerHTML += `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[curAgent]||'🤖'}</div><div class="mb"><div class="mn">${AGENT_NAMES[curAgent]}</div><div class="mbu">Ai atins limita de <strong>5 mesaje gratuite</strong> pe zi. Revin mâine cu răspunsuri proaspete! 😊<br><br>Pentru conversații nelimitate, activează <strong>Premium — 99 RON/an</strong>.</div></div></div>`;
       msgs.scrollTop = msgs.scrollHeight;
       inp.value = '';
       inp.disabled = true;
@@ -273,7 +273,7 @@ async function sendMsg(){
   try{
     const res=await fetch('https://zspcknjuqdjfxtqrqhhm.supabase.co/functions/v1/asistent',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzcGNrbmp1cWRqZnh0cXJxaGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MzI5NDcsImV4cCI6MjA1OTEwODk0N30.5YhiDJmZ4SKSCkm9H4d5FdBWZ0fJuWkSBhCL5bVFYxE'},
+      headers:{'Content-Type':'application/json','Authorization':await aaAuthHeader()},
       body:JSON.stringify({
         messages:chatHistory,
         system:buildAgentPrompt(curAgent),
@@ -462,9 +462,9 @@ function showAnuntModal(a) {
   const specs = [
     {icon:'🛣️', label:'Kilometraj', val: a.km ? Number(a.km).toLocaleString()+' km' : null},
     {icon:'⛽', label:'Combustibil', val: a.combustibil||null},
-    {icon:'⚙️', label:'Cutie viteze', val: a.cutie||null},
-    {icon:'🔧', label:'Motor', val: a.motor ? a.motor+'cm³' : null},
-    {icon:'💪', label:'Putere', val: a.putere ? a.putere+' CP' : null},
+    {icon:'⚙️', label:'Cutie viteze', val: a.cutie||a.cutie_viteze||null},
+    {icon:'🔧', label:'Motor', val: (a.motor||a.motor_cm3) ? (a.motor||a.motor_cm3)+' cm³' : null},
+    {icon:'💪', label:'Putere', val: (a.putere||a.putere_cp) ? (a.putere||a.putere_cp)+' CP' : null},
     {icon:'🎨', label:'Culoare', val: a.culoare||a.color||null},
     {icon:'📅', label:'An fabricație', val: a.year||null},
     {icon:'🪑', label:'Nr. locuri', val: a.locuri||null},
@@ -472,8 +472,8 @@ function showAnuntModal(a) {
 
   const dotariList = a.dotari ? a.dotari.split(',').map(d=>d.trim()).filter(Boolean) : [];
   const mapQuery = encodeURIComponent((a.localitate?a.localitate+', ':'')+( a.judet||''));
-  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
-  const mapEmbed = `https://maps.googleapis.com/maps/api/staticmap?center=${mapQuery}&zoom=12&size=400x160&markers=${mapQuery}&key=AIzaSyD-PLACEHOLDER`;
+  const hasLL = a.lat!=null && a.lng!=null;
+  const mapUrl = hasLL ? `https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}` : `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
   const html = `
     <div id="mo-anunt" style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;overflow-y:auto;padding:20px 16px" onclick="if(event.target===this)document.getElementById('mo-anunt').remove()">
@@ -527,7 +527,7 @@ function showAnuntModal(a) {
           </div>`:''}
 
           <!-- LOCATIE -->
-          ${(a.judet||a.localitate)?`
+          ${(a.judet||a.localitate||hasLL)?`
           <div style="margin-bottom:16px">
             <div style="font-size:13px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:8px">📍 LOCAȚIE</div>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--s2);border-radius:10px">
@@ -535,8 +535,9 @@ function showAnuntModal(a) {
                 <div style="font-size:14px;font-weight:700">${a.localitate?a.localitate+', ':''}${a.judet||''}</div>
                 ${a.indicatii?`<div style="font-size:12px;color:var(--t3);margin-top:2px">🗺️ ${a.indicatii}</div>`:''}
               </div>
-              <a href="${mapUrl}" target="_blank" style="background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap">🗺️ Vezi pe hartă</a>
+              <a href="${mapUrl}" target="_blank" rel="noopener" style="background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap">🗺️ Vezi pe hartă</a>
             </div>
+            ${hasLL?`<div id="anunt-map" style="height:200px;border-radius:10px;margin-top:10px;background:var(--s2)"></div><div style="font-size:10px;color:var(--t3);margin-top:4px">Zonă aproximativă — adresa exactă o stabilești cu vânzătorul.</div>`:''}
           </div>`:''}
 
           <!-- CARVERTICAL -->
@@ -563,6 +564,15 @@ function showAnuntModal(a) {
     </div>`;
 
   document.body.insertAdjacentHTML('beforeend', html);
+  if(hasLL && typeof aaLoadLeaflet==='function'){
+    aaLoadLeaflet().then(L=>{
+      const el=document.getElementById('anunt-map'); if(!el) return;
+      const m=L.map(el,{scrollWheelZoom:false}).setView([a.lat,a.lng],14);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(m);
+      L.circle([a.lat,a.lng],{radius:500,color:'#4f7dff',weight:2,fillColor:'#4f7dff',fillOpacity:0.2}).addTo(m);
+      setTimeout(()=>m.invalidateSize(),200);
+    }).catch(()=>{ const el=document.getElementById('anunt-map'); if(el) el.style.display='none'; });
+  }
 }
 
 function anuntThumb(idx) {

@@ -958,7 +958,7 @@ function showStoreChooser(query, produsGasit, magazine, masina) {
     }
     <div style="display:flex;flex-direction:column;gap:8px;margin:12px 0">
       ${magazine.map(m => `
-        <a href="${m.url}" target="_blank" onclick="logPieseClick('${escJs(m.nume)}','${escJs(query)}','${escJs(masina||'')}');document.getElementById('compat-notice')?.remove()" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:#fff;font-weight:700;font-size:13px">
+        <a href="${m.url}" target="_blank" rel="sponsored noopener" onclick="logPieseClick('${escJs(m.nume)}','${escJs(query)}','${escJs(masina||'')}');document.getElementById('compat-notice')?.remove()" style="text-decoration:none;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:#fff;font-weight:700;font-size:13px">
           <span style="font-size:16px">${m.icon}</span>
           <div style="flex:1">
             <div>${m.nume}</div>
@@ -967,6 +967,7 @@ function showStoreChooser(query, produsGasit, magazine, masina) {
         </a>`).join('')}
     </div>
     <div style="font-size:10px;color:#fff;opacity:0.85;line-height:1.5;margin-top:4px">
+      <strong>#publicitate</strong> — linkurile sunt de afiliere: dacă cumperi, AutoAssist poate primi un comision, fără cost suplimentar pentru tine.<br>
       ⚠️ Verifică pe site-ul ales compatibilitatea exactă (VIN/marcă/model) înainte să comanzi.<br>
       Dacă nu găsește piesa automat, selectează manual caracteristicile mașinii și piesa dorită, direct pe site-ul care se deschide.<br>
       Dacă un magazin nu se deschide, ai probabil un blocator de reclame (AdBlock) activ — dezactivează-l pentru acest site.

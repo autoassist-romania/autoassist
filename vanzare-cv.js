@@ -61,7 +61,7 @@ function deschideCVdinNr(){
     : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist';
   window.open(url,'_blank');
 }
-function cumpRaport(){alert('✅ Raport Verificare SH — 10 RON\n\nRedirecționare spre plată securizată...\nRaportul PDF complet este trimis instant pe email!\n\n🔧 AutoAssist — Mecanicul tău din buzunar!');}
+// cumpRaport() este definit în core.js
 
 // ═══ VANZARE ═══
 function vanzFotoPreview(input){
@@ -96,12 +96,13 @@ function loadVanzCars(){
 }
 
 function selectVanzCar(id){
-  selCarId = id;
+  selCarId = id; window._vanzEditId=null; window._vanzLoc=null;
   const c = cars.find(x=>x.id===id);
   if(!c) return;
   loadVanzCars();
   document.getElementById('vanz-step1').style.display='none';
   document.getElementById('vanz-step2').style.display='block';
+  vanzStep2Init();
   vanzPrefillBrandModel(c);
   const info = document.getElementById('vanz-car-info');
   if(info) info.innerHTML = `<div style="font-weight:700">${c.brand} ${c.model} ${c.year}</div><div style="font-size:12px;color:var(--t3)">${c.plate} · ${c.km?c.km.toLocaleString()+' km':''}${c.fuel?' · '+c.fuel:''}</div>`;
@@ -148,13 +149,14 @@ function vanzPrefillBrandModel(c){
 }
 
 function openVanz(id){
-  selCarId=id;
+  selCarId=id; window._vanzEditId=null; window._vanzLoc=null;
   const c=cars.find(x=>x.id===id);
   if(!c)return;
   goTo('vanzare');
   setTimeout(function(){
     document.getElementById('vanz-step1').style.display='none';
     document.getElementById('vanz-step2').style.display='block';
+    vanzStep2Init();
     document.getElementById('vanz-step3').style.display='none';
     loadVanzCars();
     vanzPrefillBrandModel(c);
@@ -162,25 +164,60 @@ function openVanz(id){
 }
 
 function vanzBack(){
+  window._vanzEditId=null;
   document.getElementById('vanz-step1').style.display='block';
   document.getElementById('vanz-step2').style.display='none';
   document.getElementById('vanz-step3').style.display='none';
 }
 
+// Apel AI prin functia Edge "asistent" (cheia Anthropic/Gemini ramane pe server)
+async function vanzAI(prompt, system, maxTokens){
+  const res = await fetch('https://zspcknjuqdjfxtqrqhhm.supabase.co/functions/v1/asistent', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':await aaAuthHeader()},
+    body: JSON.stringify({ messages:[{role:'user',content:prompt}], system: system, max_tokens: maxTokens||600 })
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error);
+  return (data.reply||'').trim();
+}
+
+// Cache + debounce: estimarea nu depinde de pretul scris, deci apelam AI-ul o singura data per masina
+window._vanzEstCache = window._vanzEstCache || {};
+let _vanzEstTimer = null;
 function vanzEstimPret(){
+  clearTimeout(_vanzEstTimer);
+  _vanzEstTimer = setTimeout(_vanzEstimPretRun, 600);
+}
+async function _vanzEstimPretRun(){
   const c=cars.find(x=>x.id===selCarId);
   if(!c||!c.year)return;
-  const age=new Date().getFullYear()-c.year;
+  const hint=document.getElementById('vanz-pret-hint');
+  const cacheKey=[c.brand,c.model,c.year,c.km,c.fuel].join('|');
+  if(window._vanzEstCache[cacheKey]){ if(hint) hint.textContent=window._vanzEstCache[cacheKey]; return; }
+  const age=new Date().getFullYear()-parseInt(c.year);
   const km=c.km||80000;
-  let base=12000;
-  if(age>10)base=4000+Math.random()*2000;
-  else if(age>7)base=6000+Math.random()*3000;
-  else if(age>4)base=9000+Math.random()*4000;
-  else base=13000+Math.random()*8000;
-  if(km>150000)base*=0.75;
-  else if(km>100000)base*=0.85;
+  // Estimare de rezerva, FARA numere aleatoare (deterministica)
+  let base;
+  if(age>10)base=5000; else if(age>7)base=7500; else if(age>4)base=11000; else base=17000;
+  if(km>150000)base*=0.75; else if(km>100000)base*=0.85;
   base=Math.round(base/100)*100;
-  document.getElementById('vanz-pret-hint').textContent=`💡 Estimare AI: ${base.toLocaleString()} - ${(base*1.2).toLocaleString()} EUR pentru acest model`;
+  const fallback=()=>{ if(hint) hint.textContent='💡 Estimare orientativă: '+base.toLocaleString()+' - '+Math.round(base*1.2/100)*100+' EUR (calcul simplu după vârstă și km)'; };
+  if(hint) hint.textContent='⏳ Se estimează prețul de piață...';
+  try{
+    const reply = await vanzAI(
+      'Estimează prețul de piață actual în România (anunțuri second-hand, EUR) pentru: '+(c.brand||'')+' '+(c.model||'')+', an '+c.year+', '+km+' km, combustibil '+(c.fuel||'necunoscut')+'. Răspunde DOAR cu JSON valid de forma {"min":0,"max":0} cu numere întregi în EUR, fără alt text.',
+      'Ești un evaluator auto pentru piața second-hand din România. Răspunzi doar cu JSON valid.',
+      120
+    );
+    const m=reply.match(/\{[\s\S]*?\}/);
+    const j=m?JSON.parse(m[0]):null;
+    if(j && j.min>500 && j.max>=j.min && j.max<500000){
+      const txtAI='💡 Estimare AI: '+Math.round(j.min).toLocaleString()+' - '+Math.round(j.max).toLocaleString()+' EUR (orientativ, verifică și anunțuri similare)';
+      window._vanzEstCache[cacheKey]=txtAI;
+      if(hint) hint.textContent=txtAI;
+    } else fallback();
+  }catch(e){ fallback(); }
 }
 
 async function vanzGenDesc(){
@@ -192,13 +229,7 @@ async function vanzGenDesc(){
   ta.value='✨ Se generează descrierea cu AI...';
   ta.disabled=true;
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:600,
-        messages:[{role:'user',content:`Generează un anunț de vânzare profesional și atractiv în română pentru:
+    const prompt=`Generează un anunț de vânzare profesional și atractiv în română pentru:
 Mașină: ${c.brand||'Auto'} ${c.model||''} ${c.year||''}
 Kilometraj: ${c.km?c.km.toLocaleString()+' km':'necunoscut'}
 Combustibil: ${c.fuel||'Benzină'}
@@ -206,15 +237,177 @@ Dotări: ${dotari||'standard'}
 Preț: ${pret?pret+' EUR':'negociabil'}
 Număr înmatriculare: ${c.plate}
 
-Anunțul să fie de 150-200 cuvinte, să evidențieze punctele forte, să sune natural și să inspire încredere. Nu include date de contact.`}]
-      })
-    });
-    const data=await resp.json();
-    ta.value=data.content?.[0]?.text||'Nu s-a putut genera descrierea. Scrie manual.';
+Anunțul să fie de 150-200 cuvinte, să evidențieze punctele forte, să sune natural și să inspire încredere. Nu include date de contact. Nu inventa dotări sau istoric care nu sunt menționate.`;
+    const txt=await vanzAI(prompt,'Ești un copywriter pentru anunțuri auto din România. Scrii corect gramatical, natural, fără exagerări.',700);
+    if(!txt) throw new Error('empty');
+    ta.value=txt;
   }catch(e){
     ta.value=`${c.brand||'Autoturism'} ${c.model||''} ${c.year||''} spre vânzare, ${c.km?c.km.toLocaleString()+' km':''}, stare foarte bună. ${dotari?'Dotări: '+dotari+'.':''} Preț ${pret?pret+' EUR':'negociabil'}. Serios, fără vicii ascunse.`;
   }
   ta.disabled=false;
+}
+
+// ═══ PACHETE ANUNȚ: Start / Plus / Pro ═══
+const VANZ_PACHETE = {
+  start:{nume:'Start', pret:25, premium:15, desc:'Anunț activ 30 de zile'},
+  plus:{nume:'Plus', pret:39, premium:25, desc:'30 de zile + reactualizare automată la 3 zile (urcă în listă)'},
+  pro:{nume:'Pro', pret:59, premium:39, desc:'⭐ Promovat: badge + loc fix în capul listei + reactualizare zilnică'}
+};
+let _vanzPachet = 'start';
+function vanzEstePrem(){ return (typeof isPremium==='function') && isPremium(); }
+function vanzPretPachet(k){
+  const p = VANZ_PACHETE[k]||VANZ_PACHETE.start;
+  return vanzEstePrem() ? p.premium : p.pret;
+}
+function vanzPachetCards(sel, fn, gratisStart){
+  const prem = vanzEstePrem();
+  return Object.keys(VANZ_PACHETE).map(k=>{
+    const p=VANZ_PACHETE[k], on=sel===k;
+    const gratis = gratisStart && prem && k==='start';
+    return `<div onclick="${fn}('${k}')" style="cursor:pointer;border:2px solid ${on?'var(--gold)':'rgba(255,255,255,0.1)'};background:${on?'rgba(255,200,60,0.08)':'rgba(255,255,255,0.03)'};border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div><div style="font-size:14px;font-weight:800">${k==='pro'?'⭐ ':''}${p.nume}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${p.desc}</div></div>
+      <div style="text-align:right;white-space:nowrap"><div style="font-size:16px;font-weight:800;color:var(--gold)">${prem?p.premium:p.pret} RON</div>
+      ${gratis?'<div style="font-size:10px;color:var(--green);font-weight:700">primul din an GRATUIT</div>':(!prem?`<div style="font-size:10px;color:var(--t3)">Premium: ${p.premium} RON</div>`:'')}</div>
+    </div>`;
+  }).join('');
+}
+function vanzSetPachet(k){ if(VANZ_PACHETE[k]){ _vanzPachet=k; vanzRenderPachete(); } }
+function vanzRenderPachete(){
+  const el=document.getElementById('vanz-tarif-block'); if(!el) return;
+  el.style.cssText='border-radius:12px;padding:0;margin-top:8px';
+  const btn=document.getElementById('vanz-publica-btn');
+  if(window._vanzEditId){
+    const pk=window._vanzEditPachet||'start';
+    el.innerHTML=`<div style="font-size:12px;color:var(--t2);padding:12px;background:rgba(79,125,255,0.08);border:1px solid rgba(79,125,255,0.2);border-radius:12px">✏️ Modifici un anunț existent — pachetul rămâne <strong>${(VANZ_PACHETE[pk]||VANZ_PACHETE.start).nume}</strong>, iar modificările nu costă nimic.</div>`;
+    if(btn) btn.textContent='💾 Salvează modificările';
+    return;
+  }
+  if(btn) btn.textContent='🚀 Publică Anunțul Acum';
+  el.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:8px">📦 Alege pachetul anunțului</div>` + vanzPachetCards(_vanzPachet,'vanzSetPachet',true);
+}
+
+// ═══ HARTĂ LOCAȚIE (Leaflet + OpenStreetMap, fără cheie API) ═══
+function aaLoadLeaflet(){
+  if(window.L && window.L.map) return Promise.resolve(window.L);
+  if(window._aaLeafletP) return window._aaLeafletP;
+  window._aaLeafletP = new Promise((res,rej)=>{
+    const css=document.createElement('link'); css.rel='stylesheet'; css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    css.integrity='sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY='; css.crossOrigin=''; document.head.appendChild(css);
+    const sc=document.createElement('script'); sc.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    sc.integrity='sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='; sc.crossOrigin='';
+    sc.onload=()=>res(window.L); sc.onerror=()=>{ window._aaLeafletP=null; rej(new Error('leaflet')); };
+    document.head.appendChild(sc);
+  });
+  return window._aaLeafletP;
+}
+async function vanzGeocode(q){
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ro&q='+encodeURIComponent(q));
+    const j=await r.json();
+    return j&&j[0] ? {lat:parseFloat(j[0].lat), lng:parseFloat(j[0].lon)} : null;
+  }catch(e){ return null; }
+}
+let _vanzMap=null, _vanzMarker=null;
+function vanzPunePin(lat,lng,zoom){
+  window._vanzLoc={lat,lng};
+  if(!_vanzMap||!window.L) return;
+  if(!_vanzMarker){
+    _vanzMarker=L.marker([lat,lng],{draggable:true}).addTo(_vanzMap);
+    _vanzMarker.on('dragend',()=>{ const p=_vanzMarker.getLatLng(); window._vanzLoc={lat:p.lat,lng:p.lng}; });
+  } else _vanzMarker.setLatLng([lat,lng]);
+  if(zoom) _vanzMap.setView([lat,lng],zoom);
+}
+async function vanzInitMap(){
+  const el=document.getElementById('vanz-map'); if(!el) return;
+  try{
+    const L=await aaLoadLeaflet();
+    if(_vanzMap){ _vanzMap.remove(); _vanzMap=null; _vanzMarker=null; }
+    const loc=window._vanzLoc;
+    _vanzMap=L.map(el).setView(loc?[loc.lat,loc.lng]:[45.9432,24.9668], loc?14:6);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(_vanzMap);
+    _vanzMap.on('click',e=>vanzPunePin(e.latlng.lat,e.latlng.lng));
+    if(loc) vanzPunePin(loc.lat,loc.lng);
+    setTimeout(()=>_vanzMap&&_vanzMap.invalidateSize(),200);
+  }catch(e){
+    el.innerHTML='<div style="padding:16px;font-size:12px;color:var(--t3)">Harta nu s-a putut încărca. Completează județul și localitatea — anunțul se publică și fără hartă.</div>';
+  }
+}
+async function vanzGeocodeLoc(){
+  const loc=(document.getElementById('vanz-localitate')?.value||'').trim();
+  const j=document.getElementById('vanz-judet')?.value||'';
+  if(!loc) return;
+  const g=await vanzGeocode(`${loc}, ${j?j+', ':''}România`);
+  if(g) vanzPunePin(g.lat,g.lng,14);
+}
+async function vanzUpdateLocalitati(){
+  const j=document.getElementById('vanz-judet')?.value||'';
+  if(!j||!_vanzMap) return;
+  const g=await vanzGeocode(`județul ${j}, România`);
+  if(g && !window._vanzLoc) _vanzMap.setView([g.lat,g.lng],9);
+}
+function vanzStep2Init(){ vanzRenderPachete(); vanzInitMap(); }
+
+// ═══ MODIFICĂ ANUNȚ ═══
+function vanzEditeaza(id){
+  const a=(window._vanzLista||[]).find(x=>String(x.id)===String(id)); if(!a) return;
+  const c=cars.find(x=>x.plate===a.plate) || cars.find(x=>x.id===selCarId) || cars[0];
+  if(c) selCarId=c.id;
+  window._vanzEditId=a.id; window._vanzEditPachet=a.pachet||'start';
+  document.getElementById('vanz-step1').style.display='none';
+  document.getElementById('vanz-step3').style.display='none';
+  document.getElementById('vanz-step2').style.display='block';
+  const setv=(i,v)=>{const e=document.getElementById(i); if(e) e.value=(v==null?'':v);};
+  if(c){ vanzPrefillBrandModel(c); const info=document.getElementById('vanz-car-info'); if(info) info.innerHTML=`<div style="font-weight:700">${a.brand||''} ${a.model||''} ${a.year||''}</div><div style="font-size:12px;color:var(--t3)">${a.plate||''}</div>`; }
+  setv('vanz-brand',a.brand); setv('vanz-model',a.model); setv('vanz-an',a.year); setv('vanz-km',a.km);
+  setv('vanz-culoare',a.culoare); setv('vanz-combustibil',a.combustibil); setv('vanz-cutie',a.cutie_viteze); setv('vanz-caroserie',a.caroserie);
+  setv('vanz-motor',a.motor_cm3); setv('vanz-putere',a.putere_cp); setv('vanz-locuri',a.locuri); setv('vanz-vin',a.vin);
+  setv('vanz-pret',a.pret); setv('vanz-desc',a.descriere); setv('vanz-tel',a.tel); setv('vanz-judet',a.judet);
+  setv('vanz-localitate',a.localitate); setv('vanz-indicatii',a.indicatii);
+  const dot=String(a.dotari||'').split(',').map(x=>x.trim());
+  document.querySelectorAll('#vanz-dotari input').forEach(i=>{ i.checked=dot.includes(i.value); });
+  const foto=a.foto||(a.fotos&&a.fotos[0])||null;
+  window._vanzFotoData=foto;
+  const img=document.getElementById('vanz-foto-img'), pv=document.getElementById('vanz-foto-preview');
+  if(img&&foto) img.src=foto; if(pv) pv.style.display=foto?'block':'none';
+  window._vanzLoc=(a.lat&&a.lng)?{lat:a.lat,lng:a.lng}:null;
+  vanzStep2Init();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══ REÎNNOIRE (fereastră) ═══
+let _renewId=null, _renewPk='start';
+function vanzReinnoieste(id){
+  const a=(window._vanzLista||[]).find(x=>String(x.id)===String(id));
+  _renewId=id; _renewPk=(a&&a.pachet)||'start';
+  vanzRenewRender(a);
+}
+function vanzRenewPick(k){ _renewPk=k; vanzRenewRender((window._vanzLista||[]).find(x=>String(x.id)===String(_renewId))); }
+function vanzRenewRender(a){
+  document.getElementById('mo-renew')?.remove();
+  const titlu=a?`${a.brand||''} ${a.model||''} ${a.year||''}`:'anunțul tău';
+  document.body.insertAdjacentHTML('beforeend',`
+  <div id="mo-renew" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)vanzRenewClose()">
+    <div style="background:var(--s1);border:1px solid var(--b2);border-radius:18px;max-width:440px;width:100%;padding:20px;max-height:92vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:17px;font-weight:800">🔄 Reînnoiește anunțul</div>
+        <button onclick="vanzRenewClose()" style="background:none;border:none;color:var(--t3);font-size:22px;cursor:pointer">×</button>
+      </div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:14px">${titlu} — alege pachetul pentru încă 30 de zile.</div>
+      ${vanzPachetCards(_renewPk,'vanzRenewPick',false)}
+      <button class="btn btn-primary btn-full" onclick="vanzRenewGo()" style="margin-top:6px;padding:13px;font-size:14px">💳 Plătește ${vanzPretPachet(_renewPk)} RON și reactivează</button>
+      <button class="btn btn-ghost btn-full" onclick="vanzRenewClose()" style="margin-top:8px">Renunț</button>
+    </div>
+  </div>`);
+}
+function vanzRenewClose(){ document.getElementById('mo-renew')?.remove(); }
+async function vanzRenewGo(){
+  const id=_renewId, pachet=_renewPk;
+  if(!(supabaseClient && currentUser)) return;
+  const {error} = await supabaseClient.from('listings').update({status:'in_asteptare', pachet}).eq('id',id).eq('user_id',currentUser.id);
+  if(error){ showNotification('⚠️ Eroare', 'Nu am putut reînnoi anunțul: '+error.message); return; }
+  vanzRenewClose();
+  await vanzLoadLista();
+  vanzPlateste(id);
 }
 
 async function vanzPublica(){
@@ -245,42 +438,89 @@ async function vanzPublica(){
   const locuri = document.getElementById('vanz-locuri')?.value ? Number(document.getElementById('vanz-locuri').value) : null;
   const vin = document.getElementById('vanz-vin')?.value || null;
   const fotos = window._vanzFotoData ? [window._vanzFotoData] : null;
+  const localitate = (document.getElementById('vanz-localitate')?.value||'').trim() || null;
+  const indicatii = (document.getElementById('vanz-indicatii')?.value||'').trim() || null;
+  if(!window._vanzLoc && (localitate||judet)){
+    const g = await vanzGeocode(`${localitate?localitate+', ':''}${judet}, România`);
+    if(g) window._vanzLoc = g;
+  }
+  // coordonate rotunjite (~100 m): se afișează doar o zonă aproximativă, nu adresa exactă
+  const lat = window._vanzLoc ? Math.round(window._vanzLoc.lat*1000)/1000 : null;
+  const lng = window._vanzLoc ? Math.round(window._vanzLoc.lng*1000)/1000 : null;
 
   const anunt={
     user_id: currentUser?.id || 'anonim',
     plate:c.plate, brand, model, year:an, km,
-    pret: Number(pret), descriere:desc, tel, judet, dotari,
+    pret: Number(pret), descriere:desc, tel, judet, localitate, indicatii, lat, lng, dotari,
     culoare, combustibil, cutie_viteze, caroserie, motor_cm3, putere_cp, locuri, vin,
     data:new Date().toLocaleDateString('ro-RO'),
     status:'activ',
+    pachet:_vanzPachet,
     foto:window._vanzFotoData||null,
     fotos,
     created_at: new Date().toISOString()
   };
 
-  // Salveaza in Supabase
+  // Modificare anunț existent: se actualizează, fără plată nouă și fără a atinge pachetul/starea
+  if(window._vanzEditId){
+    const upd={...anunt}; ['user_id','status','pachet','created_at','data'].forEach(k=>delete upd[k]);
+    let err=null;
+    if(supabaseClient && currentUser){
+      const r=await supabaseClient.from('listings').update(upd).eq('id',window._vanzEditId).eq('user_id',currentUser.id);
+      err=r.error;
+    }
+    if(err){ showNotification('⚠️ Eroare','Nu am putut salva modificările: '+err.message); return; }
+    window._vanzEditId=null;
+    document.getElementById('vanz-step2').style.display='none';
+    document.getElementById('vanz-step3').style.display='block';
+    document.getElementById('vanz-confirm-info').innerHTML=`<strong>${titlu}</strong><br><span style="color:var(--green)">✅ Modificările au fost salvate</span>`;
+    document.getElementById('vanz-links').innerHTML=`<button class="btn btn-primary btn-sm btn-full" onclick="vanzBack();vanzLoadLista()">📋 Înapoi la anunțurile mele</button>`;
+    vanzLoadLista();
+    return;
+  }
+  // Salveaza in Supabase (serverul decide: gratuit pentru Premium / in_asteptare pana la plata)
+  let saved = null;
   if(supabaseClient && currentUser){
     try {
-      const {data, error} = await supabaseClient.from('listings').insert([anunt]);
+      const {data, error} = await supabaseClient.from('listings').insert([anunt]).select().single();
       if(error) {
         console.error('Supabase listings error:', error);
         showNotification('⚠️ Avertisment', 'Anunțul a fost salvat local dar nu în cloud: ' + error.message);
-      }
+      } else { saved = data; }
     } catch(e){ console.error('Supabase save error:', e); }
   } else if(!currentUser) {
     showNotification('⚠️ Neautentificat', 'Anunțul e salvat local. Loghează-te pentru a-l publica în cloud.');
   }
   // Salveaza si local ca backup
   const anunturi=JSON.parse(localStorage.getItem('vanz_anunturi')||'[]');
-  anunturi.push({...anunt, id:Date.now()});
+  anunturi.push({...anunt, id: saved ? saved.id : Date.now(), status: saved ? saved.status : anunt.status});
   localStorage.setItem('vanz_anunturi',JSON.stringify(anunturi));
 
   document.getElementById('vanz-step2').style.display='none';
   document.getElementById('vanz-step3').style.display='block';
+
+  // Anunț care cere plată: se publică automat după confirmarea plății
+  if(saved && saved.status==='in_asteptare'){
+    const prem = (typeof isPremium==='function') && isPremium();
+    document.getElementById('vanz-confirm-info').innerHTML=`
+      <strong>${titlu}</strong><br>
+      📍 ${judet} · 📞 ${tel}<br>
+      <span style="color:var(--gold)">Salvat — se publică după plată</span>`;
+    document.getElementById('vanz-links').innerHTML=`
+      <div style="background:linear-gradient(135deg,rgba(255,200,60,0.12),rgba(255,200,60,0.04));border:1px solid rgba(255,200,60,0.35);border-radius:14px;padding:18px">
+        <div style="font-size:15px;font-weight:800;color:var(--gold);margin-bottom:6px">💳 Ultimul pas: plata anunțului</div>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:12px">Pachet <strong>${(VANZ_PACHETE[saved.pachet]||VANZ_PACHETE.start).nume}</strong>${saved.pachet==='start'&&prem?' — ai folosit anunțul gratuit din acest an':''}.
+          Anunțul tău devine vizibil imediat după plată și rămâne activ 30 de zile.</div>
+        <button class="btn btn-primary btn-sm btn-full" onclick="vanzPlateste('${saved.id}')">💳 Plătește ${vanzPretPachet(saved.pachet)} RON și publică</button>
+      </div>`;
+    vanzLoadLista();
+    loadDashVanzari();
+    return;
+  }
   document.getElementById('vanz-confirm-info').innerHTML=`
     <strong>${titlu}</strong><br>
     📍 ${judet} · 📞 ${tel}<br>
-    <span style="color:var(--gold)">Promovare activă 7 zile</span>`;
+    <span style="color:var(--gold)">${saved && saved.pay_kind==='gratis_premium' ? 'Anunț gratuit — beneficiu Premium (30 de zile)' : 'Anunț activ'}</span>`;
 
   // Badge documente verificate
   const hasRCA = c.docs?.rca && new Date(c.docs.rca) > new Date();
@@ -359,6 +599,7 @@ async function vanzLoadLista(){
     anunturi=JSON.parse(localStorage.getItem('vanz_anunturi')||'[]');
   }
 
+  window._vanzLista=anunturi;
   if(statActiv)statActiv.textContent=anunturi.filter(a=>a.status==='activ').length;
   if(statTotal)statTotal.textContent=anunturi.length;
 
@@ -367,15 +608,31 @@ async function vanzLoadLista(){
     <div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px">
         <div style="font-size:13px;font-weight:700">${a.brand||''} ${a.model||''} ${a.year||''}</div>
-        <span style="background:rgba(0,232,154,0.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">ACTIV</span>
+        ${a.status==='in_asteptare'
+          ? '<span style="background:rgba(255,200,60,0.15);color:var(--gold);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">ÎN AȘTEPTARE PLATĂ</span>'
+          : a.status==='expirat'
+          ? '<span style="background:rgba(255,59,59,0.12);color:#ff3b3b;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">EXPIRAT</span>'
+          : `<span style="background:rgba(0,232,154,0.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">${a.promo_active?'⭐ PROMOVAT':'ACTIV'}</span>`}
       </div>
       <div style="font-size:12px;color:var(--t2)">${a.plate||''} · ${a.km?Number(a.km).toLocaleString()+' km':''}</div>
       <div style="font-size:13px;font-weight:800;color:var(--gold);margin-top:4px">${a.pret} EUR</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:2px">📍 ${a.judet||'România'} · ${a.data||''}</div>
-      <div style="display:flex;gap:6px;margin-top:8px">
-        <button onclick="vanzSterge('${a.id}')" style="flex:1;font-size:11px;font-weight:700;padding:5px;background:rgba(255,59,59,0.1);color:#ff3b3b;border:none;border-radius:6px;cursor:pointer">🗑️ Șterge</button>
+      <div style="font-size:11px;color:var(--t3);margin-top:2px">📍 ${a.judet||'România'} · ${a.data||''}${a.status==='activ'&&a.expires_at?` · expiră ${new Date(a.expires_at).toLocaleDateString('ro-RO')}`:''}${a.status==='activ'&&(a.pachet==='plus'||a.pachet==='pro')?` · 🔄 reactualizat de ${a.bump_count||0}×`:''}</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${a.status==='expirat' ? `<button onclick="vanzReinnoieste('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(0,232,154,0.15);color:var(--green);border:none;border-radius:8px;cursor:pointer">🔄 Reînnoiește anunțul</button>` : ''}
+        ${a.status==='in_asteptare' ? `<button onclick="vanzPlateste('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(255,200,60,0.15);color:var(--gold);border:none;border-radius:8px;cursor:pointer">💳 Plătește și publică</button>` : ''}
+        <button onclick="showAnuntModal((window._vanzLista||[]).find(x=>String(x.id)==='${a.id}'))" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(255,255,255,0.06);color:var(--t2);border:none;border-radius:6px;cursor:pointer">👁️ Vezi</button>
+        <button onclick="vanzEditeaza('${a.id}')" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(79,125,255,0.12);color:var(--accent);border:none;border-radius:6px;cursor:pointer">✏️ Modifică</button>
+        <button onclick="vanzSterge('${a.id}')" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(255,59,59,0.1);color:#ff3b3b;border:none;border-radius:6px;cursor:pointer">🗑️ Șterge</button>
       </div>
     </div>`).join('');
+}
+
+function vanzPlateste(id){
+  if(typeof BILLING_LIVE!=='undefined' && !BILLING_LIVE){
+    if(typeof showSoon==='function') showSoon('Plata anunțului','Plata online se activează în curând. Anunțul tău e salvat și se publică imediat după plată.');
+    return;
+  }
+  if(typeof billingListingCheckout==='function') billingListingCheckout(id);
 }
 
 async function vanzSterge(id){
@@ -494,7 +751,7 @@ async function piataLoad(reset){
       else if(sort==='pret_desc') query = query.order('pret', { ascending: false });
       else if(sort==='km_asc') query = query.order('km', { ascending: true });
       else if(sort==='an_desc') query = query.order('year', { ascending: false });
-      else query = query.order('created_at', { ascending: false });
+      else query = query.order('promo_active', { ascending: false }).order('bumped_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false });
 
       query = query.range(_piataOffset, _piataOffset + PIATA_PAGE_SIZE - 1);
 
@@ -533,6 +790,7 @@ async function piataLoad(reset){
     return `<div onclick="showAnuntModal(window._piataRezultate[${idx}])" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
       <div style="height:130px;background:linear-gradient(135deg,rgba(79,125,255,0.12),rgba(200,150,12,0.08));display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid rgba(255,255,255,0.06);overflow:hidden">
         ${(a.fotos&&a.fotos[0])||a.foto?`<img src="${(a.fotos&&a.fotos[0])||a.foto}" style="width:100%;height:100%;object-fit:cover">`:`<div style="font-size:56px">${emoji}</div>`}
+        ${a.promo_active?`<div style="position:absolute;top:8px;right:8px;background:linear-gradient(135deg,#f5c542,#e0a100);color:#1a1200;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px">⭐ PROMOVAT</div>`:''}
         ${esteAlMeu?`<div style="position:absolute;top:8px;left:8px;background:rgba(79,125,255,0.9);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px">AL MEU</div>`:''}
         <div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.65);color:var(--gold);font-size:14px;font-weight:800;padding:3px 10px;border-radius:8px">${a.pret} EUR</div>
       </div>

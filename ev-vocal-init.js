@@ -227,7 +227,7 @@ async function askVoice(question) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzcGNrbmp1cWRqZnh0cXJxaGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MzI5NDcsImV4cCI6MjA1OTEwODk0N30.5YhiDJmZ4SKSCkm9H4d5FdBWZ0fJuWkSBhCL5bVFYxE'
+          'Authorization': await aaAuthHeader()
         },
         body: JSON.stringify({ question, systemPrompt, messages: voiceHistory, system: systemPrompt })
       });
@@ -315,7 +315,7 @@ async function initAuth() {
     if(!document.querySelector('.sec.active')) {
       if(currentUser) {
         const saved = localStorage.getItem('aa_last_sec');
-        const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];
+        const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];
         _applySection((saved && validSections.includes(saved)) ? saved : 'dashboard');
       } else {
         _applySection('landing');
@@ -366,7 +366,7 @@ async function initAuth() {
           updateUserUI(data.session.user);
           await loadUserData(data.session.user.id);
           setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-          _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];return(s&&v.includes(s))?s:'dashboard';})());
+          _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
           dismissOverlay();
           return;
         }
@@ -397,7 +397,7 @@ async function initAuth() {
       await loadUserData(session.user.id);
       if(typeof vanzRenderTarif==='function') setTimeout(vanzRenderTarif, 300);
       setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-      _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];return(s&&v.includes(s))?s:'dashboard';})());
+      _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
       dismissOverlay();
       return;
     }
@@ -410,7 +410,7 @@ async function initAuth() {
     updateUserUI(session.user);
     await loadUserData(session.user.id);
     setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-    _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];return(s&&v.includes(s))?s:'dashboard';})());
+    _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
   } else {
     _applySection('landing');
   }
@@ -443,7 +443,7 @@ async function initAuth() {
       await loadAgentHistory(curAgent);
       if(typeof showDevBar==='function')showDevBar();
       const saved = localStorage.getItem('aa_last_sec');
-      const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','piese'];
+      const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];
       _applySection((saved && validSections.includes(saved)) ? saved : 'dashboard');
     } else {
       currentUser = null;
@@ -515,7 +515,12 @@ async function loadUserData(userId) {
   }
   if(!supabaseClient) return;
   try {
-    const { data, error } = await supabaseClient.from('cars').select('*').eq('user_id', userId);
+    // Flota mea (dacă există) — leagă automat invitațiile după email și activează Premium prin flotă
+    if(typeof loadMyFleet === 'function') await loadMyFleet(userId);
+    const fleetId = (window.myFleet && window.myFleet._uid === userId) ? window.myFleet.id : null;
+    let carsQ = supabaseClient.from('cars').select('*');
+    carsQ = fleetId ? carsQ.or('user_id.eq.' + userId + ',fleet_id.eq.' + fleetId) : carsQ.eq('user_id', userId);
+    const { data, error } = await carsQ;
     if(error) { console.log('Supabase load error:', error); return; }
     if(data && data.length > 0) {
       // Merge Supabase + localStorage (păstrăm mașinile locale care nu sunt în Supabase)
@@ -526,7 +531,9 @@ async function loadUserData(userId) {
       });
       // Adaug mașinile locale care nu sunt în Supabase (salvate recent)
       const supabaseIds = new Set(supabaseCars.map(c=>String(c.id)));
-      const onlyLocal = localCars.filter(l=>!supabaseIds.has(String(l.id)));
+      const onlyLocal = localCars.filter(l=>!supabaseIds.has(String(l.id)) && !l.fleet_id); // mașinile de flotă șterse de alt admin nu mai „reînvie"
+      // dacă ai ieșit din flotă / flota a fost ștearsă, nu păstrez local mașinile care nu mai sunt vizibile
+
       cars = [...supabaseCars, ...onlyLocal];
       // Sincronizez mașinile locale în Supabase
       for(const lc of onlyLocal) {
@@ -570,7 +577,7 @@ async function saveCarToCloud(car) {
   try {
     const carData = {
       id: car.id,
-      user_id: currentUser.id,
+      ...carOwnerFields(car),
       plate: car.plate,
       brand: car.brand,
       model: car.model,
@@ -679,6 +686,10 @@ async function signupEmail() {
   }
   if(pass.length < 6){
     if(err){ err.style.display='block'; err.textContent='Parola trebuie să aibă cel puțin 6 caractere!'; }
+    return;
+  }
+  if(!document.getElementById('signup-terms')?.checked){
+    if(err){ err.style.display='block'; err.textContent='Bifează acceptul Termenilor și al Politicii de confidențialitate.'; }
     return;
   }
   const btn = document.querySelector('#mo-signup .btn-primary');

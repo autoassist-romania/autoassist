@@ -38,7 +38,6 @@ function processDoc(type, input) {
 }
 
 async function extractDocData(type, imageDataUrl) {
-  const apiKey = localStorage.getItem('autoassist-api-key');
   const base64 = imageDataUrl.split(',')[1];
   const mimeType = imageDataUrl.split(';')[0].split(':')[1];
 
@@ -48,18 +47,17 @@ async function extractDocData(type, imageDataUrl) {
     talon: 'Extrage din această imagine de talon/certificat de înmatriculare românesc: { "nr": "", "vin": "", "marca": "", "model": "", "an": "", "cmc": "", "kw": "", "combustibil": "", "culoare": "" }. Răspunde DOAR cu JSON valid.',
   };
 
-  if(!apiKey || !prompts[type]) {
-    showNotification('💡 Completare manuală', 'Introdu datele manual sau adaugă Claude API Key în Setări pentru extragere automată.');
-    return;
-  }
+  if(!prompts[type]) return;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    // Prin functia Edge (cheia ramane pe server) — merge pentru orice utilizator, nu doar cu cheie personala
+    const res = await fetch('https://zspcknjuqdjfxtqrqhhm.supabase.co/functions/v1/asistent', {
       method: 'POST',
-      headers: { 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+      headers: { 'Content-Type':'application/json', 'Authorization':await aaAuthHeader() },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 500,
+        max_tokens: 600,
+        system: 'Ești un sistem OCR pentru documente românești. Returnezi DOAR JSON valid, fără explicații.',
         messages: [{
           role: 'user',
           content: [
@@ -70,13 +68,14 @@ async function extractDocData(type, imageDataUrl) {
       })
     });
     const data = await res.json();
-    if(data.content?.[0]?.text) {
-      const json = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
-      fillDocFields(type, json);
-      showNotification('✅ Date extrase!', 'Verifică și corectează dacă e necesar.');
-    }
+    let reply = data.reply || '';
+    if(!reply && Array.isArray(data.content)) reply = data.content.map(b=>b.type==='text'?b.text:'').join('');
+    const jm = reply.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
+    if(!jm) throw new Error('no json');
+    fillDocFields(type, JSON.parse(jm[0]));
+    showNotification('✅ Date extrase!', 'Verifică și corectează dacă e necesar.');
   } catch(e) {
-    showNotification('💡 Completare manuală', 'Introdu datele manual în câmpurile de mai jos.');
+    showNotification('💡 Completare manuală', 'Nu am putut citi documentul. Introdu datele manual în câmpurile de mai jos.');
   }
 }
 
@@ -612,7 +611,7 @@ Fii specific, practic și în română.`;
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzcGNrbmp1cWRqZnh0cXJxaGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MzI5NDcsImV4cCI6MjA1OTEwODk0N30.5YhiDJmZ4SKSCkm9H4d5FdBWZ0fJuWkSBhCL5bVFYxE'
+        'Authorization': await aaAuthHeader()
       },
       body: JSON.stringify({
         messages: [{role:'user', content: prompt}],

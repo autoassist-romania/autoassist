@@ -166,7 +166,7 @@ function savePlateApiKey(){
 function checkITPPremium(){
   var lock=document.getElementById('itp-premium-lock');
   if(!lock) return;
-  var isPremium = (typeof currentUser !== 'undefined' && currentUser && currentUser.premium) || false;
+  var isPremium = (typeof window.isPremium === 'function' && window.isPremium()) || false;
   lock.style.display = isPremium ? 'none' : 'flex';
 }
 function itpGeoLoc(){

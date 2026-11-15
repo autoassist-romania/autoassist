@@ -1513,7 +1513,7 @@ async function _anvSaveToSupabase(car) {
     return;
   }
   try {
-    await supabaseClient.from('cars').update({ anvData: car.anvData }).eq('id', car.id).eq('user_id', uid);
+    { let _q = supabaseClient.from('cars').update({ anvData: car.anvData }).eq('id', car.id); if(!car.fleet_id) _q = _q.eq('user_id', uid); await _q; }
     localStorage.setItem('autoassist-cars-' + uid, JSON.stringify(cars));
   } catch(e) { console.log('anvSave error:', e); }
 }

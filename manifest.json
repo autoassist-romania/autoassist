@@ -27,24 +27,12 @@
       "purpose": "any"
     }
   ],
-  "categories": ["automotive", "utilities", "productivity"],
+  "categories": [
+    "automotive",
+    "utilities",
+    "productivity"
+  ],
   "lang": "ro",
   "dir": "ltr",
-  "shortcuts": [
-    {
-      "name": "Garajul meu",
-      "url": "/?section=garaj",
-      "description": "Accesează garajul tău auto"
-    },
-    {
-      "name": "Asigurări RCA",
-      "url": "/?section=asigurari",
-      "description": "Compară oferte RCA"
-    },
-    {
-      "name": "Asistență rutieră",
-      "url": "/?section=asistenta",
-      "description": "Solicită asistență urgentă"
-    }
-  ]
+  "id": "/"
 }
