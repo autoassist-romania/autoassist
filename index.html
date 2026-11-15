@@ -1650,7 +1650,7 @@
     </div>
 
     <div class="card">
-      <div class="ch"><span class="ct">🔔 Notificări & Alerte</span><button class="btn btn-green btn-sm" onclick="requestNotifPermission()">Activează notificările</button></div>
+      <div class="ch"><span class="ct">🔔 Notificări & Alerte</span><button class="btn btn-green btn-sm" id="push-toggle-btn" onclick="aaPushEnable()">Activează notificările</button></div>
       <div id="notif-status" style="margin-bottom:12px;font-size:12px;color:var(--t2)"></div>
       <div style="display:flex;flex-direction:column;gap:13px">
         <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">RCA — alertă 30 zile</div><div style="font-size:11px;color:var(--t3)">Email + push notification</div></div><input type="checkbox" checked style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)"></div>
@@ -2864,5 +2864,6 @@ if (document.readyState === 'loading') {
 
 <script src="support-chat.js" defer></script>
 <script src="flota.js" defer></script>
+<script src="push.js" defer></script>
 </body>
 </html>

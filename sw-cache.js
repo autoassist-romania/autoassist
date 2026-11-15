@@ -8,7 +8,7 @@
 // Nu interceptează request-uri către alte origini (Supabase, API-uri externe) — doar fișierele
 // proprii, same-origin, ca să nu strice autentificarea sau datele live.
 
-const CACHE = 'autoassist-v9';
+const CACHE = 'autoassist-v10';
 const STATIC = [
   '/',
   '/style.css',
@@ -21,6 +21,7 @@ const STATIC = [
   '/piese.js',
   '/ev-vocal-init.js',
   '/flota.js',
+  '/push.js',
   '/manifest.json',
   '/icon-32.png',
   '/icon-192.png',
@@ -56,5 +57,35 @@ self.addEventListener('fetch', e => {
         return res;
       })
       .catch(() => caches.match(e.request))
+  );
+});
+
+
+// ── Notificări push (alerte de expirare documente) ──
+// Payload JSON trimis de funcția send-reminders: { title, body, url, tag }
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : '' }; }
+  const title = d.title || 'AutoAssist';
+  e.waitUntil(self.registration.showNotification(title, {
+    body: d.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-32.png',
+    tag: d.tag || 'aa-alert',
+    renotify: true,
+    data: { url: d.url || '/' },
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const target = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if ('focus' in c) { c.navigate && c.navigate(target); return c.focus(); }
+      }
+      return self.clients.openWindow(target);
+    })
   );
 });

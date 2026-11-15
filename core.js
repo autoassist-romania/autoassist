@@ -335,6 +335,7 @@ function _applySection(sec){
   if(sec==='dashboard'){showSeasonalAlert();loadDashVanzari();renderDashCustomCards();}
   if(sec==='setari') setTimeout(loadSavedKey,100);
   if(sec==='setari') setTimeout(()=>{ if(typeof initSMSSettings==='function') initSMSSettings(); },150);
+  if(sec==='setari') setTimeout(()=>{ if(typeof aaPushRefreshStatus==='function') aaPushRefreshStatus(); },200);
   if(sec==='asigurari') setTimeout(resetRcaModal, 50);
   if(sec==='verif-nr') setTimeout(()=>{ if(typeof renderVerifRecent==='function') renderVerifRecent(); }, 100);
   if(sec==='piese') { setTimeout(()=>{ if(typeof initPiese==='function') initPiese(); }, 100); }
