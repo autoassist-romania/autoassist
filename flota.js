@@ -119,6 +119,7 @@
     var t=($('fl-tier')||{}).value, p=PLAN_INFO['fleet_'+t];
     var show = (typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) && !!p && !!currentUser;
     box.style.display = show ? 'block' : 'none';
+    var ft=document.querySelector('#fl-form .ct'); if(ft && typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) ft.textContent='Ai nevoie întâi de ofertă sau factură proformă?';
     if(show){ $('fl-pay-sum').textContent = p.name+' · '+p.range+' · '+p.price.toLocaleString('ro-RO')+' RON / an'; }
   }
   var _pick = window.fleetPickTier;
