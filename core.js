@@ -671,6 +671,10 @@ function save(){const _uid = currentUser?.id || 'local';
 function dl(d){if(!d)return null;return Math.ceil((new Date(d)-new Date())/864e5);}
 function cls(d){if(d===null)return'ok';if(d<=7)return'danger';if(d<=30)return'warn';return'ok';}
 function dT(d){if(d===null)return'—';if(d<0)return`Exp.(${Math.abs(d)}z)`;if(d===0)return'Azi!';return`${d}z`;}
+function renewBtn(cid,k,compact){
+  if(typeof DOC_RENEW_INFO==='undefined' || !DOC_RENEW_INFO[k]) return '';
+  return `<button onclick="event.stopPropagation();docRenew(${cid},'${k}')" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:var(--green);border-radius:8px;padding:${compact?'3px 8px':'4px 10px'};font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔄 ${compact?'Am reînnoit '+DOC_RENEW_INFO[k].label:'Am reînnoit'}</button>`;
+}
 function cntAl(){let n=0;cars.forEach(c=>Object.values(c.docs).forEach(v=>{const d=dl(v);if(d!==null&&d<=30)n++;}));return n;}
 
 // ═══ RENDER ═══
@@ -704,7 +708,7 @@ function rDA(){
   cars.forEach(c=>Object.entries(c.docs).forEach(([k,v])=>{const d=dl(v);if(d!==null&&d<=30)items.push({c,k,d});}));
   items.sort((a,b)=>a.d-b.d);
   if(!items.length){el.innerHTML=`<div class="empty"><div class="ei">✅</div><p style="color:var(--t2)">Toate documentele sunt în regulă!</p></div>`;return;}
-  el.innerHTML=items.slice(0,5).map(({c,k,d})=>{const cc=d<=7?'d':'w';return`<div class="ar"><div class="ai2 ${cc}">${d<=7?'🚨':'⚠️'}</div><div class="ainf"><div class="at2">${DN[k]} — ${c.plate}</div><div class="as2">${c.brand} ${c.model}</div></div><div class="db ${cc}">${d<0?'Exp.':d+'z'}</div></div>`;}).join('');
+  el.innerHTML=items.slice(0,5).map(({c,k,d})=>{const cc=d<=7?'d':'w';return`<div class="ar"><div class="ai2 ${cc}">${d<=7?'🚨':'⚠️'}</div><div class="ainf"><div class="at2">${DN[k]} — ${c.plate}</div><div class="as2">${c.brand} ${c.model}</div></div><div class="db ${cc}">${d<0?'Exp.':d+'z'}</div><div style="margin-left:8px">${renewBtn(c.id,k)}</div></div>`;}).join('');
 }
 
 function rGaraj(){
@@ -739,6 +743,7 @@ function rGaraj(){
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 8px">${pills}</div>
+      ${(()=>{const b=Object.entries(c.docs).filter(([k,v])=>{const d=dl(v);return d!==null&&d<=30;}).map(([k])=>renewBtn(c.id,k,true)).join('');return b?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px">${b}</div>`:'';})()}
       <div style="display:flex;gap:7px;margin-bottom:8px">
         <button class="btn btn-green btn-sm" style="flex:1" onclick="goTo('asigurari')">🛡️ RCA</button>
         <button class="btn btn-ghost btn-sm" style="flex:1" onclick="soonRov()">🛣️ Rovinietă</button>
@@ -884,6 +889,7 @@ function renderCarPage(car) {
             </div>
             <div style="text-align:right">
               <div style="font-weight:700;font-size:13px;color:${statusColor(days)}">${statusLabel(days)}</div>
+              ${(days===null||days<=60)?`<button onclick="docRenew(${car.id},'${d.key}')" style="margin-top:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:var(--green);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">🔄 Am reînnoit</button>`:''}
             </div>
           </div>`;
         }).join('')}
@@ -1007,7 +1013,7 @@ function rDocs(){
         <td style="font-family:'JetBrains Mono';font-size:12px">${v||'—'}</td>
         <td style="font-family:'JetBrains Mono';font-size:12px">${d!==null?(d<0?`<span style="color:var(--red);font-weight:700">Expirat (${Math.abs(d)}z)</span>`:`${d} zile`):'—'}</td>
         <td><span class="sts" style="background:${cm[cc]}18;color:${cm[cc]}">${im[cc]} ${lm[cc]}</span></td>
-        <td>${act}</td>
+        <td><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${act}${cc!=='ok'?renewBtn(c.id,k):''}</div></td>
       </tr>`);
     });
   });
@@ -1684,4 +1690,78 @@ async function fleetSubmit(){
     btn.disabled=false; btn.textContent='Trimite cererea';
     showNotification('⚠️','Nu s-a putut trimite. Scrie-ne la autoassist.romania@gmail.com');
   }
+}
+
+
+// ── „Am reînnoit": setează rapid noua dată de expirare a unui document ──
+var DOC_RENEW_INFO = {
+  rca:{label:'RCA', opts:[['6 luni',{m:6}],['1 an',{m:12}]]},
+  itp:{label:'ITP', opts:[['1 an',{m:12}],['2 ani',{m:24}]]},
+  rov:{label:'Rovinietă', opts:[['30 zile',{d:30}],['90 zile',{d:90}],['1 an',{m:12}]]},
+  ext:{label:'Extinctor', opts:[['1 an',{m:12}],['2 ani',{m:24}]]},
+  trz:{label:'Trusă Medicală', opts:[['1 an',{m:12}],['2 ani',{m:24}]]}
+};
+function _docRenewFmt(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function _docRenewCalc(carId,key,spec){
+  const car = cars.find(c=>c.id==carId);
+  const old = car && car.docs && car.docs[key] ? new Date(car.docs[key]+'T00:00:00') : null;
+  const t = new Date(); t.setHours(0,0,0,0);
+  // dacă documentul mai e valabil, noua perioadă începe după expirarea lui; altfel de azi
+  const base = (old && !isNaN(old) && old > t) ? new Date(old) : t;
+  const r = new Date(base);
+  if(spec.m){ const day=r.getDate(); r.setMonth(r.getMonth()+spec.m); if(r.getDate()!==day) r.setDate(0); }
+  if(spec.d){ r.setDate(r.getDate()+spec.d); }
+  return _docRenewFmt(r);
+}
+function docRenew(carId,key){
+  const info = DOC_RENEW_INFO[key]; const car = cars.find(c=>c.id==carId);
+  if(!info || !car) return;
+  const cur = car.docs && car.docs[key] ? car.docs[key] : '';
+  const quick = info.opts.map(function(o){
+    return '<button onclick="docRenewQuick('+carId+',\''+key+'\','+JSON.stringify(o[1]).replace(/"/g,'&quot;')+')" class="btn btn-ghost btn-sm" style="font-size:12px">+ '+o[0]+'</button>';
+  }).join(' ');
+  const old = document.getElementById('mo-doc-renew'); if(old) old.remove();
+  document.body.insertAdjacentHTML('beforeend',
+  '<div id="mo-doc-renew" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)docRenewClose()">'+
+    '<div style="background:var(--s1);border:1px solid var(--b2);border-radius:20px;max-width:420px;width:100%;padding:24px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+        '<div style="font-family:\'Bebas Neue\';font-size:22px;letter-spacing:2px">🔄 '+info.label+' reînnoit — '+car.plate+'</div>'+
+        '<button onclick="docRenewClose()" style="background:none;border:none;color:var(--t3);font-size:24px;cursor:pointer">×</button>'+
+      '</div>'+
+      '<div style="font-size:12px;color:var(--t3);margin-bottom:14px">'+(cur?'Expirare actuală: '+cur+'. ':'')+'Alege perioada sau scrie data nouă de expirare. Alertele se opresc imediat.</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+quick+'</div>'+
+      '<label style="font-size:11px;color:var(--t3)">Data nouă de expirare</label>'+
+      '<input class="fi" id="doc-renew-date" type="date" style="margin:4px 0 16px" value="">'+
+      '<button class="btn btn-primary btn-full" style="padding:13px;font-size:14px" onclick="docRenewSave('+carId+',\''+key+'\')">✓ Salvează</button>'+
+    '</div></div>');
+}
+function docRenewClose(){ const el=document.getElementById('mo-doc-renew'); if(el) el.remove(); }
+function docRenewQuick(carId,key,spec){
+  const el = document.getElementById('doc-renew-date');
+  if(el) el.value = _docRenewCalc(carId,key,spec);
+}
+function docRenewSave(carId,key){
+  const car = cars.find(c=>c.id==carId); if(!car) return;
+  const el = document.getElementById('doc-renew-date');
+  const v = el ? el.value : '';
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ if(typeof showNotification==='function') showNotification('⚠️','Alege perioada sau data nouă.'); return; }
+  const t = new Date(); t.setHours(0,0,0,0);
+  if(new Date(v+'T00:00:00') <= t){ if(typeof showNotification==='function') showNotification('⚠️','Data nouă trebuie să fie în viitor.'); return; }
+  car.docs = car.docs || {};
+  car.docs[key] = v;
+  save();
+  if(supabaseClient && currentUser){
+    supabaseClient.from('cars').upsert({
+      id: car.id, ...carOwnerFields(car), plate: car.plate, brand: car.brand, model: car.model,
+      year: car.year, km: car.km, vin: car.vin, engine: car.engine, fuel: car.fuel, color: car.color,
+      docs: car.docs, mnt: car.mnt
+    }, {onConflict:'id'}).then(({error})=>{ if(error) console.error('Supabase docRenew error:', error); });
+  }
+  docRenewClose();
+  if(typeof showNotification==='function') showNotification('✅', DOC_RENEW_INFO[key].label+' reînnoit până la '+v+'.');
+  try{ renderAll(); }catch(e){}
+  const mp = document.getElementById('sec-masina');
+  if(mp && mp.classList.contains('active')) renderCarPage(car);
 }
