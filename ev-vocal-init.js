@@ -314,7 +314,7 @@ async function initAuth() {
     if(ov && ov.style.display !== 'none'){ ov.style.opacity='0'; setTimeout(()=>ov.style.display='none',200); }
     if(!document.querySelector('.sec.active')) {
       if(currentUser) {
-        const saved = localStorage.getItem('aa_last_sec');
+        const saved = aaStartSec();
         const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];
         _applySection((saved && validSections.includes(saved)) ? saved : 'dashboard');
       } else {
@@ -366,7 +366,7 @@ async function initAuth() {
           updateUserUI(data.session.user);
           await loadUserData(data.session.user.id);
           setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-          _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
+          _applySection((()=>{const s=aaStartSec();const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
           dismissOverlay();
           return;
         }
@@ -397,7 +397,7 @@ async function initAuth() {
       await loadUserData(session.user.id);
       if(typeof vanzRenderTarif==='function') setTimeout(vanzRenderTarif, 300);
       setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-      _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
+      _applySection((()=>{const s=aaStartSec();const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
       dismissOverlay();
       return;
     }
@@ -410,7 +410,7 @@ async function initAuth() {
     updateUserUI(session.user);
     await loadUserData(session.user.id);
     setTimeout(()=>{if(typeof showDevBar==='function')showDevBar();}, 500);
-    _applySection((()=>{const s=localStorage.getItem('aa_last_sec');const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
+    _applySection((()=>{const s=aaStartSec();const v=['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];return(s&&v.includes(s))?s:'dashboard';})());
   } else {
     _applySection('landing');
   }
@@ -442,7 +442,7 @@ async function initAuth() {
       closeM('signup');
       await loadAgentHistory(curAgent);
       if(typeof showDevBar==='function')showDevBar();
-      const saved = localStorage.getItem('aa_last_sec');
+      const saved = aaStartSec();
       const validSections = ['dashboard','garaj','documente','rca','rovinieta','agenti','vocal','asistenta','mentenanta','anvelope','detailing','ev','vanzare','carvertical','legal','setari','docpersonale','asigurari','servicii-stat','itp','costuri','verificare','peco','verif-nr','asistenta','premium','flota','piese'];
       _applySection((saved && validSections.includes(saved)) ? saved : 'dashboard');
     } else {

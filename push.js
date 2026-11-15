@@ -98,12 +98,15 @@
   var raw=null; try{ raw=sessionStorage.getItem('aa_deepact'); }catch(e){}
   if(!raw) return;
   var act; try{ act=JSON.parse(raw); }catch(e){ return; }
-  var KNOWN = {ext:1,trz:1,rca:1,itp:1,rov:1};
+  var KNOWN = {ext:1,trz:1,rca:1,itp:1,rov:1,car:1};
   if(!act || !KNOWN[act.a]){ try{sessionStorage.removeItem('aa_deepact');}catch(e){} return; }
   var STORE = { ext:['accesorii','Extinctor auto'], trz:['accesorii','Trusă medicală auto'] };
 
   function run(car){
-    if(act.a==='ext' || act.a==='trz'){
+    if(act.a==='car'){
+      if(typeof openCar!=='function') return false;
+      openCar(car.id);
+    } else if(act.a==='ext' || act.a==='trz'){
       if(typeof pieseAlegeMagazinCategorie!=='function') return false;
       pieseAlegeMagazinCategorie(STORE[act.a][0], STORE[act.a][1], car.brand||'', car.model||'');
     } else if(act.a==='rov'){
