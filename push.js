@@ -93,24 +93,41 @@
   document.addEventListener('DOMContentLoaded', function(){ setTimeout(aaPushRefreshStatus, 600); });
 })();
 
-// ── Acțiune directă din linkul din email (?go=piese&a=ext&car=ID): deschide direct magazinele ──
+// ── Acțiune directă din linkul din email (?go=...&a=...&car=ID): completează singur mașina ──
 (function(){
-  var ACTS = {
-    ext: ['accesorii','Extinctor auto'],
-    trz: ['accesorii','Trusă medicală auto']
-  };
   var raw=null; try{ raw=sessionStorage.getItem('aa_deepact'); }catch(e){}
   if(!raw) return;
   var act; try{ act=JSON.parse(raw); }catch(e){ return; }
-  if(!act || !ACTS[act.a]) { try{sessionStorage.removeItem('aa_deepact');}catch(e){} return; }
+  var KNOWN = {ext:1,trz:1,rca:1,itp:1,rov:1};
+  if(!act || !KNOWN[act.a]){ try{sessionStorage.removeItem('aa_deepact');}catch(e){} return; }
+  var STORE = { ext:['accesorii','Extinctor auto'], trz:['accesorii','Trusă medicală auto'] };
+
+  function run(car){
+    if(act.a==='ext' || act.a==='trz'){
+      if(typeof pieseAlegeMagazinCategorie!=='function') return false;
+      pieseAlegeMagazinCategorie(STORE[act.a][0], STORE[act.a][1], car.brand||'', car.model||'');
+    } else if(act.a==='rov'){
+      var inp=document.getElementById('verif-plate-input');
+      if(!inp || typeof verificaNr!=='function') return false;
+      inp.value=String(car.plate||'').toUpperCase(); verificaNr();
+    } else if(act.a==='itp'){
+      var sel=document.getElementById('itp-car');
+      if(!sel || sel.options.length<2) return false;
+      sel.value=String(car.id);
+      sel.dispatchEvent(new Event('change',{bubbles:true}));
+    } else if(act.a==='rca'){
+      // RCA se cumpără în formularul partenerului (nu poate fi precompletat); arătăm doar pentru ce mașină e alerta
+      if(typeof showNotification==='function') showNotification('🛡️ RCA pentru '+(car.plate||'mașina ta'), 'Alege oferta de mai jos pentru '+((car.brand||'')+' '+(car.model||'')).trim()+'.');
+    }
+    return true;
+  }
+
   var tries=0, t=setInterval(function(){
     tries++;
-    if(tries>60){ clearInterval(t); return; }                       // renunț după ~18 s (ex. user nelogat)
+    if(tries>50){ clearInterval(t); return; }                       // renunț după ~20 s (ex. user nelogat)
     if(typeof currentUser==='undefined' || !currentUser || typeof cars==='undefined' || !cars.length) return;
-    if(typeof pieseAlegeMagazinCategorie!=='function') return;
-    clearInterval(t);
-    try{ sessionStorage.removeItem('aa_deepact'); }catch(e){}
     var car = cars.filter(function(c){ return String(c.id)===String(act.car); })[0] || cars[0];
-    setTimeout(function(){ pieseAlegeMagazinCategorie(ACTS[act.a][0], ACTS[act.a][1], car.brand||'', car.model||''); }, 500);
-  }, 300);
+    var ok=false; try{ ok = run(car); }catch(e){ console.error('deepact', e); ok = true; }
+    if(ok){ clearInterval(t); try{ sessionStorage.removeItem('aa_deepact'); }catch(e){} }
+  }, 400);
 })();
