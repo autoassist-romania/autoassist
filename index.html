@@ -799,8 +799,8 @@
         <div class="fg" style="margin:0"><label class="fl">Data</label><input class="fi" id="mnt-data" type="date"></div>
       </div>
       <!-- Detalii lucrări — apare doar la Revizie completă / Altele -->
-      <div id="mnt-extra-div" style="display:none">
-        <div class="fg"><label class="fl">Detalii lucrări efectuate</label>
+      <div id="mnt-extra-div" style="display:block">
+        <div class="fg"><label class="fl">Piese montate / lucrări efectuate <span style="color:var(--t3);font-weight:400">(apar în Raportul AutoAssist)</span></label>
           <textarea class="fi" id="mnt-detalii" rows="3" placeholder="Ex: schimb ulei 5W40 + filtru ulei, filtru aer, verificare frâne, reglaj geometrie..."></textarea>
         </div>
       </div>
@@ -823,6 +823,8 @@
           <input type="file" id="mnt-factura-input" accept="image/*,application/pdf" style="display:none" onchange="mntFacturaUpload(this)">
         </div>
         <div id="mnt-factura-preview"></div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="mntExtractParts('add')">✨ Extrage piesele din factură (AI)</button>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px">AI-ul citește doar piesele și lucrările — fără firmă, adresă, CUI sau prețuri. Verifici lista înainte de salvare.</div>
       </div>
       <button class="btn btn-primary btn-full" onclick="addMnt()" style="margin-top:8px">💾 Salvează intervenția</button>
     </div>

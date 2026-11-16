@@ -91,7 +91,7 @@ function mntCarChange() {
 function mntTipChange() {
   const tip = document.getElementById('mnt-tip').value;
   const extraDiv = document.getElementById('mnt-extra-div');
-  if(extraDiv) extraDiv.style.display = (tip === 'Revizie completă' || tip === 'Altele') ? 'block' : 'none';
+  if(extraDiv) extraDiv.style.display = 'block';
 }
 
 function mntKmValidate() {
@@ -446,7 +446,7 @@ function openEditMnt(carId, id, overlayEl) {
   if(overlayEl) overlayEl.remove();
 
   const TIPURI = ['Schimb ulei + filtru','Schimb anvelope','Frâne față','Frâne spate','Distribuție','Filtru aer','Filtru habitaclu','Baterie','Bujii','Amortizoare','Revizie completă','Altele'];
-  const showExtra = m.tip === 'Revizie completă' || m.tip === 'Altele';
+  const showExtra = true;
 
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0';
@@ -462,7 +462,7 @@ function openEditMnt(carId, id, overlayEl) {
         </select>
       </div>
       <div id="edit-mnt-extra-div" style="display:${showExtra?'block':'none'}">
-        <div class="fg"><label class="fl">Detalii lucrări efectuate</label>
+        <div class="fg"><label class="fl">Piese montate / lucrări efectuate <span style="color:var(--t3);font-weight:400">(apar în Raportul AutoAssist)</span></label>
           <textarea class="fi" id="edit-mnt-detalii" rows="3" placeholder="Ex: schimb ulei motor 5W40, filtru ulei, filtru aer, bujii NGK, verificare frâne...">${m.detalii||''}</textarea>
         </div>
       </div>
@@ -482,6 +482,7 @@ function openEditMnt(carId, id, overlayEl) {
           <input type="file" id="edit-mnt-factura-input" accept="image/*,application/pdf" style="display:none" onchange="editMntFacturaUpload(this)">
         </div>
         <div id="edit-mnt-factura-preview"></div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="mntExtractParts('edit')">✨ Extrage piesele din factură (AI)</button>
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-ghost btn-sm" style="flex:1">Anulează</button>
@@ -496,7 +497,7 @@ function openEditMnt(carId, id, overlayEl) {
 
 function editMntTipChange(sel) {
   const extra = document.getElementById('edit-mnt-extra-div');
-  if(extra) extra.style.display = (sel.value === 'Revizie completă' || sel.value === 'Altele') ? 'block' : 'none';
+  if(extra) extra.style.display = 'block';
 }
 
 function editMntFacturaUpload(input) {
@@ -1516,4 +1517,54 @@ async function _anvSaveToSupabase(car) {
     { let _q = supabaseClient.from('cars').update({ anvData: car.anvData }).eq('id', car.id); if(!car.fleet_id) _q = _q.eq('user_id', uid); await _q; }
     localStorage.setItem('autoassist-cars-' + uid, JSON.stringify(cars));
   } catch(e) { console.log('anvSave error:', e); }
+}
+
+
+// ═══ Extrage DOAR piesele/lucrările din poza facturii (fără firme, adrese, CUI, nume, numere de înmatriculare, prețuri) ═══
+async function _mntResizeImg(dataUrl, maxSide){
+  return await new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const k=Math.min(1,maxSide/Math.max(img.width,img.height));
+      const c=document.createElement('canvas'); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL('image/jpeg',0.85).split(',')[1]);
+    };
+    img.onerror=()=>rej(new Error('img'));
+    img.src=dataUrl;
+  });
+}
+async function mntExtractParts(mode){
+  const isEdit=mode==='edit';
+  const src=isEdit?window._editMntFactura:window._mntFacturaData;
+  const ta=document.getElementById(isEdit?'edit-mnt-detalii':'mnt-detalii');
+  if(!src||!String(src).startsWith('data:image')){
+    showNotification('Încarcă o poză a facturii','Extragerea automată funcționează doar cu poză (JPG/PNG), nu cu PDF. Poți scrie piesele și manual.');
+    return;
+  }
+  if(!ta) return;
+  const old=ta.value; ta.value='✨ Citesc piesele din factură...'; ta.disabled=true;
+  try{
+    const b64=await _mntResizeImg(src,1600);
+    const res=await fetch('https://zspcknjuqdjfxtqrqhhm.supabase.co/functions/v1/asistent',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':await aaAuthHeader()},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5', max_tokens:600,
+        system:'Ești un sistem OCR pentru facturi de service auto. Extragi DOAR piesele și lucrările efectuate. NU scrii: numele firmei sau al clientului, adrese, CUI/CIF, telefoane, IBAN, numere de înmatriculare, serii de șasiu, prețuri sau totaluri. Răspunzi doar cu lista, în română.',
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+          {type:'text',text:'Din factura din imagine scrie o listă scurtă, câte o linie, cu piesele montate și lucrările efectuate (denumire, cod piesă dacă apare, cantitate dacă e mai mare de 1). Fără prețuri, fără date despre firme sau persoane. Dacă nu se citește nimic util, răspunde exact: NECITIBIL.'}
+        ]}]
+      })
+    });
+    const d=await res.json();
+    if(d.error) throw new Error(d.error);
+    const t=(d.reply||'').trim();
+    if(!t||/^NECITIBIL/i.test(t)){ ta.value=old; showNotification('Nu am putut citi factura','Încearcă o poză mai clară sau scrie piesele manual.'); }
+    else { ta.value=t; showNotification('✅ Piese extrase','Verifică lista și corectează dacă e nevoie înainte să salvezi.'); }
+  }catch(e){
+    ta.value=old; showNotification('⚠️ Extragerea a eșuat',(e&&e.message)||'Încearcă din nou sau scrie piesele manual.');
+  }
+  ta.disabled=false;
 }
