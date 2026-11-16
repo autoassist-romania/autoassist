@@ -163,107 +163,54 @@ function savePlateApiKey(){
   const key = document.getElementById('plate-api-key-input')?.value?.trim();
   if(key){ localStorage.setItem('plate-api-key', key); showNotification('✅ API Key salvat!','Recunoașterea automată după număr de înmatriculare este activată.'); }
 }
-function checkITPPremium(){
-  var lock=document.getElementById('itp-premium-lock');
-  if(!lock) return;
-  var isPremium = (typeof window.isPremium === 'function' && window.isPremium()) || false;
-  lock.style.display = isPremium ? 'none' : 'flex';
+// ═══ ITP — pagină informativă (fără parteneri): data de expirare, stații pe Google Maps, acte necesare ═══
+function checkITPPremium(){ /* pagina ITP este gratuită */ }
+
+function itpRenderStatus(){
+  var box=document.getElementById('itp-status'), sel=document.getElementById('itp-car');
+  if(!box||!sel) return;
+  var c=(typeof cars!=='undefined')?cars.find(function(x){return String(x.id)===String(sel.value);}):null;
+  if(!c){ box.innerHTML='Alege mașina ca să vezi când îți expiră ITP-ul.'; return; }
+  var head='<div style="font-weight:700;color:var(--t1);margin-bottom:6px">'+c.brand+' '+c.model+(c.year?' ('+c.year+')':'')+' · '+c.plate+'</div>';
+  var d=c.docs&&c.docs.itp;
+  if(!d){
+    box.innerHTML=head+'Nu ai completat data ITP pentru această mașină.<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="openEditDocs('+c.id+')">✏️ Completează data</button></div>';
+    return;
+  }
+  var days=Math.ceil((new Date(d)-new Date())/864e5);
+  var col=days<=7?'var(--red)':days<=30?'var(--amber)':'var(--green)';
+  var txt=days<0?'⛔ ITP expirat de '+Math.abs(days)+' zile':days===0?'⚠️ ITP expiră azi':'ITP valabil încă '+days+' zile';
+  box.innerHTML=head+'<div style="font-size:15px;font-weight:700;color:'+col+'">'+txt+'</div>'
+    +'<div style="font-size:12px;color:var(--t3);margin:3px 0 10px">Data expirării: '+d+'</div>'
+    +(typeof renewBtn==='function'?renewBtn(c.id,'itp'):'');
 }
+function itpSelectCar(sel){ itpRenderStatus(); }
+
 function itpGeoLoc(){
-  const status=document.getElementById('itp-loc-status');
-  if(!navigator.geolocation){status.innerHTML='<span style="color:var(--red)">GPS indisponibil pe acest dispozitiv.</span>';return;}
+  var status=document.getElementById('itp-loc-status');
+  if(!navigator.geolocation){status.innerHTML='<span style="color:var(--red)">GPS indisponibil pe acest dispozitiv. Scrie orașul manual.</span>';return;}
   status.innerHTML='<span style="color:var(--amber)">⏳ Detectăm locația...</span>';
   navigator.geolocation.getCurrentPosition(
-    pos=>{
-      const lat=pos.coords.latitude, lon=pos.coords.longitude;
+    function(pos){
+      var lat=pos.coords.latitude, lon=pos.coords.longitude;
+      window._itpCoords={lat:lat,lon:lon};
       fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=ro')
-        .then(r=>r.json()).then(d=>{
-          const city=d.address.city||d.address.town||d.address.village||d.address.county||'';
-          const road=d.address.road||'';
-          const loc=(road?road+', ':'')+city;
-          document.getElementById('itp-loc').value=loc;
-          status.innerHTML='<span style="color:var(--green)">📍 Locație detectată: '+city+'</span>';
-          itpLoadStations(city);
-        }).catch(()=>{status.innerHTML='<span style="color:var(--red)">Nu am putut determina orașul. Introdu manual.</span>';});
+        .then(function(r){return r.json();}).then(function(d){
+          var a=d.address||{}; var city=a.city||a.town||a.village||a.county||'';
+          document.getElementById('itp-loc').value=city;
+          window._itpCoords={lat:lat,lon:lon};   // inputul și-a resetat coordonatele la modificare; le refac
+          status.innerHTML='<span style="color:var(--green)">📍 Locație detectată'+(city?': '+city:'')+'</span>';
+        }).catch(function(){ status.innerHTML='<span style="color:var(--green)">📍 Locație detectată</span>'; });
     },
-    ()=>{status.innerHTML='<span style="color:var(--red)">Accesul la GPS refuzat. Introdu locația manual.</span>';}
+    function(){status.innerHTML='<span style="color:var(--red)">Accesul la locație a fost refuzat. Scrie orașul manual.</span>';}
   );
 }
-function itpSelectCar(sel){
-  const val=sel.value;
-  const info=document.getElementById('itp-car-info');
-  if(!val){info.style.display='none';return;}
-  const c=cars.find(x=>String(x.id)===String(val));
-  if(!c){info.style.display='none';return;}
-  info.style.display='block';
-  info.innerHTML='🚗 '+c.brand+' '+c.model+(c.year?' ('+c.year+')':'')+' · '+c.plate+(c.km?' · '+c.km.toLocaleString()+' km':'');
-  document.getElementById('itp-plate-manual').value=c.plate;
-}
-function itpLoadStations(city){
-  var list=document.getElementById('itp-stations-list');
-  var label=document.getElementById('itp-zone-label');
-  if(city) label.innerHTML='<span style="color:var(--green)">📍 '+city+'</span>';
-  list.innerHTML='<div style="text-align:center;padding:16px;color:var(--t3)">⏳ Căutăm stații în '+city+'...</div>';
-  setTimeout(function(){
-    var q=encodeURIComponent('statie ITP autorizata RAR '+city);
-    var c=city;
-    function makeCard(ico,name,pret,rating){
-      var d=document.createElement('div');
-      d.className='serv-card';
-      d.innerHTML='<div class="serv-ico">'+ico+'</div>'
-        +'<div style="flex:1"><div style="font-size:13px;font-weight:700">'+name+'</div>'
-        +'<div style="font-size:11px;color:var(--t2);margin-top:2px">📍 '+c+' · ⭐ '+rating+'</div>'
-        +'<div style="font-size:12px;color:var(--green);font-weight:700;margin-top:3px">'+pret+' · Te contactează ei</div></div>'
-        +'<button class="btn btn-green btn-sm">Selectează</button>';
-      function doSelect(){selectITP(d,name,c,pret,rating);}
-      d.addEventListener('click',doSelect);
-      d.querySelector('button').addEventListener('click',function(e){e.stopPropagation();doSelect();});
-      return d;
-    }
-    list.innerHTML='';
-    list.appendChild(makeCard('🏛️','RAR '+c+' — Stație autorizată','~50-80 RON','4.8'));
-    list.appendChild(makeCard('🔧','Service ITP '+c,'~40-70 RON','4.5'));
-    var a=document.createElement('a');
-    a.href='https://www.google.com/maps/search/'+q;
-    a.target='_blank';
-    a.className='btn btn-ghost btn-sm';
-    a.style.cssText='display:block;margin-top:8px;text-decoration:none;text-align:center';
-    a.textContent='🗺️ Vezi toate pe Google Maps →';
-    list.appendChild(a);
-  }, 800);
-}
-function progITP(){
-  const loc=document.getElementById('itp-loc').value.trim();
-  const tel=document.getElementById('itp-tel').value.trim();
-  const date=document.getElementById('itp-date').value;
-  const time=document.getElementById('itp-time').value;
-  const plate=document.getElementById('itp-plate-manual').value.trim()||document.getElementById('itp-car').options[document.getElementById('itp-car').selectedIndex]?.text||'';
-  if(!loc){showNotification('⚠️ Locație lipsă','Introdu orașul tău sau apasă 📍 Locația mea!');return;}
-  if(!tel){showNotification('⚠️ Telefon lipsă','Introdu numărul de telefon — service-ul te va contacta!');return;}
-  itpLoadStations(loc);
-  const result=document.getElementById('itp-result');
-  result.innerHTML='<div style="padding:14px;background:rgba(0,232,154,0.1);border:1px solid rgba(0,232,154,0.25);border-radius:var(--rs)">'
-    +'<div style="font-weight:800;color:var(--green);margin-bottom:8px">✅ Cerere trimisă stațiilor ITP din '+loc+'!</div>'
-    +'<div style="font-size:12px;color:var(--t2);line-height:1.7">'
-    +(plate?'🚗 Mașina: <strong>'+plate+'</strong><br>':'')
-    +'📞 Telefon: <strong>'+tel+'</strong><br>'
-    +(date?'📅 Data: <strong>'+date+' · '+time+'</strong><br>':'')
-    +'⏱️ <strong>Stațiile ITP din zonă te vor contacta</strong> pentru confirmare și preț final.<br>'
-    +'🏷️ Menționează că vii prin <strong style="font-family:\'JetBrains Mono\'">AutoAssist</strong>!'
-    +'</div></div>';
-  showNotification('📞 Cerere ITP trimisă!','Stațiile din '+loc+' te contactează în curând!');
-}
-function selectITP(el,name,addr,pret,rating){
-  document.querySelectorAll('.serv-card').forEach(s=>s.style.borderColor='var(--b1)');
-  if(el) el.style.borderColor='var(--accent)';
-  const tel=document.getElementById('itp-tel').value.trim();
-  const plate=document.getElementById('itp-plate-manual').value.trim();
-  const loc=document.getElementById('itp-loc').value.trim();
-  const ok=confirm('🔬 Programare ITP la '+name+'!\n📍 '+addr+'\n💰 Preț estimat: '+pret+'\n⭐ Rating: '+rating+(tel?'\n📞 Tel tău: '+tel:'')+(plate?'\n🚗 Mașina: '+plate:'')+'\n\nService-ul te va suna pentru confirmare.\nOK = deschide pe Google Maps');
-  if(ok){
-    const q=encodeURIComponent(name+' '+loc);
-    window.open('https://www.google.com/maps/search/'+q,'_blank');
-    showNotification('✅ Programare ITP!',name+' te contactează în curând. Cod: PREMIUM');
-  }
-}
 
+function itpOpenMaps(){
+  var loc=(document.getElementById('itp-loc').value||'').trim();
+  var co=window._itpCoords;
+  if(!loc && !co){ if(typeof showNotification==='function') showNotification('⚠️ Locație lipsă','Scrie orașul tău sau apasă „Locația mea".'); return; }
+  var q=encodeURIComponent('stație ITP autorizată RAR'+(loc?' '+loc:''));
+  var url='https://www.google.com/maps/search/'+q+(co?'/@'+co.lat+','+co.lon+',13z':'');
+  window.open(url,'_blank','noopener');
+}

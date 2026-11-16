@@ -259,7 +259,6 @@ async function aaAuthHeader(){
 // Ca să reactivezi o funcție: șterge intrarea din SOON_SECTIONS (și, pentru rovinietă, schimbă soonRov()).
 const SOON_SECTIONS = {
   'asigurari': {t:'Reînnoire RCA',        d:'Reînnoirea RCA prin AutoAssist se activează în curând. Până atunci te anunțăm în aplicație când expiră asigurarea.'},
-  'itp':       {t:'Programare ITP',       d:'Programarea ITP prin AutoAssist se activează în curând. Până atunci te anunțăm în aplicație când expiră ITP-ul.'},
   'asistenta': {t:'Asistență rutieră',    d:'Asistența rutieră se activează în curând, după ce încheiem parteneriatele cu firmele de tractări. Până atunci, în caz de urgență sună 112.'},
   'verif-nr':  {t:'Verificare număr',     d:'Verificarea după numărul de înmatriculare se activează în curând.'}
 };
@@ -510,6 +509,10 @@ function populateITPCars(){
   if(!sel)return;
   sel.innerHTML='<option value="">-- Selectează mașina --</option>';
   cars.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.plate} — ${c.brand} ${c.model}</option>`);
+  // o singură mașină (sau am venit din pagina mașinii) → o aleg direct
+  const pre = window._returnToCarId && cars.find(x=>x.id==window._returnToCarId) ? window._returnToCarId : (cars.length===1 ? cars[0].id : '');
+  if(pre){ sel.value=String(pre); if(typeof itpRenderStatus==='function') itpRenderStatus(); }
+  else if(typeof itpRenderStatus==='function') itpRenderStatus();
 }
 
 // ═══ CARS ═══
@@ -1763,6 +1766,7 @@ function docRenewSave(carId,key){
   docRenewClose();
   if(typeof showNotification==='function') showNotification('✅', DOC_RENEW_INFO[key].label+' reînnoit până la '+v+'.');
   try{ renderAll(); }catch(e){}
+  try{ if(typeof itpRenderStatus==='function') itpRenderStatus(); }catch(e){}
   const mp = document.getElementById('sec-masina');
   if(mp && mp.classList.contains('active')) renderCarPage(car);
 }

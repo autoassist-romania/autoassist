@@ -915,130 +915,51 @@
 <!-- ITP & SERVICE -->
 <section class="sec" id="sec-itp">
   <button class="back-btn" onclick="goTo('dashboard')">← Înapoi</button>
-  <div class="topbar"><div><div class="pt">ITP & Service</div><div class="ps">Programează ITP — service-urile te contactează direct</div></div></div>
+  <div class="topbar"><div><div class="pt">🔬 ITP</div><div class="ps">Vezi când expiră, găsește o stație autorizată și pregătește actele</div></div></div>
 
   <div class="g2">
     <div>
-      <div class="card" style="position:relative;overflow:hidden">
-        <div class="ch"><span class="ct">📅 Programare ITP</span></div>
-        <div id="itp-premium-lock" style="display:none;position:absolute;inset:0;background:rgba(7,7,14,0.92);backdrop-filter:blur(6px);z-index:10;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center">
-          <div style="font-size:42px">👑</div>
-          <div style="font-size:18px;font-weight:800;color:var(--gold)">Funcție Premium</div>
-          <div style="font-size:13px;color:var(--t2);line-height:1.6;max-width:280px">Programarea ITP cu detectare GPS și trimitere automată către service-uri este disponibilă doar pentru utilizatorii Premium.</div>
-          <button class="btn btn-gold" onclick="goTo('premium')" style="margin-top:4px">👑 Activează Premium — 99 RON/an</button>
-          <div style="font-size:11px;color:var(--t3)">Acces complet la toate funcțiile AutoAssist</div>
-        </div>
+      <div class="card">
+        <div class="ch"><span class="ct">🚗 Mașina ta</span></div>
+        <select class="fi" id="itp-car" onchange="itpSelectCar(this)" style="margin-bottom:10px">
+          <option value="">-- Selectează din garaj --</option>
+        </select>
+        <div id="itp-status" style="font-size:13px;color:var(--t2)">Alege mașina ca să vezi când îți expiră ITP-ul.</div>
+      </div>
 
-        <div class="itp-step">
-          <div class="itp-num">1</div>
-          <div class="itp-info"><div class="itp-title">Mașina</div><div class="itp-desc">Din garaj sau introdu manual numărul de înmatriculare</div></div>
+      <div class="card" style="margin-top:14px">
+        <div class="ch"><span class="ct">📍 Găsește o stație ITP</span></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input class="fi" id="itp-loc" placeholder="Oraș sau localitate (ex: Cluj-Napoca)" style="margin:0;flex:1" onkeydown="if(event.key==='Enter')itpOpenMaps()" oninput="window._itpCoords=null">
+          <button class="btn btn-ghost btn-sm" onclick="itpGeoLoc()" style="flex-shrink:0;white-space:nowrap">📍 Locația mea</button>
         </div>
-        <div style="margin-left:46px;margin-bottom:14px">
-          <select class="fi" id="itp-car" onchange="itpSelectCar(this)" style="margin-bottom:8px">
-            <option value="">-- Selectează din garaj --</option>
-          </select>
-          <div style="display:flex;gap:8px;align-items:center">
-            <div style="font-size:11px;color:var(--t3);flex-shrink:0">sau manual:</div>
-            <input class="fi" id="itp-plate-manual" placeholder="B 123 ABC" style="margin:0;font-family:'JetBrains Mono';letter-spacing:1px">
-          </div>
-          <div id="itp-car-info" style="display:none;margin-top:8px;padding:10px 13px;background:rgba(0,232,154,0.08);border:1px solid rgba(0,232,154,0.2);border-radius:var(--rs);font-size:12px;color:var(--green);font-weight:600"></div>
-        </div>
-
-        <div class="itp-step">
-          <div class="itp-num">2</div>
-          <div class="itp-info"><div class="itp-title">Locația ta</div><div class="itp-desc">Detectăm automat sau introdu manual alt oraș</div></div>
-        </div>
-        <div style="margin-left:46px;margin-bottom:14px">
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input class="fi" id="itp-loc" placeholder="ex: București, Sector 3" style="margin:0;flex:1">
-            <button class="btn btn-ghost btn-sm" onclick="itpGeoLoc()" style="flex-shrink:0;white-space:nowrap">📍 Locația mea</button>
-          </div>
-          <div id="itp-loc-status" style="font-size:11px;color:var(--t3)"></div>
-        </div>
-
-        <div class="itp-step">
-          <div class="itp-num">3</div>
-          <div class="itp-info"><div class="itp-title">Telefonul tău</div><div class="itp-desc">Service-ul te contactează pentru confirmare</div></div>
-        </div>
-        <div style="margin-left:46px;margin-bottom:14px">
-          <input class="fi" id="itp-tel" placeholder="+40 700 000 000" type="tel" style="margin:0">
-        </div>
-
-        <div class="itp-step">
-          <div class="itp-num">4</div>
-          <div class="itp-info"><div class="itp-title">Data preferată</div><div class="itp-desc">Interval orar dorit</div></div>
-        </div>
-        <div class="fr" style="margin-left:46px;margin-bottom:16px">
-          <div class="fg" style="margin:0"><label class="fl">Data</label><input class="fi" id="itp-date" type="date" style="margin:0"></div>
-          <div class="fg" style="margin:0"><label class="fl">Interval orar</label>
-            <select class="fi" id="itp-time" style="margin:0">
-              <option>08:00 - 10:00</option><option>10:00 - 12:00</option>
-              <option>12:00 - 14:00</option><option>14:00 - 16:00</option>
-              <option>16:00 - 18:00</option>
-            </select>
-          </div>
-        </div>
-
-        <button class="btn btn-primary btn-full" onclick="progITP()">🔬 Caută stații ITP și trimite cerere</button>
-        <div id="itp-result" style="margin-top:12px"></div>
+        <div id="itp-loc-status" style="font-size:11px;color:var(--t3);margin-bottom:10px"></div>
+        <button class="btn btn-green btn-full" onclick="itpOpenMaps()" style="padding:13px;font-size:14px">🗺️ Caută stații ITP pe Google Maps</button>
+        <div style="font-size:11px;color:var(--t3);margin-top:8px;line-height:1.5">Se deschide Google Maps cu stațiile ITP autorizate RAR din zona ta. Programarea, orarul și prețul final le confirmi direct cu stația.</div>
       </div>
     </div>
 
     <div>
       <div class="card">
-        <div class="ch"><span class="ct">🏭 Stații ITP în zona ta</span><span id="itp-zone-label" style="font-size:11px;color:var(--t3)">Introdu locația →</span></div>
-        <div id="itp-stations-list">
-          <div style="text-align:center;padding:24px;color:var(--t3);font-size:13px">📍 Introdu locația ta pentru a vedea stațiile disponibile</div>
-        </div>
-        <div style="margin-top:12px;padding:11px 14px;background:rgba(79,125,255,0.07);border:1px solid rgba(79,125,255,0.15);border-radius:var(--rs);font-size:12px;color:var(--t2);font-weight:500">
-          👑 <strong style="color:var(--gold)">Funcție Premium</strong> — Programare prioritară și beneficii exclusive la stațiile partenere
-        </div>
+        <div class="ch"><span class="ct">📄 Ce să ai la tine</span></div>
+        <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.9;color:var(--t2)">
+          <li>Certificatul de înmatriculare (talonul), în original</li>
+          <li>Cartea de identitate a vehiculului (CIV)</li>
+          <li>Actul de identitate al celui care aduce mașina</li>
+          <li>Polița RCA valabilă</li>
+        </ul>
       </div>
-
-      <div class="card" style="margin-top:0">
-        <div class="ch"><span class="ct">📞 Cum funcționează</span></div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,232,154,0.15);color:var(--green);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
-            <div style="font-size:12.5px;color:var(--t2);font-weight:500;line-height:1.5">Completezi formularul cu datele mașinii și telefonul tău</div>
-          </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,232,154,0.15);color:var(--green);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
-            <div style="font-size:12.5px;color:var(--t2);font-weight:500;line-height:1.5">AutoAssist trimite cererea ta la stațiile ITP din zonă</div>
-          </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,232,154,0.15);color:var(--green);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
-            <div style="font-size:12.5px;color:var(--t2);font-weight:500;line-height:1.5"><strong>Service-ul te sună</strong> pentru a confirma programarea și prețul</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CHECKLIST ITP -->
-  <div class="card">
-    <div class="ch"><span class="ct">✅ Ce verifică ITP-ul — Ghid complet</span></div>
-    <div class="g3" style="margin:0">
-      <div>
-        <div style="font-size:12px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🔴 Defecte majore</div>
-        <div style="display:flex;flex-direction:column;gap:7px;font-size:12.5px;color:var(--t2);font-weight:500">
-          <div>• Sistem de frânare defect</div><div>• Jocuri la direcție</div>
-          <div>• Noxe depășite</div><div>• Lumini nefuncționale</div><div>• Pneuri uzate sub limită</div>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:12px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🟡 Defecte minore</div>
-        <div style="display:flex;flex-direction:column;gap:7px;font-size:12.5px;color:var(--t2);font-weight:500">
-          <div>• Zgârieturi pe caroserie</div><div>• Coroziune ușoară</div>
-          <div>• Lichide sub nivel</div><div>• Ștergătoare uzate</div><div>• Oglinzi deteriorate</div>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:12px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🟢 Pregătire ITP</div>
-        <div style="display:flex;flex-direction:column;gap:7px;font-size:12.5px;color:var(--t2);font-weight:500">
-          <div>• Verifică toate luminile</div><div>• Umflă pneurile corect</div>
-          <div>• Completează lichidele</div><div>• Curăță mașina</div><div>• Adu toate documentele</div>
-        </div>
+      <div class="card" style="margin-top:14px">
+        <div class="ch"><span class="ct">⏱️ Cât de des se face</span></div>
+        <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.9;color:var(--t2)">
+          <li>Autoturism nou: prima dată la 3 ani de la înmatriculare</li>
+          <li>Autoturism de până la 12 ani: la fiecare 2 ani</li>
+          <li>Autoturism de peste 12 ani: în fiecare an</li>
+          <li>Taxi și transport de persoane: la 6 luni</li>
+        </ul>
+        <div style="font-size:12px;color:var(--t2);margin-top:10px;line-height:1.6">💰 Preț orientativ pentru un autoturism: aproximativ 100–250 RON, în funcție de stație și de motorizare. Îl confirmi la stație.</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:6px;line-height:1.6">🔧 Dacă mașina are deficiențe majore, le remediezi în 30 de zile și revii la stație.</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:8px">Informații generale, pot exista excepții (de ex. mașini importate sau cu destinație specială). Verifică la stație sau pe rarom.ro.</div>
       </div>
     </div>
   </div>
