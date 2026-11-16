@@ -454,6 +454,7 @@ function showSeasonalAlert() {
 
 function showAnuntModal(a) {
   if(!a) return;
+  window._anuntCur = a;
   document.getElementById('mo-anunt')?.remove();
   const fotos = (a.fotos&&a.fotos.filter(Boolean).length ? a.fotos.filter(Boolean) : (a.foto?[a.foto]:[]));
   window._anuntFotos = fotos;
@@ -539,6 +540,9 @@ function showAnuntModal(a) {
             </div>
             ${hasLL?`<div id="anunt-map" style="height:200px;border-radius:10px;margin-top:10px;background:var(--s2)"></div><div style="font-size:10px;color:var(--t3);margin-top:4px">Zonă aproximativă — adresa exactă o stabilești cu vânzătorul.</div>`:''}
           </div>`:''}
+
+          <!-- RAPORT AUTOASSIST -->
+          ${a.raport?`<button onclick="anuntVeziRaport()" style="width:100%;margin-bottom:16px;padding:14px;background:linear-gradient(135deg,rgba(79,125,255,0.18),rgba(124,92,252,0.12));border:1px solid rgba(79,125,255,0.4);border-radius:12px;color:var(--t1);font-weight:800;font-size:14px;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px"><span>📋 Vezi Raport AutoAssist<div style="font-size:11px;font-weight:500;color:var(--t2);margin-top:3px">Documente, istoric service, consum și verificarea km</div></span><span style="font-size:18px">›</span></button>`:''}
 
           <!-- CARVERTICAL -->
           <div onclick="window.open('${a.vin ? 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?uid=256&source_id=AFF&sub1=autoassist&sub3='+encodeURIComponent(a.vin) : 'https://www.carvertical.deal/2SK31XT/BQK1ZL/?source_id=AFF&sub1=autoassist'}', '_blank')" style="margin-bottom:16px;padding:12px;background:rgba(255,140,32,0.07);border:1px solid rgba(255,140,32,0.2);border-radius:10px;cursor:pointer">

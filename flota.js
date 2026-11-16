@@ -36,6 +36,7 @@
       else window.myFleet = null;
     }catch(e){ window.myFleet = null; }
     try{ await afterBilling(); }catch(e){}
+    try{ if(typeof aaRefreshPlanLabel==='function') aaRefreshPlanLabel(); }catch(e){}
     try{ if(typeof renderAll==='function') renderAll(); }catch(e){}
     return window.myFleet;
   };

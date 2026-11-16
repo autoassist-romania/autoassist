@@ -1140,9 +1140,9 @@
         <textarea class="fi" id="vanz-desc" rows="6" placeholder="Apasă butonul de mai jos pentru a genera descrierea automat cu AI..." style="resize:vertical"></textarea>
         <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="vanzGenDesc()" style="flex:2">✨ Generează descriere cu AI</button>
-          <button class="btn btn-ghost btn-sm" id="vanz-raport-btn" onclick="vanzAdaugaRaportService()" style="flex:1;background:rgba(79,125,255,0.1);border:1px solid rgba(79,125,255,0.3);color:var(--accent)" title="Adaugă istoricul de service la anunț">🔧 + Raport Service</button>
+          <button class="btn btn-ghost btn-sm" id="vanz-raport-btn" onclick="vanzRaportPreview()" style="flex:1;background:rgba(79,125,255,0.1);border:1px solid rgba(79,125,255,0.3);color:var(--accent)" title="Vezi raportul AutoAssist pe care îl vor vedea cumpărătorii">📋 Previzualizează Raport</button>
         </div>
-        <div id="vanz-raport-status" style="display:none;margin-top:6px;padding:8px 12px;background:rgba(0,200,100,0.1);border-radius:8px;font-size:12px;color:var(--green)">✅ Raportul service a fost adăugat la anunț — cumpărătorii îl pot vedea</div>
+        <label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:12px;color:var(--t2);cursor:pointer"><input type="checkbox" id="vanz-raport-on" checked style="margin-top:2px"><span><strong style="color:var(--t1)">Atașează Raportul AutoAssist la anunț</strong> — documente, istoric service, consum și verificarea km din aplicație. Cumpărătorii văd butonul „Vezi Raport AutoAssist" (gratuit acum).</span></label>
       </div>
       <div class="fg">
         <label class="fl">⚙️ Dotări principale (selectează)</label>

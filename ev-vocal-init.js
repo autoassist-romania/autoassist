@@ -453,6 +453,27 @@ async function initAuth() {
   });
 }
 
+function aaUserIsPremium(user){
+  if(!user) return false;
+  var own=['autoassist.romania@gmail.com','calin_nicole93@yahoo.com','calin_nicolae93@yahoo.com','calin.catalin.romania@gmail.com'];
+  if(own.indexOf((user.email||'').toLowerCase())>=0) return true;
+  if(window.myFleet && window.myFleet._uid===user.id && window.myFleet.active) return true;
+  var am=user.app_metadata||{};
+  if(am.premium!==true) return false;
+  return !am.premium_until || Date.parse(am.premium_until)>Date.now();
+}
+function aaSetPlanLabel(el, user){
+  if(aaUserIsPremium(user)){
+    el.innerHTML='Plan Premium <span style="background:linear-gradient(135deg,#f0b429,#e09e1a);color:#000;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:4px">PRO</span>';
+  } else { el.textContent='Plan Gratuit'; }
+}
+function aaRefreshPlanLabel(){
+  try{
+    var el=document.getElementById('upill-plan');
+    if(el && typeof currentUser!=='undefined' && currentUser) aaSetPlanLabel(el, currentUser);
+  }catch(e){}
+}
+
 function updateUserUI(user) {
   const nameEl = document.getElementById('upill-name') || document.querySelector('.upill div div:first-child');
   const planEl = document.getElementById('upill-plan') || document.querySelector('.upill div div:last-child');
@@ -465,13 +486,7 @@ function updateUserUI(user) {
     const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Utilizator';
     const email = user.email || '';
     if(nameEl) nameEl.textContent = name;
-    if(planEl) {
-      if(user.premium) {
-        planEl.innerHTML = 'Plan Gratuit <span style="background:linear-gradient(135deg,#f0b429,#e09e1a);color:#000;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:4px">PRO</span>';
-      } else {
-        planEl.textContent = 'Plan Gratuit';
-      }
-    }
+    if(planEl) aaSetPlanLabel(planEl, user);
     if(emailEl){ emailEl.textContent = email; emailEl.style.display = email ? 'block' : 'none'; }
     if(avatarEl){ avatarEl.textContent = name.charAt(0).toUpperCase(); avatarEl.style.background='linear-gradient(135deg,#00e89a,#4f7dff)'; }
     if(mobLoginBtn) mobLoginBtn.style.display='none';

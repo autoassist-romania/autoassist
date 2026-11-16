@@ -242,6 +242,8 @@ Anunțul să fie de 150-200 cuvinte, să evidențieze punctele forte, să sune n
     if(!txt) throw new Error('empty');
     ta.value=txt;
   }catch(e){
+    const why=(e&&e.message&&e.message!=='empty')?e.message:'AI-ul nu a răspuns.';
+    if(typeof showNotification==='function') showNotification('⚠️ Generarea cu AI a eșuat',why+' Am pus o descriere simplă — o poți edita.');
     ta.value=`${c.brand||'Autoturism'} ${c.model||''} ${c.year||''} spre vânzare, ${c.km?c.km.toLocaleString()+' km':''}, stare foarte bună. ${dotari?'Dotări: '+dotari+'.':''} Preț ${pret?pret+' EUR':'negociabil'}. Serios, fără vicii ascunse.`;
   }
   ta.disabled=false;
@@ -461,12 +463,17 @@ async function vanzPublica(){
     created_at: new Date().toISOString()
   };
 
+  // Raport AutoAssist atașat anunțului (gratuit acum)
+  const _rOn=document.getElementById('vanz-raport-on');
+  anunt.raport = ((!_rOn || _rOn.checked) && vanzRaportPoateFi()) ? vanzBuildRaport(c, km) : null;
+
   // Modificare anunț existent: se actualizează, fără plată nouă și fără a atinge pachetul/starea
   if(window._vanzEditId){
     const upd={...anunt}; ['user_id','status','pachet','created_at','data'].forEach(k=>delete upd[k]);
     let err=null;
     if(supabaseClient && currentUser){
-      const r=await supabaseClient.from('listings').update(upd).eq('id',window._vanzEditId).eq('user_id',currentUser.id);
+      let r=await supabaseClient.from('listings').update(upd).eq('id',window._vanzEditId).eq('user_id',currentUser.id);
+      if(r.error && /raport/i.test(r.error.message||'')){ delete upd.raport; r=await supabaseClient.from('listings').update(upd).eq('id',window._vanzEditId).eq('user_id',currentUser.id); }
       err=r.error;
     }
     if(err){ showNotification('⚠️ Eroare','Nu am putut salva modificările: '+err.message); return; }
@@ -482,7 +489,8 @@ async function vanzPublica(){
   let saved = null;
   if(supabaseClient && currentUser){
     try {
-      const {data, error} = await supabaseClient.from('listings').insert([anunt]).select().single();
+      let {data, error} = await supabaseClient.from('listings').insert([anunt]).select().single();
+      if(error && /raport/i.test(error.message||'')){ const a2={...anunt}; delete a2.raport; ({data, error} = await supabaseClient.from('listings').insert([a2]).select().single()); }
       if(error) {
         console.error('Supabase listings error:', error);
         showNotification('⚠️ Avertisment', 'Anunțul a fost salvat local dar nu în cloud: ' + error.message);
@@ -811,3 +819,103 @@ async function piataLoad(reset){
   if(document.getElementById('piata-f-model')?.options.length <= 1) piataPopulateModels();
 }
 
+
+
+// ═══ RAPORT AUTOASSIST pentru anunț ═══
+// Momentan GRATUIT. Ca să-l faci cu plată mai târziu: pune RAPORT_PRET_RON > 0 și leagă plata în vanzRaportPoateFi().
+const RAPORT_PRET_RON = 0;
+function vanzRaportPoateFi(){ return RAPORT_PRET_RON === 0 || vanzEstePrem(); }
+
+function _rEsc(x){ return String(x==null?'':x).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function _rDate(d){ const p=String(d||'').slice(0,10).split('-'); return p.length===3&&p[0].length===4?p[2]+'.'+p[1]+'.'+p[0]:_rEsc(d||''); }
+
+// Construiește raportul (snapshot) din datele mașinii din aplicație. NU include numărul de înmatriculare, costuri, facturi sau observații private.
+function vanzBuildRaport(c, kmDeclarat){
+  const azi=new Date().toISOString().slice(0,10);
+  const doc=(k)=>{ const d=c.docs&&c.docs[k]; if(!d) return null; return {exp:String(d).slice(0,10), valid:String(d).slice(0,10)>=azi}; };
+  let mnt=[], fuel=[];
+  try{ mnt=JSON.parse(localStorage.getItem('mnt_'+c.id)||'[]'); }catch(e){}
+  try{ fuel=JSON.parse(localStorage.getItem('fuel_'+c.id)||'[]'); }catch(e){}
+  mnt=(Array.isArray(mnt)?mnt:[]).filter(m=>m&&m.tip&&m.data);
+  fuel=(Array.isArray(fuel)?fuel:[]).filter(f=>f&&f.data&&Number(f.km)>0&&Number(f.litri)>0);
+  mnt.sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+  const service=mnt.slice(0,40).map(m=>({data:String(m.data).slice(0,10),tip:String(m.tip).slice(0,60),km:m.km?Number(m.km):null,furnizor:m.furnizor?String(m.furnizor).slice(0,60):null,detalii:m.detalii?String(m.detalii).slice(0,140):null}));
+
+  // Ultima intervenție per tip
+  const ultimele={}; mnt.forEach(m=>{ if(!ultimele[m.tip]) ultimele[m.tip]={data:String(m.data).slice(0,10),km:m.km?Number(m.km):null}; });
+
+  // Consum mediu (metoda plin-la-plin)
+  const fa=fuel.slice().sort((a,b)=>Number(a.km)-Number(b.km));
+  let litri=0,km=0,seg=0,prevFull=null,acc=0;
+  fa.forEach(f=>{
+    if(prevFull!==null){ acc+=Number(f.litri); }
+    if(f.plin!==false){
+      if(prevFull!==null && Number(f.km)>prevFull){ litri+=acc; km+=Number(f.km)-prevFull; seg++; }
+      prevFull=Number(f.km); acc=0;
+    }
+  });
+  let consum=null;
+  if(seg>=1 && km>=200){ const v2=litri/km*100; if(v2>=2&&v2<=40) consum=Math.round(v2*10)/10; }
+
+  // Consistența kilometrajului în timp (service + alimentări)
+  const pts=[]; mnt.forEach(m=>{ if(m.km) pts.push([String(m.data).slice(0,10),Number(m.km)]); });
+  fuel.forEach(f=>pts.push([String(f.data).slice(0,10),Number(f.km)]));
+  pts.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]-b[1]);
+  let anomalie=false; for(let i=1;i<pts.length;i++){ if(pts[i][1]<pts[i-1][1]-100){ anomalie=true; break; } }
+  const kmMax=pts.length?Math.max(...pts.map(p=>p[1])):null;
+
+  const datesAll=[...mnt.map(m=>String(m.data).slice(0,10)),...fuel.map(f=>String(f.data).slice(0,10))].sort();
+  return {
+    v:1, generat:new Date().toISOString(),
+    km_declarat: kmDeclarat?Number(kmDeclarat):(c.km?Number(c.km):null),
+    km_max_inregistrat:kmMax,
+    km_consistent: pts.length>=2 ? !anomalie : null,
+    puncte_km: pts.length,
+    documente:{rca:doc('rca'),itp:doc('itp'),rov:doc('rov'),ext:doc('ext'),trz:doc('trz')},
+    service, ultimele,
+    combustibil: fuel.length?{alimentari:fuel.length,consum_mediu:consum}:null,
+    de_la: datesAll.length?datesAll[0]:null
+  };
+}
+
+function vanzRaportHtml(r, titlu){
+  if(!r||typeof r!=='object') return '<div style="padding:20px;color:var(--t3)">Raport indisponibil.</div>';
+  const sec=(t,body)=>`<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:8px">${t}</div>${body}</div>`;
+  const docRow=(ic,nume,d)=>{
+    if(!d||!d.exp) return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b2);font-size:13px"><span>${ic} ${nume}</span><span style="color:var(--t3)">nedeclarat</span></div>`;
+    const ok=!!d.valid; return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b2);font-size:13px"><span>${ic} ${nume}</span><span style="font-weight:700;color:${ok?'var(--green)':'var(--red)'}">${ok?'✓ valabil până la ':'✗ expirat la '}${_rDate(d.exp)}</span></div>`;
+  };
+  const D=r.documente||{};
+  let h='';
+  const kmTxt=r.km_consistent===true?'<span style="color:var(--green);font-weight:700">✓ Kilometraj consecvent în istoricul înregistrat</span>':r.km_consistent===false?'<span style="color:var(--amber);font-weight:700">⚠️ Kilometrajul înregistrat nu crește constant — cere explicații vânzătorului</span>':'<span style="color:var(--t3)">Prea puține înregistrări pentru o verificare a kilometrajului</span>';
+  h+=sec('🛣️ KILOMETRAJ',`<div style="font-size:13px;line-height:1.7">${r.km_declarat?'Declarat de vânzător: <strong>'+Number(r.km_declarat).toLocaleString('ro-RO')+' km</strong><br>':''}${r.km_max_inregistrat?'Cel mai mare km înregistrat în aplicație: <strong>'+Number(r.km_max_inregistrat).toLocaleString('ro-RO')+' km</strong><br>':''}${kmTxt}</div>`);
+  h+=sec('📄 DOCUMENTE',docRow('🛡️','RCA',D.rca)+docRow('🔬','ITP',D.itp)+docRow('🛣️','Rovinietă',D.rov)+docRow('🧯','Extinctor',D.ext)+docRow('🏥','Trusă medicală',D.trz));
+  const sv=Array.isArray(r.service)?r.service:[];
+  h+=sec('🔧 ISTORIC SERVICE ('+sv.length+')',sv.length?sv.map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--b2);font-size:13px"><div style="display:flex;justify-content:space-between;gap:8px"><strong>${_rEsc(m.tip)}</strong><span style="color:var(--t3);white-space:nowrap">${_rDate(m.data)}</span></div><div style="font-size:12px;color:var(--t2)">${m.km?Number(m.km).toLocaleString('ro-RO')+' km':''}${m.km&&m.furnizor?' · ':''}${_rEsc(m.furnizor||'')}</div>${m.detalii?`<div style="font-size:12px;color:var(--t3)">${_rEsc(m.detalii)}</div>`:''}</div>`).join(''):'<div style="font-size:13px;color:var(--t3)">Vânzătorul nu a înregistrat intervenții de service în aplicație.</div>');
+  const cb=r.combustibil;
+  h+=sec('⛽ COMBUSTIBIL',cb?`<div style="font-size:13px;line-height:1.7">${Number(cb.alimentari)||0} alimentări înregistrate${r.de_la?' (din '+_rDate(r.de_la)+')':''}<br>${cb.consum_mediu?'Consum mediu real: <strong>'+Number(cb.consum_mediu).toLocaleString('ro-RO')+' L/100 km</strong>':'<span style="color:var(--t3)">Prea puține alimentări „plin" pentru calculul consumului</span>'}</div>`:'<div style="font-size:13px;color:var(--t3)">Fără jurnal de combustibil.</div>');
+  h+=`<div style="font-size:11px;color:var(--t3);line-height:1.6;padding:10px 12px;background:var(--s2);border-radius:10px">ℹ️ Raport generat din datele introduse de vânzător în AutoAssist la ${_rDate(r.generat)}. Informațiile sunt declarate de proprietar și <strong>nu sunt verificate de AutoAssist</strong>. Pentru istoric verificat (km reali, accidente) folosește un raport carVertical.</div>`;
+  return `<div style="font-size:20px;font-weight:900;margin-bottom:4px">📋 Raport AutoAssist</div><div style="font-size:12px;color:var(--t3);margin-bottom:16px">${_rEsc(titlu||'')}</div>${h}`;
+}
+
+function vanzRaportOpen(r, titlu){
+  document.getElementById('mo-raport')?.remove();
+  document.body.insertAdjacentHTML('beforeend',`<div id="mo-raport" style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10000;overflow-y:auto;padding:20px 16px" onclick="if(event.target===this)this.remove()"><div style="background:var(--s1);border:1px solid var(--b2);border-radius:20px;max-width:620px;margin:0 auto;padding:22px;position:relative" onclick="event.stopPropagation()"><button onclick="document.getElementById('mo-raport').remove()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px">×</button>${vanzRaportHtml(r,titlu)}</div></div>`);
+}
+
+// Previzualizare pentru vânzător (butonul din formular)
+function vanzRaportPreview(){
+  const c=cars.find(x=>x.id===selCarId);
+  if(!c){ if(typeof showNotification==='function') showNotification('Alege mașina','Selectează mai întâi mașina pe care o vinzi.'); return; }
+  const kmEl=document.getElementById('vanz-km');
+  const r=vanzBuildRaport(c, kmEl&&kmEl.value?kmEl.value:c.km);
+  vanzRaportOpen(r, (c.brand||'')+' '+(c.model||'')+' '+(c.year||''));
+}
+// compatibilitate cu butonul vechi
+function vanzAdaugaRaportService(){ vanzRaportPreview(); }
+
+// Buton din anunț (cumpărător)
+function anuntVeziRaport(){
+  const a=window._anuntCur; if(!a||!a.raport) return;
+  vanzRaportOpen(a.raport,(a.brand||'')+' '+(a.model||'')+' '+(a.year||''));
+}
