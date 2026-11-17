@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<script>try{var m=location.search.match(/[?&]billing=(\w+)/);if(m)sessionStorage.setItem("aa_billing",m[1]);}catch(e){}</script>
+<script>try{var m=location.search.match(/[?&]billing=(\w+)/);if(m)sessionStorage.setItem("aa_billing",m[1]);else sessionStorage.removeItem("aa_billing");}catch(e){}</script>
 <meta charset="UTF-8">
 <script>
 // Link direct din email/notificare: ?go=asigurari deschide secțiunea după autentificare
@@ -242,6 +242,7 @@
     <div class="ni" onclick="goTo('agenti')" style="border:1px solid rgba(79,125,255,0.15)"><span class="ni-i">🧠</span>Agenți AI<span class="nbadge g">LIVE</span></div>
   </nav>
   <div class="sf">
+    <button id="sidebar-premium-btn" onclick="goTo('premium')" style="display:none;width:100%;margin-bottom:8px;padding:10px;background:linear-gradient(135deg,#f0b429,#e09e1a);border:none;border-radius:11px;color:#000;font-size:12px;font-weight:800;cursor:pointer;align-items:center;justify-content:center;gap:6px">👑 Activează Premium</button>
     <button id="sidebar-install-btn" onclick="pwaOpenInstallFromPill()" style="display:none;width:100%;margin-bottom:8px;padding:10px;background:linear-gradient(135deg,#4f7dff,#7c5cfc);border:none;border-radius:11px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:6px">📲 Instalează aplicația</button>
     <div class="upill" id="user-pill" title="Click pentru cont/logout" onclick="userPillClick()">
       <div class="av" style="background:linear-gradient(135deg,#4f7dff,#7c5cfc);font-size:12px;font-weight:800" id="upill-avatar">AA</div>

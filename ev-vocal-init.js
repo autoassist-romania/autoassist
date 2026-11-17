@@ -463,6 +463,7 @@ function aaUserIsPremium(user){
   return !am.premium_until || Date.parse(am.premium_until)>Date.now();
 }
 function aaSetPlanLabel(el, user){
+  try{ var pb=document.getElementById('sidebar-premium-btn'); if(pb) pb.style.display=(user&&!aaUserIsPremium(user))?'flex':'none'; }catch(e){}
   if(aaUserIsPremium(user)){
     el.innerHTML='Plan Premium <span style="background:linear-gradient(135deg,#f0b429,#e09e1a);color:#000;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:4px">PRO</span>';
   } else { el.textContent='Plan Gratuit'; }
