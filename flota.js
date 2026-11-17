@@ -63,13 +63,14 @@
     }
     if(b!=='success'){ note('ℹ️','Plata a fost anulată. Nu s-a retras nimic.'); return; }
     note('⏳','Plată primită. Activez contul...');
-    for(var i=0;i<10;i++){
+    for(var i=0;i<24;i++){
       try{
         var s = await supabaseClient.auth.refreshSession();
         if(s && s.data && s.data.user) currentUser = s.data.user;
+        try{ var g = await supabaseClient.auth.getUser(); if(g && g.data && g.data.user){ currentUser = g.data.user; } }catch(e2){}
         var r = await supabaseClient.rpc('my_fleet');
         if(r.data) window.myFleet = Object.assign({}, r.data, {_uid: currentUser.id});
-        if(isPremium()){ note('✅','Contul tău este activ. Mulțumim!'); if(typeof renderAll==='function') renderAll(); if(window.myFleet && typeof goTo==='function') goTo('flota'); return; }
+        if(isPremium()){ note('✅','Contul tău este activ. Mulțumim!'); try{ if(typeof updateUserUI==='function') updateUserUI(currentUser); }catch(e3){} try{ if(typeof aaRefreshPlanLabel==='function') aaRefreshPlanLabel(); }catch(e4){} if(typeof renderAll==='function') renderAll(); if(window.myFleet && typeof goTo==='function') goTo('flota'); return; }
       }catch(e){}
       await new Promise(function(r){ setTimeout(r,2500); });
     }
