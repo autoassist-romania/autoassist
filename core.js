@@ -283,7 +283,7 @@ function showSoon(title, desc){
 }
 function soonRov(){ showSoon('Reînnoire rovinietă','Reînnoirea rovinietei prin AutoAssist se activează în curând. Până atunci te anunțăm în aplicație când expiră.'); }
 // Pune true DUPĂ ce ai configurat Stripe (vezi PAȘI_FLOTE.md). Până atunci butoanele de plată afișează „în curând".
-const BILLING_LIVE = false;
+const BILLING_LIVE = true;
 function cumpPrem(){
   if(BILLING_LIVE && typeof billingCheckout==='function') return billingCheckout('premium');
   showSoon('AutoAssist Premium','Plata Premium (99 RON/an, primele 2 luni gratis) se activează în curând. Până atunci poți folosi gratuit toate funcțiile planului de bază.');
