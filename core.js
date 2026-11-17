@@ -121,7 +121,7 @@ FUNCȚIONALITĂȚI PRINCIPALE:
 
 PREȚURI:
 - Plan Gratuit: 1 mașină, alerte la 30 de zile, 5 mesaje AI/zi
-- Plan Premium: 99 RON/an (≈8 RON/lună, primele 2 luni gratis), până la 5 mașini
+- Plan Premium: 99 RON/an (9,9 RON/lună × 10 luni, 2 luni incluse gratis), până la 5 mașini
 - Pachete Flotă pentru firme (6–100 vehicule, mai mulți utilizatori): secțiunea Flote din meniu
 - Raport verificare SH (Checklist Mecanic): 10 RON
 - Primul raport SH gratuit la înregistrare
@@ -286,7 +286,7 @@ function soonRov(){ showSoon('Reînnoire rovinietă','Reînnoirea rovinietei pri
 const BILLING_LIVE = true;
 function cumpPrem(){
   if(BILLING_LIVE && typeof billingCheckout==='function') return billingCheckout('premium');
-  showSoon('AutoAssist Premium','Plata Premium (99 RON/an, primele 2 luni gratis) se activează în curând. Până atunci poți folosi gratuit toate funcțiile planului de bază.');
+  showSoon('AutoAssist Premium','Plata Premium (99 RON/an, 2 luni incluse gratis) se activează în curând. Până atunci poți folosi gratuit toate funcțiile planului de bază.');
 }
 function cumpRaport(){ showSoon('Checklist mecanic cumpărare SH','Checklistul complet pentru cumpărarea unei mașini second-hand se activează în curând.'); }
 

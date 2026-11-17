@@ -302,8 +302,24 @@
   // ── Etichetă dinamică pentru butonul Premium ──
   function applyBillingUI(){
     var b=$('prem-buy-btn');
-    if(b && typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) b.textContent='👑 Activează Premium — 99 RON/an · primele 2 luni gratis';
+    if(b && typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) b.textContent='👑 Activează Premium — 99 RON/an · 2 luni incluse gratis';
   }
   document.addEventListener('DOMContentLoaded', applyBillingUI);
   if(document.readyState!=='loading') applyBillingUI();
+
+  // ── Întoarcere de la Stripe: pornește activarea imediat ce utilizatorul e conectat ──
+  // (loadUserData poate rula înainte să se încarce acest fișier; așa nu se mai pierde ?billing=success)
+  (function waitBillingReturn(){
+    var b=null; try{ b=sessionStorage.getItem('aa_billing'); }catch(e){}
+    if(!b) return;
+    var tries=0;
+    var iv=setInterval(function(){
+      tries++;
+      var ready = (typeof supabaseClient!=='undefined' && supabaseClient) && (typeof currentUser!=='undefined' && currentUser);
+      var still=null; try{ still=sessionStorage.getItem('aa_billing'); }catch(e){}
+      if(!still){ clearInterval(iv); return; }          // l-a consumat deja loadMyFleet
+      if(ready){ clearInterval(iv); try{ afterBilling(); }catch(e){} return; }
+      if(tries>60) clearInterval(iv);                   // ~30 s
+    },500);
+  })();
 })();
