@@ -2651,8 +2651,26 @@ function checkDocumentAlerts() {
   });
 }
 
+function aaToast(title, body){
+  try{
+    var box=document.getElementById('aa-toast-box');
+    if(!box){
+      box=document.createElement('div'); box.id='aa-toast-box';
+      box.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:92vw;width:420px;pointer-events:none';
+      document.body.appendChild(box);
+    }
+    var t=document.createElement('div');
+    t.style.cssText='background:#14192b;border:1px solid rgba(240,180,41,.55);color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 8px 30px rgba(0,0,0,.55);font-size:13px;line-height:1.4;pointer-events:auto';
+    var h=document.createElement('div'); h.style.cssText='font-weight:800;margin-bottom:2px'; h.textContent=title||'';
+    var b=document.createElement('div'); b.style.cssText='opacity:.85'; b.textContent=body||'';
+    t.appendChild(h); if(body) t.appendChild(b);
+    box.appendChild(t);
+    setTimeout(function(){ try{ t.remove(); }catch(e){} }, 9000);
+  }catch(e){}
+}
 function showNotification(title, body) {
-  if(Notification.permission === 'granted') {
+  aaToast(title, body);
+  if(typeof Notification!=='undefined' && Notification.permission === 'granted') {
     new Notification(title, {
       body,
       icon: '/icon-192.png',
