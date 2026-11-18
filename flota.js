@@ -436,7 +436,7 @@
       if(kind==='json'){
         aaDownload(new Blob([JSON.stringify(j.data,null,2)],{type:'application/json'}),'autoassist-datele-mele-'+day+'.json');
       } else {
-        if(!window.docx) await aaLoadScript('https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js');
+        if(!window.docx) await aaLoadScript('https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js');
         if(!window.AAExportDocx) await aaLoadScript('/export-docx.js?v=1');
         var logo=null;
         try{
