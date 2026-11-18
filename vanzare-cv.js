@@ -95,10 +95,20 @@ function loadVanzCars(){
     </div>`).join('');
 }
 
+// Mașina curentă din formularul de vânzare (rezistent la tip id / reîncărcarea listei din Supabase)
+function vanzCar(){
+  let c=cars.find(x=>String(x.id)===String(selCarId));
+  const k=window._vanzCarKey;
+  if(!c && k) c=cars.find(x=>String(x.id)===String(k.id)) || cars.find(x=>k.plate && x.plate===k.plate);
+  if(c){ selCarId=c.id; window._vanzCarKey={id:c.id,plate:c.plate}; }
+  return c;
+}
+
 function selectVanzCar(id){
-  selCarId = id; window._vanzEditId=null; window._vanzLoc=null;
-  const c = cars.find(x=>x.id===id);
+  selCarId = (cars.find(x=>String(x.id)===String(id))||{id:id}).id; window._vanzEditId=null; window._vanzLoc=null;
+  const c = cars.find(x=>String(x.id)===String(id));
   if(!c) return;
+  window._vanzCarKey={id:c.id,plate:c.plate};
   loadVanzCars();
   document.getElementById('vanz-step1').style.display='none';
   document.getElementById('vanz-step2').style.display='block';
@@ -150,8 +160,9 @@ function vanzPrefillBrandModel(c){
 
 function openVanz(id){
   selCarId=id; window._vanzEditId=null; window._vanzLoc=null;
-  const c=cars.find(x=>x.id===id);
+  const c=cars.find(x=>String(x.id)===String(id));
   if(!c)return;
+  window._vanzCarKey={id:c.id,plate:c.plate};
   goTo('vanzare');
   setTimeout(function(){
     document.getElementById('vanz-step1').style.display='none';
@@ -190,7 +201,7 @@ function vanzEstimPret(){
   _vanzEstTimer = setTimeout(_vanzEstimPretRun, 600);
 }
 async function _vanzEstimPretRun(){
-  const c=cars.find(x=>x.id===selCarId);
+  const c=vanzCar();
   if(!c||!c.year)return;
   const hint=document.getElementById('vanz-pret-hint');
   const cacheKey=[c.brand,c.model,c.year,c.km,c.fuel].join('|');
@@ -220,11 +231,26 @@ async function _vanzEstimPretRun(){
   }catch(e){ fallback(); }
 }
 
+function vanzDotariVal(){
+  const l=[...document.querySelectorAll('#vanz-dotari input:checked')].map(x=>x.value);
+  const alte=(document.getElementById('vanz-dotari-alte')?.value||'').split(/[,;\n]/).map(x=>x.trim()).filter(Boolean);
+  alte.forEach(x=>{ if(!l.some(y=>y.toLowerCase()===x.toLowerCase())) l.push(x); });
+  return l.join(', ');
+}
+function vanzDotariSet(txt){
+  const dot=String(txt||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const boxes=[...document.querySelectorAll('#vanz-dotari input')];
+  const known=boxes.map(i=>i.value);
+  boxes.forEach(i=>{ i.checked=dot.includes(i.value); });
+  const alte=document.getElementById('vanz-dotari-alte');
+  if(alte) alte.value=dot.filter(x=>!known.includes(x)).join(', ');
+}
+
 async function vanzGenDesc(){
-  const c=cars.find(x=>x.id===selCarId);
+  const c=vanzCar();
   if(!c)return;
   const ta=document.getElementById('vanz-desc');
-  const dotari=[...document.querySelectorAll('#vanz-dotari input:checked')].map(x=>x.value).join(', ');
+  const dotari=vanzDotariVal();
   const pret=document.getElementById('vanz-pret').value;
   ta.value='✨ Se generează descrierea cu AI...';
   ta.disabled=true;
@@ -352,8 +378,8 @@ function vanzStep2Init(){ vanzRenderPachete(); vanzInitMap(); }
 // ═══ MODIFICĂ ANUNȚ ═══
 function vanzEditeaza(id){
   const a=(window._vanzLista||[]).find(x=>String(x.id)===String(id)); if(!a) return;
-  const c=cars.find(x=>x.plate===a.plate) || cars.find(x=>x.id===selCarId) || cars[0];
-  if(c) selCarId=c.id;
+  const c=cars.find(x=>x.plate===a.plate) || vanzCar() || cars[0];
+  if(c){ selCarId=c.id; window._vanzCarKey={id:c.id,plate:c.plate}; }
   window._vanzEditId=a.id; window._vanzEditPachet=a.pachet||'start';
   document.getElementById('vanz-step1').style.display='none';
   document.getElementById('vanz-step3').style.display='none';
@@ -365,8 +391,7 @@ function vanzEditeaza(id){
   setv('vanz-motor',a.motor_cm3); setv('vanz-putere',a.putere_cp); setv('vanz-locuri',a.locuri); setv('vanz-vin',a.vin);
   setv('vanz-pret',a.pret); setv('vanz-desc',a.descriere); setv('vanz-tel',a.tel); setv('vanz-judet',a.judet);
   setv('vanz-localitate',a.localitate); setv('vanz-indicatii',a.indicatii);
-  const dot=String(a.dotari||'').split(',').map(x=>x.trim());
-  document.querySelectorAll('#vanz-dotari input').forEach(i=>{ i.checked=dot.includes(i.value); });
+  vanzDotariSet(a.dotari);
   const foto=a.foto||(a.fotos&&a.fotos[0])||null;
   window._vanzFotoData=foto;
   const img=document.getElementById('vanz-foto-img'), pv=document.getElementById('vanz-foto-preview');
@@ -413,7 +438,7 @@ async function vanzRenewGo(){
 }
 
 async function vanzPublica(){
-  const c=cars.find(x=>x.id===selCarId);
+  const c=vanzCar();
   if(!c)return;
   const pret=document.getElementById('vanz-pret').value;
   const desc=document.getElementById('vanz-desc').value;
@@ -423,7 +448,7 @@ async function vanzPublica(){
   if(!desc||desc.length<20){alert('Te rugăm să generezi sau să scrii o descriere!');return;}
   if(!tel){alert('Te rugăm să introduci numărul de telefon!');return;}
 
-  const dotari=[...document.querySelectorAll('#vanz-dotari input:checked')].map(x=>x.value).join(', ');
+  const dotari=vanzDotariVal();
   const brand = document.getElementById('vanz-brand')?.value || c.brand;
   const model = document.getElementById('vanz-model')?.value || c.model;
   const an = document.getElementById('vanz-an')?.value ? Number(document.getElementById('vanz-an').value) : c.year;
@@ -906,7 +931,7 @@ function vanzRaportOpen(r, titlu){
 
 // Previzualizare pentru vânzător (butonul din formular)
 function vanzRaportPreview(){
-  const c=cars.find(x=>x.id===selCarId);
+  const c=vanzCar();
   if(!c){ if(typeof showNotification==='function') showNotification('Alege mașina','Selectează mai întâi mașina pe care o vinzi.'); return; }
   const kmEl=document.getElementById('vanz-km');
   const r=vanzBuildRaport(c, kmEl&&kmEl.value?kmEl.value:c.km);
