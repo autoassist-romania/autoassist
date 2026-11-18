@@ -347,6 +347,29 @@
     },500);
   })();
 
+  // ── Exportul datelor (GDPR, portabilitate) ──
+  window.exportDataDo = async function(){
+    var b=$('aa-exp-btn'), m=$('aa-exp-msg');
+    if(!currentUser){ if(m) m.textContent='Autentifică-te mai întâi.'; return; }
+    if(b){ b.disabled=true; b.textContent='Se pregătește…'; }
+    if(m) m.textContent='';
+    try{
+      var r = await fetch(FN_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':AA_ANON_JWT,'Authorization':await aaAuthHeader()},body:JSON.stringify({action:'export_data'})});
+      var j = await r.json().catch(function(){return {};});
+      if(!j.ok || !j.data) throw new Error(j.error||'export');
+      var blob = new Blob([JSON.stringify(j.data,null,2)],{type:'application/json'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'autoassist-datele-mele-'+new Date().toISOString().slice(0,10)+'.json';
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500);
+      if(m) m.textContent='✅ Fișierul a fost descărcat.';
+    }catch(e){
+      if(m) m.textContent='Nu am putut genera exportul. Încearcă din nou sau scrie-ne la autoassist.romania@gmail.com.';
+    }
+    if(b){ b.disabled=false; b.textContent='Descarcă datele mele'; }
+  };
+
   // ── Ștergerea contului (GDPR) ──
   window.deleteAccountOpen = function(){
     if(!currentUser){ note('🔐','Autentifică-te mai întâi.'); return; }
