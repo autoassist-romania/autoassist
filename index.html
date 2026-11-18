@@ -2692,6 +2692,25 @@ if(typeof renderAll === 'function') {
   };
 }
 </script>
+<script>
+// Buton „arată/ascunde parola” la câmpurile de parolă ale utilizatorului
+(function(){
+  function addEye(id){
+    var i=document.getElementById(id);
+    if(!i||i.dataset.eye) return;
+    i.dataset.eye='1';
+    var w=document.createElement('div'); w.style.cssText='position:relative;display:block';
+    i.parentNode.insertBefore(w,i); w.appendChild(i);
+    i.style.paddingRight='44px';
+    var b=document.createElement('button'); b.type='button'; b.textContent='👁️'; b.setAttribute('aria-label','Arată parola');
+    b.style.cssText='position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:6px;opacity:.8';
+    b.onclick=function(){ var s=i.type==='password'; i.type=s?'text':'password'; b.textContent=s?'🙈':'👁️'; b.setAttribute('aria-label',s?'Ascunde parola':'Arată parola'); };
+    w.appendChild(b);
+  }
+  function init(){ ['login-pass','signup-pass','new-pass-1','new-pass-2'].forEach(addEye); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
 <!-- MODAL RESETARE PAROLA -->
 <div class="mo" id="mo-reset-pw">
   <div class="md" style="max-width:420px">

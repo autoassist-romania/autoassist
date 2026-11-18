@@ -59,7 +59,7 @@ async function loadAgentHistory(agent, returnHTML=false) {
       return `<div class="msg user"><div class="mav user">👤</div><div class="mb"><div class="mn" style="text-align:right">Tu</div><div class="mbu">${m.content}</div></div></div>`;
     } else {
       const fmt = m.content.split('\n').join('<br>');
-      return `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[agent]||"🤖"}</div><div class="mb"><div class="mn">${AGENT_NAMES[agent]}</div><div class="mbu">${fmt}</div></div></div>`;
+      return `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[curAgent]||"🤖"}</div><div class="mb"><div class="mn">${AGENT_NAMES[agent]}</div><div class="mbu">${fmt}</div></div></div>`;
     }
   }).join('') : '';
   
@@ -107,7 +107,7 @@ function newConversation() {
   localStorage.removeItem('chat_' + agent);
   // În Supabase marcăm cu session_id nou, nu ștergem
   const msgs = document.getElementById('chat-msgs');
-  msgs.innerHTML = `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[agent]||"🤖"}</div><div class="mb"><div class="mn">${AGENT_NAMES[agent]}</div><div class="mbu">Conversație nouă pornită! Cu ce te pot ajuta? 🚀</div></div></div>`;
+  msgs.innerHTML = `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[curAgent]||"🤖"}</div><div class="mb"><div class="mn">${AGENT_NAMES[agent]}</div><div class="mbu">Conversație nouă pornită! Cu ce te pot ajuta? 🚀</div></div></div>`;
   showNotification('✅ Conversație nouă','Conversația anterioară a fost salvată în istoric.');
 }
 
@@ -178,7 +178,7 @@ async function selAgent(btn,agent){
   let historyHTML = await loadAgentHistory(agent, true);
   
   const hasHistory = chatHistory.length > 0;
-  const welcomeMsg = `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[agent]||"🤖"}</div><div class="mb"><div class="mn">${AGENT_NAMES[agent]}</div><div class="mbu">Bună! Sunt <strong>${AGENT_NAMES[agent]}</strong>${hasHistory ? ' — am încărcat istoricul conversației noastre! 🧠' : '. Sunt gata să te ajut cu tot ce ai nevoie. Cu ce pot începe? 🚀'}</div></div></div>`;
+  const welcomeMsg = `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[curAgent]||"🤖"}</div><div class="mb"><div class="mn">${AGENT_NAMES[agent]}</div><div class="mbu">Bună! Sunt <strong>${AGENT_NAMES[agent]}</strong>${hasHistory ? ' — am încărcat istoricul conversației noastre! 🧠' : '. Sunt gata să te ajut cu tot ce ai nevoie. Cu ce pot începe? 🚀'}</div></div></div>`;
   
   msgs.innerHTML = welcomeMsg + historyHTML;
   msgs.scrollTop = msgs.scrollHeight;
@@ -341,7 +341,7 @@ async function clearAgentHistory() {
   
   chatHistory = [];
   const msgs = document.getElementById('chat-msgs');
-  msgs.innerHTML = `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[agent]||"🤖"}</div><div class="mb"><div class="mn">${AGENT_NAMES[curAgent]}</div><div class="mbu">Istoricul a fost șters. Bună! Sunt <strong>${AGENT_NAMES[curAgent]}</strong>. Cu ce pot începe? 🚀</div></div></div>`;
+  msgs.innerHTML = `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[curAgent]||"🤖"}</div><div class="mb"><div class="mn">${AGENT_NAMES[curAgent]}</div><div class="mbu">Istoricul a fost șters. Bună! Sunt <strong>${AGENT_NAMES[curAgent]}</strong>. Cu ce pot începe? 🚀</div></div></div>`;
 }
 
 async function requestNotifPermission() {

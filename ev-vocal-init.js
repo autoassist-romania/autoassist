@@ -716,7 +716,11 @@ async function signupEmail() {
       options: { data: { full_name: name || email.split('@')[0] } }
     });
     if(error){
-      if(err){ err.style.display='block'; err.textContent=error.message==='User already registered'?'Acest email este deja înregistrat! Încearcă să te loghezi.':error.message; }
+      if(err){ err.style.display='block'; err.textContent=/already registered|already been registered/i.test(error.message||'')?'⚠️ Există deja un cont cu acest email. Loghează-te sau apasă „Ai uitat parola?”.':error.message; }
+      return;
+    }
+    if(data && data.user && Array.isArray(data.user.identities) && data.user.identities.length===0){
+      if(err){ err.style.display='block'; err.textContent='⚠️ Există deja un cont cu acest email. Loghează-te sau apasă „Ai uitat parola?” ca să-ți resetezi parola.'; }
       return;
     }
     if(data.session){

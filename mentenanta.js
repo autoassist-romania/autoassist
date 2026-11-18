@@ -838,6 +838,12 @@ function renderReminderAuto() {
   </div>`;
 }
 
+function delMntConfirm(carId, id, btn) {
+  if(!confirm('Ștergi această intrare din istoric?')) return;
+  delMnt(carId, id);
+  try{ const md = btn && btn.closest('div[style*=fixed]'); if(md) md.remove(); }catch(e){}
+}
+
 function delMnt(carId, id) {
   let list = JSON.parse(localStorage.getItem('mnt_'+carId)||'[]');
   list = list.filter(m => m.id !== id);

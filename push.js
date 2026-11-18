@@ -134,3 +134,33 @@
     if(ok){ clearInterval(t); try{ sessionStorage.removeItem('aa_deepact'); }catch(e){} }
   }, 400);
 })();
+
+// ── Invitație discretă să activeze notificările pe telefon (apare o singură dată, după login) ──
+(function(){
+  function ok(){
+    try{
+      if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return false;
+      var ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
+      var standalone=(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true;
+      if(ios && !standalone) return false;
+      if(Notification.permission!=='default') return false;
+      if(localStorage.getItem('aa_push_dismiss')) return false;
+      return true;
+    }catch(e){ return false; }
+  }
+  function show(){
+    if(document.getElementById('aa-push-invite')) return;
+    var d=document.createElement('div'); d.id='aa-push-invite';
+    d.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99998;width:min(440px,94vw);background:#14192b;border:1px solid rgba(240,180,41,.55);border-radius:14px;padding:14px 16px;box-shadow:0 10px 36px rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:1.45';
+    d.innerHTML='<div style="font-weight:800;margin-bottom:4px">🔔 Vrei să te anunțăm pe telefon?</div><div style="opacity:.85;margin-bottom:10px">Primești o notificare normală, sus pe ecran, înainte să expire RCA, ITP sau rovinieta.</div><div style="display:flex;gap:8px"><button id="aa-push-yes" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#f0b429,#e09e1a);color:#000;font-weight:800;cursor:pointer">Activează</button><button id="aa-push-no" style="padding:10px 14px;border:1px solid rgba(255,255,255,.25);border-radius:10px;background:none;color:#fff;cursor:pointer">Nu acum</button></div>';
+    document.body.appendChild(d);
+    document.getElementById('aa-push-yes').onclick=function(){ d.remove(); try{ localStorage.setItem('aa_push_dismiss','1'); }catch(e){} if(window.aaPushEnable) window.aaPushEnable(); };
+    document.getElementById('aa-push-no').onclick=function(){ d.remove(); try{ localStorage.setItem('aa_push_dismiss','1'); }catch(e){} };
+  }
+  var tries=0, t=setInterval(function(){
+    tries++; if(tries>120){ clearInterval(t); return; }
+    if(typeof currentUser==='undefined' || !currentUser) return;
+    clearInterval(t);
+    if(ok()) setTimeout(function(){ if(ok()) show(); }, 8000);
+  }, 1000);
+})();

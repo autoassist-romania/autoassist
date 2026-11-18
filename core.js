@@ -323,6 +323,7 @@ function _applySection(sec){
   } else if(!['asigurari','itp','mentenanta','vanzare'].includes(sec)) {
     window._returnToCarId = null;
   }
+  if(sec==='premium' && typeof window.applyBillingUI==='function') window.applyBillingUI();
   if(sec==='costuri') populateCostCars();
   if(sec==='asistent') { setTimeout(loadVoices, 200); }
   if(sec==='mentenanta') { populateMntSelects(); mntTab('istoric'); }
@@ -350,6 +351,13 @@ function _applySection(sec){
   if(sec==='flota' && typeof renderFlota==='function') renderFlota();
   // Nu face scroll la top pentru sectiuni cu iframe (asigurari)
   if(sec !== 'asigurari') window.scrollTo(0,0);
+}
+function goBack(){
+  try{
+    if(window._returnToCarId && typeof openCar==='function'){ const id=window._returnToCarId; window._returnToCarId=null; openCar(id); return; }
+    if(_navStack.length>1){ history.back(); return; }
+  }catch(e){}
+  goTo('dashboard');
 }
 function goTo(sec){
   if(SOON_SECTIONS[sec]){ showSoon(SOON_SECTIONS[sec].t, SOON_SECTIONS[sec].d); return; }

@@ -37,6 +37,7 @@
     }catch(e){ window.myFleet = null; }
     try{ await afterBilling(); }catch(e){}
     try{ if(typeof aaRefreshPlanLabel==='function') aaRefreshPlanLabel(); }catch(e){}
+    try{ applyBillingUI(); }catch(e){}
     try{ if(typeof renderAll==='function') renderAll(); }catch(e){}
     return window.myFleet;
   };
@@ -70,7 +71,7 @@
         try{ var g = await supabaseClient.auth.getUser(); if(g && g.data && g.data.user){ currentUser = g.data.user; } }catch(e2){}
         var r = await supabaseClient.rpc('my_fleet');
         if(r.data) window.myFleet = Object.assign({}, r.data, {_uid: currentUser.id});
-        if(isPremium()){ note('✅','Contul tău este activ. Mulțumim!'); try{ if(typeof updateUserUI==='function') updateUserUI(currentUser); }catch(e3){} try{ if(typeof aaRefreshPlanLabel==='function') aaRefreshPlanLabel(); }catch(e4){} if(typeof renderAll==='function') renderAll(); if(window.myFleet && typeof goTo==='function') goTo('flota'); return; }
+        if(isPremium()){ note('✅','Contul tău este activ. Mulțumim!'); try{ if(typeof updateUserUI==='function') updateUserUI(currentUser); }catch(e3){} try{ if(typeof aaRefreshPlanLabel==='function') aaRefreshPlanLabel(); }catch(e4){} try{ applyBillingUI(); }catch(e5){} if(typeof renderAll==='function') renderAll(); if(window.myFleet && typeof goTo==='function') goTo('flota'); return; }
       }catch(e){}
       await new Promise(function(r){ setTimeout(r,2500); });
     }
@@ -302,9 +303,31 @@
 
   // ── Etichetă dinamică pentru butonul Premium ──
   function applyBillingUI(){
-    var b=$('prem-buy-btn');
-    if(b && typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) b.textContent='👑 Activează Premium — 99 RON/an · 2 luni incluse gratis';
+    var b=$('prem-buy-btn'); if(!b) return;
+    var live=(typeof BILLING_LIVE!=='undefined' && BILLING_LIVE);
+    var u=(typeof currentUser!=='undefined' && currentUser) ? currentUser : null;
+    var am=(u && u.app_metadata) || {};
+    var prem=(typeof isPremium==='function') && isPremium();
+    var st=$('prem-status');
+    if(!st){ st=document.createElement('div'); st.id='prem-status'; st.style.cssText='font-size:12px;color:var(--green);margin:0 0 10px;text-align:center;font-weight:700;display:none'; b.parentNode.insertBefore(st,b); }
+    if(prem){
+      var until=''; try{ if(am.premium_until) until=new Date(am.premium_until).toLocaleDateString('ro-RO'); }catch(e){}
+      if(am.stripe_customer && live){
+        b.textContent='⚙️ Gestionează abonamentul / facturi / anulare';
+        b.onclick=function(){ billingPortal(); };
+        st.textContent='✅ Ești Premium'+(until?' · valabil până la '+until:''); st.style.display='block';
+      } else {
+        b.textContent=(window.myFleet && window.myFleet.active) ? '✅ Premium activ prin flotă' : '✅ Premium activ';
+        b.onclick=function(){};
+        st.style.display='none';
+      }
+      return;
+    }
+    st.style.display='none';
+    b.onclick=function(){ cumpPrem(); };
+    if(live) b.textContent='👑 Activează Premium — 99 RON/an · 2 luni incluse gratis';
   }
+  window.applyBillingUI=applyBillingUI;
   document.addEventListener('DOMContentLoaded', applyBillingUI);
   if(document.readyState!=='loading') applyBillingUI();
 
