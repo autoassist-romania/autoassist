@@ -156,7 +156,7 @@ function doLogout(){
   });
 }
 function userPillClick(){
-  if(currentUser){ goTo('cont'); }
+  if(currentUser){ goTo('setari'); }
   else { openM('login'); }
 }
 function savePlateApiKey(){

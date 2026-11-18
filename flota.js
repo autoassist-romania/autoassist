@@ -346,4 +346,46 @@
       if(tries>60) clearInterval(iv);                   // ~30 s
     },500);
   })();
+
+  // ── Ștergerea contului (GDPR) ──
+  window.deleteAccountOpen = function(){
+    if(!currentUser){ note('🔐','Autentifică-te mai întâi.'); return; }
+    var old=$('aa-del-modal'); if(old) old.remove();
+    var m=document.createElement('div'); m.id='aa-del-modal';
+    m.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px';
+    m.innerHTML='<div class="card" style="max-width:420px;width:100%;border:1px solid rgba(239,68,68,.5)">'
+      +'<div class="ct" style="margin-bottom:10px">🗑️ Ștergi definitiv contul?</div>'
+      +'<p style="font-size:13px;color:var(--t2);margin-bottom:10px">Se șterg mașinile, documentele, anunțurile, conversațiile cu agenții și notificările. Abonamentul Premium se anulează imediat, fără rambursare. <strong>Nu se poate anula.</strong></p>'
+      +'<p style="font-size:12px;color:var(--t3);margin-bottom:10px">Facturile plătite rămân păstrate de procesatorul de plăți, conform obligațiilor contabile.</p>'
+      +'<div class="fg"><label class="fl">Scrie STERGE pentru confirmare</label><input class="fi" id="aa-del-input" autocomplete="off" placeholder="STERGE"></div>'
+      +'<div id="aa-del-msg" style="font-size:12px;color:var(--red);min-height:16px;margin-bottom:8px"></div>'
+      +'<div style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="deleteAccountClose()">Renunț</button>'
+      +'<button class="btn" id="aa-del-go" style="flex:1;background:var(--red);color:#fff" onclick="deleteAccountDo()">Șterge definitiv</button></div></div>';
+    document.body.appendChild(m);
+  };
+  window.deleteAccountClose = function(){ var m=$('aa-del-modal'); if(m) m.remove(); };
+  window.deleteAccountDo = async function(){
+    var inp=$('aa-del-input'), msg=$('aa-del-msg'), go=$('aa-del-go');
+    if(!inp || inp.value.trim().toUpperCase()!=='STERGE'){ if(msg) msg.textContent='Scrie exact STERGE ca să confirmi.'; return; }
+    if(go){ go.disabled=true; go.textContent='Se șterge…'; }
+    try{
+      var r = await fetch(FN_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':AA_ANON_JWT,'Authorization':await aaAuthHeader()},body:JSON.stringify({action:'delete_account',confirm:'STERGE'})});
+      var j = await r.json().catch(function(){return {};});
+      if(j.ok){
+        try{ localStorage.clear(); sessionStorage.clear(); }catch(e){}
+        try{ await supabaseClient.auth.signOut(); }catch(e){}
+        document.body.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:sans-serif;background:#0b1220;color:#fff"><div><div style="font-size:42px;margin-bottom:12px">✅</div><div style="font-size:18px;font-weight:700;margin-bottom:8px">Contul a fost șters</div><div style="font-size:14px;opacity:.75;margin-bottom:18px">Datele tale au fost eliminate. Mulțumim că ai folosit AutoAssist.</div><a href="/" style="color:#f0b429">Înapoi la pagina principală</a></div></div>';
+        return;
+      }
+      var t = j.error==='owns_fleet' ? 'Ai o flotă activă. Anulează mai întâi abonamentul flotei din secțiunea Flotă, apoi poți șterge contul.'
+            : j.error==='protected_account' ? 'Acest cont este protejat și nu poate fi șters din aplicație.'
+            : j.error==='confirm_required' ? 'Scrie STERGE ca să confirmi.'
+            : 'Nu am putut șterge contul. Încearcă din nou sau scrie-ne la autoassist.romania@gmail.com.';
+      if(msg) msg.textContent=t;
+      if(go){ go.disabled=false; go.textContent='Șterge definitiv'; }
+    }catch(e){
+      if(msg) msg.textContent='Eroare de rețea. Încearcă din nou.';
+      if(go){ go.disabled=false; go.textContent='Șterge definitiv'; }
+    }
+  };
 })();
