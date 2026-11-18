@@ -303,6 +303,7 @@
 
   // ── Etichetă dinamică pentru butonul Premium ──
   function updateSettingsSub(){
+    try{ fillProfile(false); }catch(e){}
     var st=$('aa-sub-status'), bt=$('aa-sub-btn'), by=$('aa-sub-buy'); if(!st||!bt) return;
     if(by) by.style.display='none';
     var u=(typeof currentUser!=='undefined' && currentUser) ? currentUser : null;
@@ -370,6 +371,42 @@
       if(tries>60) clearInterval(iv);                   // ~30 s
     },500);
   })();
+
+  // ── Profil utilizator (Setări): date reale din cont, salvate în metadatele contului ──
+  function fillProfile(force){
+    var n=$('aa-prof-name'); if(!n) return;
+    var u=(typeof currentUser!=='undefined' && currentUser) ? currentUser : null;
+    var f={name:n, email:$('aa-prof-email'), phone:$('aa-prof-phone'), city:$('aa-prof-city')};
+    if(!u){ f.email.value=''; return; }
+    var md=u.user_metadata||{};
+    function put(el,val){ if(!el) return; if(!force && (el.dataset.dirty==='1' || document.activeElement===el)) return; el.value=val||''; }
+    put(f.name, md.full_name || md.name || '');
+    put(f.phone, md.telefon || '');
+    put(f.city, md.localitate || '');
+    f.email.value = u.email || '';
+  }
+  window.fillProfile=fillProfile;
+  window.saveProfile = async function(){
+    var m=$('aa-prof-msg'), b=$('aa-prof-save');
+    if(!currentUser || !supabaseClient){ if(m){ m.style.color='var(--red)'; m.textContent='Autentifică-te mai întâi.'; } return; }
+    var name=($('aa-prof-name').value||'').trim().slice(0,80);
+    var phone=($('aa-prof-phone').value||'').trim().slice(0,20);
+    var city=($('aa-prof-city').value||'').trim().slice(0,60);
+    if(phone && !/^[0-9+()\-\s.]{6,20}$/.test(phone)){ if(m){ m.style.color='var(--red)'; m.textContent='Numărul de telefon nu pare valid.'; } return; }
+    if(b){ b.disabled=true; b.textContent='Se salvează…'; }
+    if(m){ m.style.color='var(--t3)'; m.textContent=''; }
+    try{
+      var r = await supabaseClient.auth.updateUser({ data:{ full_name:name, telefon:phone, localitate:city } });
+      if(r.error) throw r.error;
+      if(r.data && r.data.user) currentUser = r.data.user;
+      ['aa-prof-name','aa-prof-phone','aa-prof-city'].forEach(function(id){ var e=$(id); if(e) e.dataset.dirty=''; });
+      try{ if(typeof updateUserUI==='function') updateUserUI(currentUser); }catch(e){}
+      if(m){ m.style.color='var(--green)'; m.textContent='✅ Modificările au fost salvate.'; }
+    }catch(e){
+      if(m){ m.style.color='var(--red)'; m.textContent='Nu am putut salva. Încearcă din nou.'; }
+    }
+    if(b){ b.disabled=false; b.textContent='Salvează modificările'; }
+  };
 
   // ── Exportul datelor (GDPR, portabilitate): raport Word + fișier JSON ──
   function aaLoadScript(src){

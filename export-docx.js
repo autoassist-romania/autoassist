@@ -158,6 +158,11 @@
       ['Email', fv(cont.email)], ['Cont creat la', fv(cont.creat_la)],
       ['Premium', cont.premium ? 'Da' : 'Nu'], ['Premium valabil până la', cont.premium_pana ? fv(cont.premium_pana) : '—']
     ]));
+    var dp = data.date_profil || {};
+    if (dp.nume || dp.telefon || dp.localitate) {
+      kids.push(gap(D));
+      kids.push(kv(D, [['Nume', fv(dp.nume)], ['Telefon', fv(dp.telefon)], ['Localitate', fv(dp.localitate)]]));
+    }
     (data.profil || []).forEach(function (p) {
       kids.push(gap(D));
       kids.push(kv(D, [['Nume în profil', fv(p.full_name)], ['Email în profil', fv(p.email)], ['Plan', fv(p.plan)], ['Profil creat la', fv(p.created_at)]]));

@@ -1557,50 +1557,26 @@
   <div class="g2">
     <div class="card">
       <div class="ct" style="margin-bottom:14px">👤 Profil Utilizator</div>
-      <div class="fg"><label class="fl">Nume complet</label><input class="fi" value="Utilizator AutoAssist"></div>
-      <div class="fg"><label class="fl">Email</label><input class="fi" value="user@autoassist.ro"></div>
-      <div class="fg"><label class="fl">Telefon</label><input class="fi" placeholder="+40 700 000 000" type="tel"></div>
-      <div class="fg"><label class="fl">Localitate</label><input class="fi" placeholder="București"></div>
-      <button class="btn btn-primary" style="margin-top:6px">Salvează modificările</button>
+      <div class="fg"><label class="fl">Nume complet</label><input class="fi" id="aa-prof-name" maxlength="80" placeholder="Numele tău" autocomplete="name" oninput="this.dataset.dirty='1'"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="aa-prof-email" readonly style="opacity:.75;cursor:not-allowed" title="Emailul contului nu se poate schimba de aici"></div>
+      <div class="fg"><label class="fl">Telefon</label><input class="fi" id="aa-prof-phone" maxlength="20" placeholder="+40 700 000 000" type="tel" autocomplete="tel" oninput="this.dataset.dirty='1'"></div>
+      <div class="fg"><label class="fl">Localitate</label><input class="fi" id="aa-prof-city" maxlength="60" placeholder="București" autocomplete="address-level2" oninput="this.dataset.dirty='1'"></div>
+      <button class="btn btn-primary" id="aa-prof-save" style="margin-top:6px" onclick="saveProfile()">Salvează modificările</button>
+      <div id="aa-prof-msg" style="margin-top:8px;font-size:12px;min-height:16px;color:var(--t3)"></div>
     </div>
     <div class="card">
       <div class="ch"><span class="ct">📱 Alerte SMS <span style="background:linear-gradient(135deg,#f0b429,#e09e1a);color:#000;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:4px">ÎN CURÂND</span></span></div>
-      <p style="font-size:12px;color:var(--t2);margin-bottom:14px">Alertele SMS se activează în curând — îți salvăm numărul și preferințele acum. Până atunci primești alertele de expirare pe email.</p>
-      <div id="sms-premium-lock" style="display:none;text-align:center;padding:16px;background:rgba(240,180,41,0.06);border-radius:10px;border:1px dashed rgba(240,180,41,0.3)">
-        <div style="font-size:24px;margin-bottom:8px">👑</div>
-        <div style="font-size:13px;color:var(--t2);margin-bottom:10px">Alertele SMS sunt disponibile în planul Premium</div>
-        <button class="btn btn-gold btn-sm" onclick="showUpgradeModal('sms')">Activează Premium</button>
-      </div>
-      <div id="sms-settings-body">
-        <div class="fg"><label class="fl">Număr de telefon</label><input class="fi" id="sms-phone" type="tel" placeholder="+40 700 000 000"></div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><div style="font-size:13px;font-weight:600">RCA — SMS 7 zile înainte</div></div>
-            <input type="checkbox" id="sms-rca" checked style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)">
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><div style="font-size:13px;font-weight:600">ITP — SMS 7 zile înainte</div></div>
-            <input type="checkbox" id="sms-itp" checked style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)">
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><div style="font-size:13px;font-weight:600">Rovinietă — SMS 3 zile înainte</div></div>
-            <input type="checkbox" id="sms-rov" checked style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)">
-          </div>
-        </div>
-        <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="saveSMSSettings()">💾 Salvează setările SMS</button>
-        <div id="sms-save-status" style="margin-top:8px;font-size:12px;text-align:center"></div>
-      </div>
+      <p style="font-size:12px;color:var(--t2);margin-bottom:10px">Alertele prin SMS vor veni mai târziu. Până atunci nu pierzi nimic: primești alertele de expirare (RCA, ITP, rovinietă, extinctor, trusă medicală) pe email și, dacă activezi notificările, direct pe telefon.</p>
+      <p style="font-size:12px;color:var(--t2)">Gratuit: o alertă cu 30 de zile înainte. Premium: alerte cu 30, 15, 7, 3 și 1 zi înainte și în ziua expirării.</p>
     </div>
 
     <div class="card">
       <div class="ch"><span class="ct">🔔 Notificări & Alerte</span><button class="btn btn-green btn-sm" id="push-toggle-btn" onclick="aaPushEnable()">Activează notificările</button></div>
       <div id="notif-status" style="margin-bottom:12px;font-size:12px;color:var(--t2)"></div>
-      <div style="display:flex;flex-direction:column;gap:13px">
-        <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">RCA — alertă 30 zile</div><div style="font-size:11px;color:var(--t3)">Email + push notification</div></div><input type="checkbox" checked style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">ITP — alertă 30 zile</div><div style="font-size:11px;color:var(--t3)">Email + push notification</div></div><input type="checkbox" checked style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">Rovinietă — alertă 7 zile</div><div style="font-size:11px;color:var(--t3)">Email + push notification</div></div><input type="checkbox" checked style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">Extinctor — alertă 14 zile</div><div style="font-size:11px;color:var(--t3)">Email + push notification</div></div><input type="checkbox" style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">ITP programare reminder</div><div style="font-size:11px;color:var(--t3)">Cu 7 zile înainte</div></div><input type="checkbox" checked style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)"></div>
+      <p style="font-size:12px;color:var(--t2);margin-bottom:12px">Te avertizăm automat când expiră RCA-ul, ITP-ul, rovinieta, extinctorul și trusa medicală, pentru fiecare mașină din garaj. Alertele vin pe email, iar pe telefon sau pe calculator dacă activezi notificările de mai sus.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="padding:10px 12px;background:var(--s2);border-radius:10px"><div style="font-size:13px;font-weight:700">Plan gratuit</div><div style="font-size:12px;color:var(--t2);margin-top:2px">O alertă, cu 30 de zile înainte de expirare.</div></div>
+        <div style="padding:10px 12px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:10px"><div style="font-size:13px;font-weight:700;color:var(--gold)">👑 Premium</div><div style="font-size:12px;color:var(--t2);margin-top:2px">Alerte cu 30, 15, 7, 3 și 1 zi înainte, plus în ziua expirării.</div></div>
       </div>
     </div>
     <div class="card" id="admin-api-card" style="grid-column:1/-1;display:none">
@@ -2586,7 +2562,13 @@ function pwaDontShowAgain(){
   pwaUpdateInstallPill();
 }
 function pwaUpdateInstallPill(){
-  const show = !isRunningStandalone();
+  // Butonul apare doar dacă aplicația se poate instala acum (browserul oferă instalarea) sau pe iOS (instalare manuală).
+  // Dacă e deja instalată (rulează ca aplicație sau am văzut-o instalată), nu mai apare.
+  try{ if(isRunningStandalone()) localStorage.setItem('aa_pwa_installed','1'); }catch(e){}
+  let installed = false;
+  try{ installed = localStorage.getItem('aa_pwa_installed') === '1'; }catch(e){}
+  const canInstall = !!deferredPrompt || isIOSDevice();
+  const show = !isRunningStandalone() && !installed && canInstall;
   const pill = document.getElementById('pwa-install-pill');
   if(pill) pill.style.display = show ? 'flex' : 'none';
   const sidebarBtn = document.getElementById('sidebar-install-btn');
@@ -2602,6 +2584,7 @@ let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
+  try{ localStorage.removeItem('aa_pwa_installed'); }catch(err){} // browserul oferă instalarea => nu e instalată (sau a fost dezinstalată)
   showInstallBanner();
   pwaUpdateInstallPill();
 });
@@ -2628,6 +2611,8 @@ document.getElementById('install-btn')?.addEventListener('click', installApp);
 window.addEventListener('appinstalled', () => {
   pwaCloseBanner();
   localStorage.setItem('aa_pwa_prompt_dismissed', '1'); // deja instalată, nu mai are rost popup-ul
+  try{ localStorage.setItem('aa_pwa_installed','1'); }catch(e){}
+  deferredPrompt = null;
   pwaUpdateInstallPill();
 });
 
