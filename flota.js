@@ -302,7 +302,30 @@
   };
 
   // ── Etichetă dinamică pentru butonul Premium ──
+  function updateSettingsSub(){
+    var st=$('aa-sub-status'), bt=$('aa-sub-btn'), by=$('aa-sub-buy'); if(!st||!bt) return;
+    if(by) by.style.display='none';
+    var u=(typeof currentUser!=='undefined' && currentUser) ? currentUser : null;
+    if(!u){ st.textContent='Autentifică-te ca să vezi abonamentul.'; bt.style.display='none'; return; }
+    var am=u.app_metadata||{}, live=(typeof BILLING_LIVE!=='undefined' && BILLING_LIVE);
+    var prem=(typeof isPremium==='function') && isPremium(), until='';
+    try{ if(am.premium_until) until=new Date(am.premium_until).toLocaleDateString('ro-RO'); }catch(e){}
+    if(prem && am.stripe_customer && live){
+      st.innerHTML='✅ Premium activ'+(until?' · valabil până la <b>'+until+'</b>':'')+'. Din portal poți anula reînnoirea, vedea facturile și schimba cardul. Dacă anulezi, păstrezi Premium până la finalul perioadei plătite.';
+      bt.style.display='';
+    } else if(prem){
+      st.textContent=(window.myFleet && window.myFleet.active) ? '✅ Premium activ prin flotă.' : '✅ Premium activ.';
+      bt.style.display='none';
+    } else {
+      st.textContent='Folosești planul gratuit: o mașină în garaj, 5 mesaje AI pe zi. Cu Premium (99 RON/an) ai mașini nelimitate, alerte extinse, agenți AI nelimitați și raportul AI al mașinii.';
+      bt.style.display='none'; if(by) by.style.display='';
+    }
+  }
+  window.updateSettingsSub=updateSettingsSub;
+  [1500,4000,8000].forEach(function(ms){ setTimeout(function(){ try{ updateSettingsSub(); }catch(e){} },ms); });
+  document.addEventListener('click',function(e){ var t=e.target; if(t && t.closest && t.closest('[onclick*="setari"]')) setTimeout(function(){ try{ updateSettingsSub(); }catch(e2){} },200); });
   function applyBillingUI(){
+    try{ updateSettingsSub(); }catch(e){}
     var b=$('prem-buy-btn'); if(!b) return;
     var live=(typeof BILLING_LIVE!=='undefined' && BILLING_LIVE);
     var u=(typeof currentUser!=='undefined' && currentUser) ? currentUser : null;
@@ -328,6 +351,7 @@
     if(live) b.textContent='👑 Activează Premium — 99 RON/an · 2 luni incluse gratis';
   }
   window.applyBillingUI=applyBillingUI;
+  (function(){ var g=window.goTo; if(typeof g==='function' && !g._aaSub){ var w=function(id){ var r=g.apply(this,arguments); if(id==='setari'){ try{ updateSettingsSub(); }catch(e){} } return r; }; w._aaSub=true; window.goTo=w; } })();
   document.addEventListener('DOMContentLoaded', applyBillingUI);
   if(document.readyState!=='loading') applyBillingUI();
 
@@ -347,27 +371,52 @@
     },500);
   })();
 
-  // ── Exportul datelor (GDPR, portabilitate) ──
-  window.exportDataDo = async function(){
-    var b=$('aa-exp-btn'), m=$('aa-exp-msg');
+  // ── Exportul datelor (GDPR, portabilitate): raport Word + fișier JSON ──
+  function aaLoadScript(src){
+    return new Promise(function(res,rej){
+      var sc=document.createElement('script'); sc.src=src; sc.onload=res; sc.onerror=function(){ rej(new Error('load '+src)); };
+      document.head.appendChild(sc);
+    });
+  }
+  function aaDownload(blob,name){
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500);
+  }
+  window.exportDataDo = async function(kind){
+    kind = kind==='json' ? 'json' : 'word';
+    var b=$('aa-exp-word'), bj=$('aa-exp-json'), m=$('aa-exp-msg');
     if(!currentUser){ if(m) m.textContent='Autentifică-te mai întâi.'; return; }
-    if(b){ b.disabled=true; b.textContent='Se pregătește…'; }
+    var btn = kind==='json' ? bj : b, old = btn ? btn.textContent : '';
+    if(b) b.disabled=true; if(bj) bj.disabled=true;
+    if(btn) btn.textContent='Se pregătește…';
     if(m) m.textContent='';
     try{
       var r = await fetch(FN_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':AA_ANON_JWT,'Authorization':await aaAuthHeader()},body:JSON.stringify({action:'export_data'})});
       var j = await r.json().catch(function(){return {};});
       if(!j.ok || !j.data) throw new Error(j.error||'export');
-      var blob = new Blob([JSON.stringify(j.data,null,2)],{type:'application/json'});
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'autoassist-datele-mele-'+new Date().toISOString().slice(0,10)+'.json';
-      document.body.appendChild(a); a.click();
-      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500);
+      var day = new Date().toISOString().slice(0,10);
+      if(kind==='json'){
+        aaDownload(new Blob([JSON.stringify(j.data,null,2)],{type:'application/json'}),'autoassist-datele-mele-'+day+'.json');
+      } else {
+        if(!window.docx) await aaLoadScript('https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js');
+        if(!window.AAExportDocx) await aaLoadScript('/export-docx.js?v=1');
+        var logo=null;
+        try{
+          var lr=await fetch('/logo1.png'); var lb=await lr.arrayBuffer();
+          var dim=await new Promise(function(res){ var im=new Image(); im.onload=function(){ res({w:im.naturalWidth,h:im.naturalHeight}); }; im.onerror=function(){ res({w:529,h:288}); }; im.src=URL.createObjectURL(new Blob([lb],{type:'image/png'})); });
+          logo={bytes:new Uint8Array(lb),w:dim.w,h:dim.h};
+        }catch(e){ logo=null; }
+        var doc=window.AAExportDocx.build(window.docx,j.data,logo);
+        var blob=await window.docx.Packer.toBlob(doc);
+        aaDownload(blob,'AutoAssist-datele-mele-'+day+'.docx');
+      }
       if(m) m.textContent='✅ Fișierul a fost descărcat.';
     }catch(e){
       if(m) m.textContent='Nu am putut genera exportul. Încearcă din nou sau scrie-ne la autoassist.romania@gmail.com.';
     }
-    if(b){ b.disabled=false; b.textContent='Descarcă datele mele'; }
+    if(btn) btn.textContent=old;
+    if(b) b.disabled=false; if(bj) bj.disabled=false;
   };
 
   // ── Ștergerea contului (GDPR) ──

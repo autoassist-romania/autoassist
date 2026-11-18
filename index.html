@@ -1625,14 +1625,20 @@
     </div>
     <!-- ZONA CONT: ȘTERGERE (GDPR) -->
     <div class="card" style="grid-column:1/-1">
+      <div class="ch"><span class="ct">💳 Abonamentul meu</span></div>
+      <div id="aa-sub-status" style="font-size:13px;color:var(--t2);margin-bottom:10px">Se încarcă…</div>
+      <button class="btn btn-gold btn-sm" id="aa-sub-btn" style="display:none" onclick="billingPortal()">⚙️ Gestionează abonamentul / facturi / anulare</button>
+      <button class="btn btn-gold btn-sm" id="aa-sub-buy" style="display:none" onclick="goTo('premium')">👑 Vezi Premium — 99 RON/an</button>
+    </div>
+    <div class="card" style="grid-column:1/-1">
       <div class="ch"><span class="ct">📦 Exportă datele mele</span></div>
-      <p style="font-size:12px;color:var(--t2);margin-bottom:12px">Descarci într-un fișier JSON toate datele pe care le avem despre tine: contul, mașinile și documentele lor, anunțurile, conversațiile cu agenții, alertele trimise, notificările push, apartenența la flote și mesajele către suport. Poți folosi fișierul oricând, inclusiv ca să te muți la alt serviciu.</p>
-      <button class="btn btn-sm" id="aa-exp-btn" onclick="exportDataDo()">Descarcă datele mele</button>
+      <p style="font-size:12px;color:var(--t2);margin-bottom:12px">Descarci într-un raport Word, frumos aranjat, toate datele pe care le avem despre tine: contul, mașinile și documentele lor, anunțurile, conversațiile cu agenții, alertele trimise, notificările push, apartenența la flote și mesajele către suport. Raportul se deschide în Word, Google Docs sau LibreOffice. Dacă vrei să muți datele la alt serviciu, ai și varianta tehnică (JSON).</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-gold btn-sm" id="aa-exp-word" onclick="exportDataDo('word')">📄 Descarcă raportul (Word)</button><button class="btn btn-sm" id="aa-exp-json" onclick="exportDataDo('json')">Format tehnic (JSON)</button></div>
       <div id="aa-exp-msg" style="font-size:12px;color:var(--t3);margin-top:8px;min-height:16px"></div>
     </div>
     <div class="card" style="grid-column:1/-1;border:1px solid rgba(239,68,68,.35)">
       <div class="ch"><span class="ct">🗑️ Ștergerea contului</span></div>
-      <p style="font-size:12px;color:var(--t2);margin-bottom:12px">Îți poți șterge oricând contul. Se șterg definitiv mașinile, documentele, anunțurile, conversațiile cu agenții și notificările tale, iar abonamentul Premium se anulează imediat, fără rambursare. Nu se poate anula. Dacă vrei doar să nu mai plătești, folosește „Gestionează abonamentul” din Premium: contul rămâne și devine gratuit la sfârșitul perioadei plătite, iar datele nu se pierd.</p>
+      <p style="font-size:12px;color:var(--t2);margin-bottom:12px">Îți poți șterge oricând contul. Se șterg definitiv mașinile, documentele, anunțurile, conversațiile cu agenții și notificările tale, iar abonamentul Premium se anulează imediat, fără rambursare. Nu se poate anula. Dacă vrei doar să nu mai plătești, folosește „Gestionează abonamentul” din cardul „Abonamentul meu”, de mai sus: contul rămâne și devine gratuit la sfârșitul perioadei plătite, iar datele nu se pierd.</p>
       <button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.4)" onclick="deleteAccountOpen()">Șterge contul definitiv</button>
     </div>
   </div>
