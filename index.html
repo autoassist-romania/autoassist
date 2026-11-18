@@ -494,7 +494,7 @@
         <div style="font-size:36px;margin-bottom:8px">🚗</div>
         <div style="font-size:14px;font-weight:600;margin-bottom:4px">Niciun anunț activ momentan</div>
         <div style="font-size:12px;margin-bottom:14px">Fii primul care vinde o mașină prin AutoAssist!</div>
-        <button class="btn btn-primary btn-sm" onclick="goTo('vanzare')">+ Publică anunțul tău</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" id="piata-mine-btn" onclick="piataMineToggle()">📋 Anunțurile mele</button><button class="btn btn-primary btn-sm" onclick="goTo('vanzare')">+ Publică anunțul tău</button></div>
       </div>
     </div>
   </div>
@@ -1087,7 +1087,7 @@
 <!-- VANZARE -->
 <section class="sec" id="sec-vanzare">
   <button class="back-btn" onclick="goTo('dashboard')">← Înapoi</button>
-  <div class="topbar"><div><div class="pt">💰 Vinde Mașina</div><div class="ps">Anunț generat automat cu AI · Publicare pe AutoAssist + OLX + Autovit</div></div></div>
+  <div class="topbar"><div><div class="pt">💰 Vinde Mașina</div><div class="ps">Anunț generat automat cu AI · Publicare în Piața AutoAssist</div></div></div>
   
   <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start" class="vanz-grid">
   
@@ -1137,6 +1137,7 @@
         <label class="fl">💶 Prețul cerut (EUR)</label>
         <input class="fi" id="vanz-pret" type="number" placeholder="ex: 8500" oninput="vanzEstimPret()">
         <div id="vanz-pret-hint" style="font-size:11px;color:var(--gold);margin-top:4px"></div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="vanzSimilare()">🔎 Vezi anunțuri similare</button>
       </div>
       <div class="fg">
         <label class="fl">📝 Descriere anunț <span style="color:var(--accent);font-size:11px">(generată automat cu AI)</span></label>
@@ -1179,7 +1180,7 @@
           <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" value="Prima mână"> 1️⃣ Prima mână</label>
           <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" value="Carte service"> 📘 Carte service completă</label>
         </div>
-        <input type="text" id="vanz-dotari-alte" maxlength="300" placeholder="Alte dotări (scrie, separate prin virgulă): ex. Tempomat, Webasto, Pachet M, Jante 18&quot;" style="margin-top:10px;width:100%">
+        <input class="fi" type="text" id="vanz-dotari-alte" maxlength="300" placeholder="Alte dotări (scrie, separate prin virgulă): ex. Tempomat, Webasto, Pachet M, Jante 18&quot;" style="margin-top:10px">
       </div>
       <div class="fr">
         <div class="fg" style="margin:0"><label class="fl">📞 Telefon contact</label><input class="fi" id="vanz-tel" type="tel" placeholder="+40 700 000 000"></div>

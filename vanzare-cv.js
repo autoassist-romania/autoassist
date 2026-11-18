@@ -158,20 +158,23 @@ function vanzPrefillBrandModel(c){
   if(typeof updateModelDatalist==='function') updateModelDatalist(c.brand || '', 'dl-models-vanz');
 }
 
-function openVanz(id){
-  selCarId=id; window._vanzEditId=null; window._vanzLoc=null;
+async function openVanz(id){
   const c=cars.find(x=>String(x.id)===String(id));
   if(!c)return;
   window._vanzCarKey={id:c.id,plate:c.plate};
   goTo('vanzare');
-  setTimeout(function(){
-    document.getElementById('vanz-step1').style.display='none';
-    document.getElementById('vanz-step2').style.display='block';
-    vanzStep2Init();
-    document.getElementById('vanz-step3').style.display='none';
-    loadVanzCars();
-    vanzPrefillBrandModel(c);
-  },150);
+  try{ await vanzLoadLista(); }catch(e){}
+  selCarId=c.id; window._vanzEditId=null; window._vanzLoc=null;
+  // Dacă mașina are deja anunț activ sau în așteptare → deschide modificarea lui
+  const ex=(window._vanzLista||[]).find(x=>x.plate===c.plate && (x.status==='activ'||x.status==='in_asteptare'));
+  if(ex){ vanzEditeaza(ex.id); return; }
+  document.getElementById('vanz-step1').style.display='none';
+  document.getElementById('vanz-step2').style.display='block';
+  document.getElementById('vanz-step3').style.display='none';
+  vanzStep2Init();
+  loadVanzCars();
+  vanzPrefillBrandModel(c);
+  vanzEstimPret();
 }
 
 function vanzBack(){
@@ -273,6 +276,39 @@ Anunțul să fie de 150-200 cuvinte, să evidențieze punctele forte, să sune n
     ta.value=`${c.brand||'Autoturism'} ${c.model||''} ${c.year||''} spre vânzare, ${c.km?c.km.toLocaleString()+' km':''}, stare foarte bună. ${dotari?'Dotări: '+dotari+'.':''} Preț ${pret?pret+' EUR':'negociabil'}. Serios, fără vicii ascunse.`;
   }
   ta.disabled=false;
+}
+
+
+// ═══ ANUNȚURI SIMILARE (popup — formularul rămâne completat) ═══
+function _vanzSlug(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+async function vanzSimilare(){
+  const c=vanzCar()||{};
+  const g=id=>(document.getElementById(id)?.value||'').trim();
+  const brand=g('vanz-brand')||c.brand||'', model=g('vanz-model')||c.model||'';
+  const an=Number(g('vanz-an')||c.year)||0;
+  if(!brand){ if(typeof showNotification==='function') showNotification('Alege mașina','Selectează mai întâi mașina pe care o vinzi.'); return; }
+  document.getElementById('mo-similare')?.remove();
+  document.body.insertAdjacentHTML('beforeend',`<div id="mo-similare" style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10000;overflow-y:auto;padding:20px 16px" onclick="if(event.target===this)this.remove()"><div style="background:var(--s1);border:1px solid var(--b2);border-radius:20px;max-width:620px;margin:0 auto;padding:22px;position:relative" onclick="event.stopPropagation()"><button onclick="document.getElementById('mo-similare').remove()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px">×</button>
+    <div style="font-size:20px;font-weight:900;margin-bottom:4px">🔎 Anunțuri similare</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:14px">${_rEsc(brand+' '+model+(an?' · '+an:''))} — formularul tău rămâne completat în spate.</div>
+    <div id="similare-ai" style="font-size:13px;color:var(--t3)">Se caută în Piața AutoAssist...</div>
+
+  </div></div>`);
+  const box=document.getElementById('similare-ai');
+  try{
+    let q=supabaseClient.from('listings').select('id,brand,model,year,km,pret,judet,localitate,combustibil,user_id').eq('status','activ').ilike('brand',brand);
+    if(model) q=q.ilike('model',model);
+    if(an) q=q.gte('year',an-3).lte('year',an+3);
+    const {data,error}=await q.order('created_at',{ascending:false}).limit(12);
+    if(error) throw error;
+    const me=(typeof currentUser!=='undefined'&&currentUser&&currentUser.id)?String(currentUser.id):'';
+    const L=(data||[]).filter(x=>String(x.user_id)!==me);
+    if(!L.length){ box.innerHTML='Încă nu sunt anunțuri similare în Piața AutoAssist. Ești printre primii — prețul tău ajută la formarea pieței.'; return; }
+    const pr=L.map(x=>Number(x.pret)).filter(Boolean).sort((a,b)=>a-b);
+    const med=pr.length?pr[Math.floor(pr.length/2)]:0;
+    box.innerHTML=(pr.length?`<div style="font-size:13px;margin-bottom:10px">Prețuri în Piața AutoAssist: <strong>${pr[0].toLocaleString('ro-RO')} – ${pr[pr.length-1].toLocaleString('ro-RO')} EUR</strong> · median <strong>${med.toLocaleString('ro-RO')} EUR</strong></div>`:'')+
+      L.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--s2);border-radius:10px;margin-bottom:6px;font-size:13px"><div><strong>${_rEsc(x.brand||'')} ${_rEsc(x.model||'')} ${x.year||''}</strong><div style="font-size:11px;color:var(--t3)">${x.km?Number(x.km).toLocaleString('ro-RO')+' km':''}${x.combustibil?' · '+_rEsc(x.combustibil):''}${x.localitate||x.judet?' · '+_rEsc(x.localitate||x.judet):''}</div></div><div style="font-weight:800;color:var(--gold);white-space:nowrap">${x.pret?Number(x.pret).toLocaleString('ro-RO')+' EUR':'-'}</div></div>`).join('');
+  }catch(e){ box.innerHTML='Nu am putut încărca anunțurile din Piața AutoAssist acum.'; }
 }
 
 // ═══ PACHETE ANUNȚ: Start / Plus / Pro ═══
@@ -582,8 +618,10 @@ async function vanzPublica(){
 
       <div style="background:var(--s2);border:1px solid var(--b2);border-radius:14px;padding:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:4px">👁️ Vizualizează anunțul</div>
-        <div style="font-size:12px;color:var(--t2);margin-bottom:10px">Vezi cum arată anunțul tău în marketplace-ul AutoAssist.</div>
-        <button class="btn btn-primary btn-sm btn-full" onclick="goTo('vanzare');setTimeout(()=>{document.getElementById('vanz-step1').style.display='block';document.getElementById('vanz-step2').style.display='none';document.getElementById('vanz-step3').style.display='none';vanzLoadLista();},100)">🚗 Vezi marketplace AutoAssist</button>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:10px">Vezi cum arată anunțul tău, cu butoane de modificare și ștergere.</div>
+        <button class="btn btn-primary btn-sm btn-full" onclick="vanzVeziAnunt('${saved&&saved.id?saved.id:''}')">👁️ Previzualizează anunțul</button>
+        <div style="font-size:12px;color:var(--t2);margin:12px 0 8px">Vezi-l în Piața Auto, printre toate anunțurile, așa cum îl văd clienții.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="piataMineOpen(false)">🚗 Piața Auto</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="piataMineOpen(true)">📋 Anunțurile mele</button></div>
       </div>
     </div>`;
 
@@ -599,6 +637,34 @@ function copyVanzText() {
   if(navigator.clipboard) {
     navigator.clipboard.writeText(text).then(()=>showNotification('✅ Copiat!','Textul anunțului a fost copiat în clipboard.')).catch(()=>{});
   }
+}
+
+async function vanzVeziAnunt(id){
+  let a=(window._vanzLista||[]).find(x=>String(x.id)===String(id));
+  if(!a && supabaseClient && currentUser){
+    try{
+      let q=supabaseClient.from('listings').select('*').eq('user_id',currentUser.id);
+      q = id ? q.eq('id',id) : q.order('created_at',{ascending:false}).limit(1);
+      const {data}=await q; a=(data&&data[0])||null;
+    }catch(e){}
+  }
+  if(!a){ if(typeof showNotification==='function') showNotification('Anunț negăsit','Nu am putut încărca anunțul. Încearcă din lista „Anunțurile mele”.'); return; }
+  showAnuntModal(a,{owner:true});
+}
+
+// Piața Auto: toate anunțurile sau doar ale mele
+window._piataMine=false;
+function piataMineOpen(mine){
+  window._piataMine=!!mine; window._piataKeep=true;
+  goTo('piata');
+  setTimeout(piataMineSync,50);
+}
+function piataMineToggle(){ window._piataMine=!window._piataMine; piataMineSync(); piataLoad(true); }
+function piataMineSync(){
+  const b=document.getElementById('piata-mine-btn'); if(!b) return;
+  b.textContent=window._piataMine?'🌍 Toate anunțurile':'📋 Anunțurile mele';
+  b.className='btn btn-sm '+(window._piataMine?'btn-primary':'btn-ghost');
+  const sub=document.querySelector('#sec-piata .ps'); if(sub) sub.textContent=window._piataMine?'Anunțurile tale, așa cum le văd clienții':'Toate anunțurile active de pe AutoAssist';
 }
 
 function vanzNouAnunt(){
@@ -633,6 +699,7 @@ async function vanzLoadLista(){
   }
 
   window._vanzLista=anunturi;
+  try{ if(typeof rVanzC==='function') rVanzC(); }catch(e){}
   if(statActiv)statActiv.textContent=anunturi.filter(a=>a.status==='activ').length;
   if(statTotal)statTotal.textContent=anunturi.length;
 
@@ -653,7 +720,7 @@ async function vanzLoadLista(){
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
         ${a.status==='expirat' ? `<button onclick="vanzReinnoieste('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(0,232,154,0.15);color:var(--green);border:none;border-radius:8px;cursor:pointer">🔄 Reînnoiește anunțul</button>` : ''}
         ${a.status==='in_asteptare' ? `<button onclick="vanzPlateste('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(255,200,60,0.15);color:var(--gold);border:none;border-radius:8px;cursor:pointer">💳 Plătește și publică</button>` : ''}
-        <button onclick="showAnuntModal((window._vanzLista||[]).find(x=>String(x.id)==='${a.id}'))" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(255,255,255,0.06);color:var(--t2);border:none;border-radius:6px;cursor:pointer">👁️ Vezi</button>
+        <button onclick="showAnuntModal((window._vanzLista||[]).find(x=>String(x.id)==='${a.id}'),{owner:true})" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(255,255,255,0.06);color:var(--t2);border:none;border-radius:6px;cursor:pointer">👁️ Vezi</button>
         <button onclick="vanzEditeaza('${a.id}')" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(79,125,255,0.12);color:var(--accent);border:none;border-radius:6px;cursor:pointer">✏️ Modifică</button>
         <button onclick="vanzSterge('${a.id}')" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(255,59,59,0.1);color:#ff3b3b;border:none;border-radius:6px;cursor:pointer">🗑️ Șterge</button>
       </div>
@@ -761,6 +828,7 @@ async function piataLoad(reset){
   if(typeof supabaseClient !== 'undefined'){
     try {
       let query = supabaseClient.from('listings').select('*', { count: 'exact' }).eq('status','activ');
+      if(window._piataMine && typeof currentUser!=='undefined' && currentUser) query = query.eq('user_id', currentUser.id);
       if(q) query = query.or(`brand.ilike.%${q}%,model.ilike.%${q}%`);
       if(brand) query = query.eq('brand', brand);
       if(model) query = query.eq('model', model);

@@ -339,7 +339,7 @@ function _applySection(sec){
   if(sec==='asigurari') setTimeout(resetRcaModal, 50);
   if(sec==='verif-nr') setTimeout(()=>{ if(typeof renderVerifRecent==='function') renderVerifRecent(); }, 100);
   if(sec==='piese') { setTimeout(()=>{ if(typeof initPiese==='function') initPiese(); }, 100); }
-  if(sec==='piata'){ if(typeof piataLoad==='function') piataLoad(true); }
+  if(sec==='piata'){ if(!window._piataKeep) window._piataMine=false; window._piataKeep=false; if(typeof piataMineSync==='function') piataMineSync(); if(typeof piataLoad==='function') piataLoad(true); }
   if(sec==='vanzare'){
     loadVanzCars();vanzLoadLista();
     document.getElementById('vanz-step1').style.display='block';
@@ -1051,7 +1051,7 @@ function rVanzC(){
 
   el.innerHTML=`<div class="g3">${cars.map(c=>{
     const foto=c.fotos&&c.fotos[0]?c.fotos[0]:null;
-    const anuntActiv = _anunturiActive.find(a=>a.plate===c.plate&&a.status==='activ');
+    const anuntActiv = (window._vanzLista||[]).concat(_anunturiActive).find(a=>a.plate===c.plate&&a.status==='activ');
     return`<div class="cc" style="padding:0;overflow:hidden;position:relative">
       ${anuntActiv?`<div style="position:absolute;top:8px;right:8px;z-index:2;background:var(--green);color:#000;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px">ACTIV</div>`:''}
       ${foto?`<div style="height:120px;overflow:hidden;cursor:pointer" onclick="openVanz(${c.id})"><img src="${foto}" style="width:100%;height:100%;object-fit:cover"></div>`:`<div style="height:80px;background:linear-gradient(135deg,rgba(79,125,255,0.1),rgba(200,150,12,0.06));display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer" onclick="openVanz(${c.id})">🚗</div>`}

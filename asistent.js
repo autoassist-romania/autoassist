@@ -452,8 +452,9 @@ function showSeasonalAlert() {
 }
 
 
-function showAnuntModal(a) {
+function showAnuntModal(a, opts) {
   if(!a) return;
+  opts = opts || {};
   window._anuntCur = a;
   document.getElementById('mo-anunt')?.remove();
   const fotos = (a.fotos&&a.fotos.filter(Boolean).length ? a.fotos.filter(Boolean) : (a.foto?[a.foto]:[]));
@@ -480,6 +481,15 @@ function showAnuntModal(a) {
     <div id="mo-anunt" style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;overflow-y:auto;padding:20px 16px" onclick="if(event.target===this)document.getElementById('mo-anunt').remove()">
       <div style="background:var(--s1);border:1px solid var(--b2);border-radius:20px;max-width:680px;margin:0 auto;position:relative" onclick="event.stopPropagation()">
         <button onclick="document.getElementById('mo-anunt').remove()" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.5);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;z-index:1">×</button>
+        ${opts.owner?`<div style="padding:14px 16px;background:linear-gradient(135deg,rgba(79,125,255,0.18),rgba(124,92,252,0.1));border-radius:20px 20px 0 0;border-bottom:1px solid var(--b2)">
+          <div style="font-size:13px;font-weight:800;margin-bottom:2px">👁️ Previzualizare — așa văd cumpărătorii anunțul tău</div>
+          <div style="font-size:11px;color:var(--t3);margin-bottom:10px">${a.status==='activ'?'Anunț activ'+(a.expires_at?' · expiră '+new Date(a.expires_at).toLocaleDateString('ro-RO'):''):(a.status==='in_asteptare'?'În așteptarea plății':String(a.status||''))}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="anuntOwnerAct('edit')" style="flex:1;min-width:110px;padding:9px;background:rgba(79,125,255,0.2);color:var(--accent);border:none;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">✏️ Modifică</button>
+            <button onclick="anuntOwnerAct('delete')" style="flex:1;min-width:110px;padding:9px;background:rgba(255,59,59,0.12);color:#ff3b3b;border:none;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">🗑️ Șterge</button>
+            <button onclick="anuntOwnerAct('market')" style="flex:1;min-width:110px;padding:9px;background:rgba(255,255,255,0.08);color:var(--t1);border:none;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">🚗 În Piața Auto</button>
+          </div>
+        </div>`:''}
 
         <!-- GALERIE POZE -->
         <div style="border-radius:20px 20px 0 0;overflow:hidden;background:#000;position:relative">
@@ -559,10 +569,10 @@ function showAnuntModal(a) {
           <!-- CONTACT -->
           <div style="font-size:13px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:10px">📞 CONTACT VÂNZĂTOR</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
-            <a href="tel:${a.tel}" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#000;font-weight:800;padding:14px;border-radius:12px;text-decoration:none;font-size:14px">📞 Sună acum</a>
-            <a href="sms:${a.tel}?body=${encodeURIComponent('Bună ziua! Sunt interesat de anunțul dvs. cu '+a.brand+' '+a.model+' '+a.year+' la prețul de '+a.pret+' EUR. Vă rog să mă contactați. Mulțumesc!')}" style="display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(79,125,255,0.15);border:1px solid rgba(79,125,255,0.3);color:var(--accent);font-weight:800;padding:14px;border-radius:12px;text-decoration:none;font-size:14px">💬 Trimite SMS</a>
+            <button id="anunt-tel-btn" onclick="anuntShowTel()" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#000;font-weight:800;padding:14px;border-radius:12px;border:none;cursor:pointer;font-size:14px">📞 Afișează numărul <span style="font-weight:600;opacity:.7;font-size:12px">${anuntMaskTel(a.tel)}</span></button>
+            <button onclick="anuntMsg('sms')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(79,125,255,0.15);border:1px solid rgba(79,125,255,0.3);color:var(--accent);font-weight:800;padding:14px;border-radius:12px;cursor:pointer;font-size:14px">💬 Trimite mesaj</button>
           </div>
-          <a href="https://wa.me/4${a.tel?.replace(/[^0-9]/g,'')}?text=${encodeURIComponent('Bună ziua! Sunt interesat de anunțul cu '+a.brand+' '+a.model+' '+a.year+' - '+a.pret+' EUR. Văzut pe AutoAssist.ro')}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;font-weight:800;padding:12px;border-radius:12px;text-decoration:none;font-size:14px;width:100%;box-sizing:border-box">🟢 Contactează pe WhatsApp</a>
+          <button onclick="anuntMsg('wa')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25d366;font-weight:800;padding:12px;border-radius:12px;cursor:pointer;font-size:14px">💬 WhatsApp</button>
         </div>
       </div>
     </div>`;
@@ -577,6 +587,38 @@ function showAnuntModal(a) {
       setTimeout(()=>m.invalidateSize(),200);
     }).catch(()=>{ const el=document.getElementById('anunt-map'); if(el) el.style.display='none'; });
   }
+}
+
+// ── Contact anunț: numărul rămâne ascuns până apasă „Afișează numărul" ──
+function anuntMaskTel(t){ const d=String(t||'').replace(/[^0-9+]/g,''); return d.length>=4 ? d.slice(0,4)+' ••• •••' : '•••• ••• •••'; }
+function anuntShowTel(){
+  const a=window._anuntCur; if(!a||!a.tel) return;
+  const b=document.getElementById('anunt-tel-btn'); if(!b) return;
+  const n=String(a.tel).replace(/[^0-9+]/g,'');
+  b.outerHTML='<a id="anunt-tel-btn" href="tel:'+n+'" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--green);color:#000;font-weight:800;padding:10px;border-radius:12px;text-decoration:none;font-size:15px;line-height:1.2">📞 '+String(a.tel).replace(/[<>&"]/g,'')+'<span style="font-size:10px;font-weight:600;opacity:.7">apasă pentru a suna</span></a>';
+}
+function anuntMsg(kind){
+  const a=window._anuntCur; if(!a||!a.tel) return;
+  const n=String(a.tel).replace(/[^0-9]/g,'');
+  const nume=(a.brand||'')+' '+(a.model||'')+' '+(a.year||'');
+  if(kind==='wa'){
+    const intl=n.startsWith('0')?'4'+n:n;
+    window.open('https://wa.me/'+intl+'?text='+encodeURIComponent('Bună ziua! Sunt interesat de anunțul cu '+nume+' - '+a.pret+' EUR. Văzut pe AutoAssist.ro'),'_blank','noopener');
+  } else {
+    location.href='sms:'+n+'?body='+encodeURIComponent('Bună ziua! Sunt interesat de anunțul dvs. cu '+nume+' la prețul de '+a.pret+' EUR. Vă rog să mă contactați. Mulțumesc!');
+  }
+}
+// ── Acțiuni proprietar din previzualizare ──
+function anuntOwnerAct(what){
+  const a=window._anuntCur; if(!a) return;
+  document.getElementById('mo-anunt')?.remove();
+  if(what==='market'){ goTo('piata'); return; }
+  const inVanz=(location.hash||'').indexOf('vanzare')>=0;
+  const run=()=>{
+    window._vanzLista=(window._vanzLista||[]).filter(x=>String(x.id)!==String(a.id)).concat([a]);
+    if(what==='edit') vanzEditeaza(a.id); else vanzSterge(a.id);
+  };
+  if(inVanz) run(); else { goTo('vanzare'); setTimeout(run,300); }
 }
 
 function anuntThumb(idx) {
