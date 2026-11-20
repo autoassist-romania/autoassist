@@ -438,9 +438,21 @@ function vanzEditeaza(id){
 }
 
 
-// ═══ PRELUNGIRE / PROMOVARE anunț ACTIV (+30 zile peste timpul rămas, pachet ales) ═══
+// ═══ PRELUNGIRE / PROMOVARE anunț ACTIV (30 zile noi de la plată, fără cumul, pachet ales) ═══
 let _extId=null, _extPk='start';
 const _VANZ_RANK={start:1,plus:2,pro:3};
+// Countdown zile rămase (anunț activ / promovare)
+window.aaZileRam=function(iso){ if(!iso) return null; var d=Math.ceil((Date.parse(iso)-Date.now())/86400000); return isNaN(d)?null:Math.max(0,d); };
+window.aaCountdown=function(a){
+  if(!a||a.status!=='activ'||!a.expires_at) return '';
+  var z=aaZileRam(a.expires_at); if(z===null) return '';
+  var col=z<=3?'#ff6b6b':z<=7?'#f5a742':'#00e89a';
+  var txt=(z===0?'expiră azi':z===1?'mai are 1 zi':'mai are '+z+(z>=20?' de':'')+' zile');
+  var promo='';
+  if(a.promo_active&&a.promo_until){ var p=aaZileRam(a.promo_until); if(p!==null) promo='<span style="background:rgba(245,197,66,.16);color:#f5c542;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px">⭐ Promovat încă '+p+(p===1?' zi':(p>=20?' de zile':' zile'))+'</span>'; }
+  return '<span style="background:'+col+'22;color:'+col+';font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">⏳ '+txt+'</span>'+promo;
+};
+
 function vanzExtindeOpen(id){
   const a=(window._vanzLista||[]).find(x=>String(x.id)===String(id));
   if(!a) return;
@@ -469,7 +481,7 @@ function vanzExtRender(a){
         <div style="font-size:17px;font-weight:800">⭐ Prelungește / Promovează</div>
         <button onclick="vanzExtClose()" style="background:none;border:none;color:var(--t3);font-size:22px;cursor:pointer">×</button>
       </div>
-      <div style="font-size:12px;color:var(--t3);margin-bottom:14px">${_rEsc(titlu)}${exp?' — activ până pe '+exp:''}. Primești <strong>+30 de zile</strong> peste timpul rămas, iar anunțul rămâne vizibil tot timpul.</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:14px">${_rEsc(titlu)}${exp?' — activ până pe '+exp:''}. Plata începe o perioadă nouă de <strong>30 de zile de azi</strong> (zilele rămase nu se adaugă), iar anunțul rămâne vizibil tot timpul.</div>
       ${cards}
       <button class="btn btn-primary btn-full" onclick="vanzExtGo()" style="margin-top:6px;padding:13px;font-size:14px">💳 Plătește ${vanzPretPachet(_extPk)} RON</button>
       <button class="btn btn-ghost btn-full" onclick="vanzExtClose()" style="margin-top:8px">Renunț</button>
@@ -768,7 +780,7 @@ async function vanzLoadLista(){
       </div>
       <div style="font-size:12px;color:var(--t2)">${a.plate||''} · ${a.km?Number(a.km).toLocaleString()+' km':''}</div>
       <div style="font-size:13px;font-weight:800;color:var(--gold);margin-top:4px">${a.pret} EUR</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:2px">📍 ${a.judet||'România'} · ${a.data||''}${a.status==='activ'&&a.expires_at?` · expiră ${new Date(a.expires_at).toLocaleDateString('ro-RO')}`:''}${a.status==='activ'&&(a.pachet==='plus'||a.pachet==='pro')?` · 🔄 reactualizat de ${a.bump_count||0}×`:''}</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:2px">📍 ${a.judet||'România'} · ${a.data||''}${a.status==='activ'&&a.expires_at?` · expiră ${new Date(a.expires_at).toLocaleDateString('ro-RO')}`:''}</div><div style="margin-top:5px">${aaCountdown(a)}${a.status==='activ'&&(a.pachet==='plus'||a.pachet==='pro')?` · 🔄 reactualizat de ${a.bump_count||0}×`:''}</div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
         ${a.status==='expirat' ? `<button onclick="vanzReinnoieste('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(0,232,154,0.15);color:var(--green);border:none;border-radius:8px;cursor:pointer">🔄 Reînnoiește anunțul</button>` : ''}
         ${a.status==='in_asteptare' ? `<button onclick="vanzPlateste('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(255,200,60,0.15);color:var(--gold);border:none;border-radius:8px;cursor:pointer">💳 Plătește și publică</button>` : ''}
