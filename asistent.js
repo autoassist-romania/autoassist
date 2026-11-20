@@ -487,6 +487,7 @@ function showAnuntModal(a, opts) {
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button onclick="anuntOwnerAct('edit')" style="flex:1;min-width:110px;padding:9px;background:rgba(79,125,255,0.2);color:var(--accent);border:none;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">✏️ Modifică</button>
             <button onclick="anuntOwnerAct('delete')" style="flex:1;min-width:110px;padding:9px;background:rgba(255,59,59,0.12);color:#ff3b3b;border:none;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">🗑️ Șterge</button>
+            ${a.status==='activ'?`<button onclick="anuntOwnerAct('extend')" style="flex:1 1 100%;padding:9px;background:rgba(255,200,60,0.18);color:var(--gold);border:none;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">⭐ Prelungește / Promovează</button>`:''}
             <button onclick="anuntOwnerAct('market')" style="flex:1;min-width:110px;padding:9px;background:rgba(255,255,255,0.08);color:var(--t1);border:none;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">🚗 În Piața Auto</button>
           </div>
         </div>`:''}
@@ -613,6 +614,7 @@ function anuntOwnerAct(what){
   const a=window._anuntCur; if(!a) return;
   document.getElementById('mo-anunt')?.remove();
   if(what==='market'){ goTo('piata'); return; }
+  if(what==='extend'){ const inV=(location.hash||'').indexOf('vanzare')>=0; const go=()=>{ window._vanzLista=(window._vanzLista||[]).filter(x=>String(x.id)!==String(a.id)).concat([a]); vanzExtindeOpen(a.id); }; if(inV) go(); else { goTo('vanzare'); setTimeout(go,300); } return; }
   const inVanz=(location.hash||'').indexOf('vanzare')>=0;
   const run=()=>{
     window._vanzLista=(window._vanzLista||[]).filter(x=>String(x.id)!==String(a.id)).concat([a]);

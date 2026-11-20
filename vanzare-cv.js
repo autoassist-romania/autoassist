@@ -437,6 +437,58 @@ function vanzEditeaza(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+
+// ═══ PRELUNGIRE / PROMOVARE anunț ACTIV (+30 zile peste timpul rămas, pachet ales) ═══
+let _extId=null, _extPk='start';
+const _VANZ_RANK={start:1,plus:2,pro:3};
+function vanzExtindeOpen(id){
+  const a=(window._vanzLista||[]).find(x=>String(x.id)===String(id));
+  if(!a) return;
+  if(a.status==='expirat'){ vanzReinnoieste(id); return; }
+  if(a.status!=='activ'){ if(typeof showNotification==='function') showNotification('Anunț în așteptare','Plătește mai întâi publicarea anunțului.'); return; }
+  _extId=id; _extPk=a.pachet||'start';
+  vanzExtRender(a);
+}
+function vanzExtPick(k){ _extPk=k; vanzExtRender((window._vanzLista||[]).find(x=>String(x.id)===String(_extId))); }
+function vanzExtRender(a){
+  document.getElementById('mo-ext')?.remove();
+  const cur=_VANZ_RANK[a.pachet||'start']||1;
+  const titlu=`${a.brand||''} ${a.model||''} ${a.year||''}`.trim();
+  const exp=a.expires_at?new Date(a.expires_at).toLocaleDateString('ro-RO'):'';
+  const prem=vanzEstePrem();
+  const cards=Object.keys(VANZ_PACHETE).filter(k=>_VANZ_RANK[k]>=cur).map(k=>{
+    const p=VANZ_PACHETE[k], on=_extPk===k, same=_VANZ_RANK[k]===cur;
+    return `<div onclick="vanzExtPick('${k}')" style="cursor:pointer;border:2px solid ${on?'var(--gold)':'rgba(255,255,255,0.1)'};background:${on?'rgba(255,200,60,0.08)':'rgba(255,255,255,0.03)'};border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div><div style="font-size:14px;font-weight:800">${k==='pro'?'⭐ ':''}${p.nume}${same?' <span style="font-size:10px;color:var(--t3);font-weight:600">(pachetul tău)</span>':''}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${p.desc}</div></div>
+      <div style="font-size:16px;font-weight:800;color:var(--gold);white-space:nowrap">${prem?p.premium:p.pret} RON</div></div>`;
+  }).join('');
+  document.body.insertAdjacentHTML('beforeend',`
+  <div id="mo-ext" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)vanzExtClose()">
+    <div style="background:var(--s1);border:1px solid var(--b2);border-radius:18px;max-width:440px;width:100%;padding:20px;max-height:92vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:17px;font-weight:800">⭐ Prelungește / Promovează</div>
+        <button onclick="vanzExtClose()" style="background:none;border:none;color:var(--t3);font-size:22px;cursor:pointer">×</button>
+      </div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:14px">${_rEsc(titlu)}${exp?' — activ până pe '+exp:''}. Primești <strong>+30 de zile</strong> peste timpul rămas, iar anunțul rămâne vizibil tot timpul.</div>
+      ${cards}
+      <button class="btn btn-primary btn-full" onclick="vanzExtGo()" style="margin-top:6px;padding:13px;font-size:14px">💳 Plătește ${vanzPretPachet(_extPk)} RON</button>
+      <button class="btn btn-ghost btn-full" onclick="vanzExtClose()" style="margin-top:8px">Renunț</button>
+    </div>
+  </div>`);
+}
+function vanzExtClose(){ document.getElementById('mo-ext')?.remove(); }
+function vanzExtGo(){
+  const id=_extId, pk=_extPk;
+  if(typeof billingListingUpgrade==='function') billingListingUpgrade(id,pk);
+}
+// Link din email / notificare: ?go=vanzare&a=renew&car=<id anunț>
+async function vanzDeepRenew(id){
+  try{ await vanzLoadLista(); }catch(e){}
+  const a=(window._vanzLista||[]).find(x=>String(x.id)===String(id));
+  if(!a) return;
+  if(a.status==='expirat') vanzReinnoieste(id); else vanzExtindeOpen(id);
+}
+
 // ═══ REÎNNOIRE (fereastră) ═══
 let _renewId=null, _renewPk='start';
 function vanzReinnoieste(id){
@@ -720,6 +772,7 @@ async function vanzLoadLista(){
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
         ${a.status==='expirat' ? `<button onclick="vanzReinnoieste('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(0,232,154,0.15);color:var(--green);border:none;border-radius:8px;cursor:pointer">🔄 Reînnoiește anunțul</button>` : ''}
         ${a.status==='in_asteptare' ? `<button onclick="vanzPlateste('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(255,200,60,0.15);color:var(--gold);border:none;border-radius:8px;cursor:pointer">💳 Plătește și publică</button>` : ''}
+        ${a.status==='activ' ? `<button onclick="vanzExtindeOpen('${a.id}')" style="flex:1 1 100%;font-size:12px;font-weight:800;padding:8px;background:rgba(255,200,60,0.15);color:var(--gold);border:none;border-radius:8px;cursor:pointer">${a.pachet==='pro'?'🔄 Prelungește anunțul':'⭐ Prelungește / Promovează'}</button>` : ''}
         <button onclick="showAnuntModal((window._vanzLista||[]).find(x=>String(x.id)==='${a.id}'),{owner:true})" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(255,255,255,0.06);color:var(--t2);border:none;border-radius:6px;cursor:pointer">👁️ Vezi</button>
         <button onclick="vanzEditeaza('${a.id}')" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(79,125,255,0.12);color:var(--accent);border:none;border-radius:6px;cursor:pointer">✏️ Modifică</button>
         <button onclick="vanzSterge('${a.id}')" style="flex:1;font-size:11px;font-weight:700;padding:6px;background:rgba(255,59,59,0.1);color:#ff3b3b;border:none;border-radius:6px;cursor:pointer">🗑️ Șterge</button>
@@ -884,22 +937,36 @@ async function piataLoad(reset){
 
   const carEmojis={'Dacia':'🚗','Renault':'🚙','BMW':'🏎️','Mercedes':'🏎️','Volkswagen':'🚗','Audi':'🏎️','Toyota':'🚙','Ford':'🚗','Opel':'🚗','Peugeot':'🚗','Skoda':'🚗','Hyundai':'🚙','Kia':'🚙','Seat':'🚗','Fiat':'🚗'};
 
+  const _zi=(d)=>{ if(!d) return ''; const t=new Date(d); if(isNaN(t)) return ''; const now=new Date(); const same=t.toDateString()===now.toDateString(); const y=new Date(now-86400000).toDateString()===t.toDateString(); const hm=t.toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'}); return same?'azi la '+hm:(y?'ieri la '+hm:t.toLocaleDateString('ro-RO',{day:'numeric',month:'long',year:'numeric'})); };
   grid.innerHTML += rezultate.map((a, i) => {
     const idx = startIdx + i;
     const emoji = carEmojis[a.brand] || '🚗';
     const esteAlMeu = a.user_id === currentUser?.id;
-    return `<div onclick="showAnuntModal(window._piataRezultate[${idx}])" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-      <div style="height:130px;background:linear-gradient(135deg,rgba(79,125,255,0.12),rgba(200,150,12,0.08));display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid rgba(255,255,255,0.06);overflow:hidden">
-        ${(a.fotos&&a.fotos[0])||a.foto?`<img src="${(a.fotos&&a.fotos[0])||a.foto}" style="width:100%;height:100%;object-fit:cover">`:`<div style="font-size:56px">${emoji}</div>`}
-        ${a.promo_active?`<div style="position:absolute;top:8px;right:8px;background:linear-gradient(135deg,#f5c542,#e0a100);color:#1a1200;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px">⭐ PROMOVAT</div>`:''}
-        ${esteAlMeu?`<div style="position:absolute;top:8px;left:8px;background:rgba(79,125,255,0.9);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px">AL MEU</div>`:''}
-        <div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.65);color:var(--gold);font-size:14px;font-weight:800;padding:3px 10px;border-radius:8px">${a.pret} EUR</div>
+    const foto = (a.fotos&&a.fotos[0])||a.foto||'';
+    const nFoto = (a.fotos&&a.fotos.filter(Boolean).length)||(foto?1:0);
+    const loc = [a.localitate,a.judet].filter(Boolean).join(', ') || 'România';
+    const reakt = a.bumped_at && a.pachet && a.pachet!=='start' ? 'Reactualizat '+_zi(a.bumped_at) : _zi(a.created_at);
+    const chips = [a.year, a.km?Number(a.km).toLocaleString('ro-RO')+' km':'', a.combustibil, a.cutie_viteze, a.caroserie, (a.motor_cm3?a.motor_cm3+' cm³':'') ].filter(Boolean);
+    const titlu = _rEsc(((a.brand||'')+' '+(a.model||'')+' '+(a.year||'')).trim());
+    return `<div class="piata-row" onclick="showAnuntModal(window._piataRezultate[${idx}])" style="display:flex;gap:0;background:rgba(255,255,255,0.04);border:1px solid ${a.promo_active?'rgba(245,197,66,0.55)':'rgba(255,255,255,0.08)'};border-radius:12px;overflow:hidden;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+      <div class="piata-row-img" style="width:210px;min-height:150px;flex-shrink:0;background:linear-gradient(135deg,rgba(79,125,255,0.12),rgba(200,150,12,0.08));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+        ${foto?`<img src="${foto}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`:`<div style="font-size:54px">${emoji}</div>`}
+        ${nFoto>1?`<div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.7);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px">📷 ${nFoto}</div>`:''}
       </div>
-      <div style="padding:11px 13px">
-        <div style="font-size:14px;font-weight:800;margin-bottom:2px">${a.brand||''} ${a.model||''}</div>
-        <div style="font-size:12px;color:var(--t2)">${a.year||''} · ${a.km?Number(a.km).toLocaleString()+' km':''}</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:3px">${[a.combustibil,a.cutie_viteze,a.caroserie].filter(Boolean).join(' · ')}</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:4px">📍 ${a.judet||'România'}</div>
+      <div style="flex:1;min-width:0;padding:12px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:6px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+          <div style="min-width:0">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:4px">
+              ${a.promo_active?`<span style="background:linear-gradient(135deg,#f5c542,#e0a100);color:#1a1200;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px">⭐ PROMOVAT</span>`:''}
+              ${esteAlMeu?`<span style="background:rgba(79,125,255,0.9);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px">AL MEU</span>`:''}
+              <span style="background:rgba(255,255,255,0.08);color:var(--t2);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">Utilizat</span>
+            </div>
+            <div style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${titlu}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0"><div style="font-size:19px;font-weight:900;color:var(--gold);white-space:nowrap">${Number(a.pret).toLocaleString('ro-RO')} €</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${chips.map(c=>`<span style="font-size:11px;color:var(--t2);background:rgba(255,255,255,0.06);border-radius:6px;padding:3px 8px">${_rEsc(c)}</span>`).join('')}</div>
+        <div style="font-size:11px;color:var(--t3)">📍 ${_rEsc(loc)}${reakt?' · '+reakt:''}</div>
       </div>
     </div>`;
   }).join('');

@@ -98,11 +98,16 @@
   var raw=null; try{ raw=sessionStorage.getItem('aa_deepact'); }catch(e){}
   if(!raw) return;
   var act; try{ act=JSON.parse(raw); }catch(e){ return; }
-  var KNOWN = {ext:1,trz:1,rca:1,itp:1,rov:1,car:1};
+  var KNOWN = {ext:1,trz:1,rca:1,itp:1,rov:1,car:1,renew:1};
   if(!act || !KNOWN[act.a]){ try{sessionStorage.removeItem('aa_deepact');}catch(e){} return; }
   var STORE = { ext:['accesorii','Extinctor auto'], trz:['accesorii','Trusă medicală auto'] };
 
   function run(car){
+    if(act.a==='renew'){
+      if(typeof vanzDeepRenew!=='function') return false;
+      goTo('vanzare'); setTimeout(function(){ vanzDeepRenew(act.car); },300);
+      return true;
+    }
     if(act.a==='car'){
       if(typeof openCar!=='function') return false;
       openCar(car.id);

@@ -102,6 +102,17 @@
       note('⚠️','Nu am putut porni plata. Încearcă din nou.');
     }catch(e){ note('⚠️','Eroare de rețea. Încearcă din nou.'); }
   };
+  window.billingListingUpgrade = async function(listingId, pachet){
+    if(!currentUser){ note('🔐','Autentifică-te mai întâi.'); return; }
+    try{
+      var r = await fetch(FN_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':AA_ANON_JWT,'Authorization':await aaAuthHeader()},body:JSON.stringify({action:'listing_upgrade',pachet:pachet,listing_id:String(listingId, pachet)})});
+      var j = await r.json().catch(function(){return {};});
+      if(j.url){ window.location.href = j.url; return; }
+      if(r.status===503 || j.error==='not_configured'){ showSoon('Plata anunțului','Plata online se activează în curând. Anunțul tău e salvat.'); return; }
+      if(j.error==='not_active'){ note('ℹ️','Anunțul nu mai este activ. Reînnoiește-l din listă.'); if(typeof vanzLoadLista==='function') vanzLoadLista(); return; }
+      note('⚠️','Nu am putut porni plata. Încearcă din nou.');
+    }catch(e){ note('⚠️','Eroare de rețea. Încearcă din nou.'); }
+  };
   window.billingPortal = async function(){
     try{
       var r = await fetch(FN_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':AA_ANON_JWT,'Authorization':await aaAuthHeader()},body:JSON.stringify({action:'portal'})});
