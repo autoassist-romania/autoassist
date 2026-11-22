@@ -121,11 +121,42 @@
       note('ℹ️', j.error==='no_customer' ? 'Abonamentul acesta nu e gestionat prin Stripe. Scrie-ne la autoassist.romania@gmail.com.' : 'Nu am putut deschide portalul.');
     }catch(e){ note('⚠️','Eroare de rețea.'); }
   };
+  // Plata flotei cere obligatoriu numele flotei; dacă lipsește, apare o fereastră unde îl scrii
   window.fleetPay = function(){
     var t = ($('fl-tier')||{}).value;
     if(!PLAN_INFO['fleet_'+t]){ note('ℹ️','Alege un pachet de la 6 la 100 de vehicule.'); return; }
-    billingCheckout('fleet_'+t, ($('fl-pay-name')||{}).value);
+    var nm = String((($('fl-pay-name')||{}).value)||'').trim();
+    if(nm.length < 2){ fleetNameAsk(t); return; }
+    billingCheckout('fleet_'+t, nm);
   };
+  function fleetNameAsk(t){
+    var old=$('mo-fl-name'); if(old) old.remove();
+    var p=PLAN_INFO['fleet_'+t]||{};
+    var div=document.createElement('div');
+    div.id='mo-fl-name';
+    div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
+    div.innerHTML='<div style="background:var(--s1);border:1px solid var(--b2);border-radius:18px;max-width:420px;width:100%;padding:22px">'
+      +'<div style="font-size:18px;font-weight:800;margin-bottom:6px">🏢 Cum se numește flota ta?</div>'
+      +'<div style="font-size:13px;color:var(--t3);margin-bottom:14px">Scrie numele flotei (ex. numele firmei). Îl vei vedea în aplicație și în emailurile de alertă. Fără nume nu putem porni plata.</div>'
+      +'<input id="fl-name-pop" class="fl-in" placeholder="Numele flotei (ex. Firma SRL)" maxlength="80" autocomplete="organization" style="width:100%;box-sizing:border-box">'
+      +'<div id="fl-name-err" style="font-size:12px;color:#ff6b6b;margin-top:6px;display:none">Te rugăm să scrii numele flotei (minim 2 caractere).</div>'
+      +'<button id="fl-name-go" class="btn btn-gold btn-full" style="margin-top:14px;padding:13px;font-size:14px">💳 Continuă spre plată</button>'
+      +'<button id="fl-name-cancel" class="btn btn-ghost btn-full" style="margin-top:8px">Renunț</button></div>';
+    document.body.appendChild(div);
+    var inp=$('fl-name-pop'), err=$('fl-name-err');
+    var go=function(){
+      var v=String(inp.value||'').trim();
+      if(v.length<2){ err.style.display='block'; inp.focus(); return; }
+      var f=$('fl-pay-name'); if(f) f.value=v;
+      div.remove();
+      billingCheckout('fleet_'+t, v);
+    };
+    $('fl-name-go').onclick=go;
+    $('fl-name-cancel').onclick=function(){ div.remove(); };
+    div.addEventListener('click',function(e){ if(e.target===div) div.remove(); });
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter') go(); });
+    setTimeout(function(){ inp.focus(); },50);
+  }
 
   // ── Starea inițială a paginii (vânzare) ──
   function updatePayBlock(){
