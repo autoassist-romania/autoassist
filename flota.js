@@ -130,7 +130,8 @@
       return;
     }
     var nm = String((($('fl-pay-name')||{}).value)||'').trim();
-    if(nm.length < 2){ fleetNameAsk(t); return; }
+    // numele trebuie scris de utilizator (nu completat automat de browser)
+    if(nm.length < 2 || !window._flNameTyped){ fleetNameAsk(t); return; }
     billingCheckout('fleet_'+t, nm);
   };
   function fleetNameAsk(t){
@@ -152,7 +153,7 @@
     var go=function(){
       var v=String(inp.value||'').trim();
       if(v.length<2){ err.style.display='block'; inp.focus(); return; }
-      var f=$('fl-pay-name'); if(f) f.value=v;
+      var f=$('fl-pay-name'); if(f) f.value=v; window._flNameTyped=true;
       div.remove();
       billingCheckout('fleet_'+t, v);
     };
@@ -167,6 +168,8 @@
   function updatePayBlock(){
     var box=$('fl-pay'); if(!box) return;
     var t=($('fl-tier')||{}).value, p=PLAN_INFO['fleet_'+t];
+    var nmEl=$('fl-pay-name');
+    if(nmEl && !nmEl._aaInit){ nmEl._aaInit=true; nmEl.setAttribute('autocomplete','off'); nmEl.setAttribute('name','fleet-company-label'); nmEl.value=''; window._flNameTyped=false; nmEl.addEventListener('input',function(){ window._flNameTyped=true; }); }
     var picked = !!document.querySelector('.fleet-tier.sel');
     var show = (typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) && !!p && !!currentUser && picked;
     box.style.display = show ? 'block' : 'none';
