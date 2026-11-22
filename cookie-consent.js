@@ -16,6 +16,7 @@
     analytics:function(){ var c=read(); return !!(c&&c.analytics); },
     marketing:function(){ return false; }
   };
+  try{ var st=document.createElement('style'); st.textContent='@media(max-width:900px){#aa-cookie{bottom:86px!important}}'; document.head.appendChild(st); }catch(e){}
   function close(){ var d=document.getElementById('aa-cookie'); if(d) d.remove(); }
   function show(){
     if(document.getElementById('aa-cookie')) return;

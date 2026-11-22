@@ -304,6 +304,9 @@ function _applySection(sec){
   // Ascunde sidebar și header pe landing page
   const sidebar = document.querySelector('.sidebar');
   const mainEl = document.querySelector('.main');
+  // Bara de jos (meniul din aplicație pe telefon) se ascunde pe pagina de intrare/login
+  const bnavEl = document.querySelector('.bnav');
+  if(bnavEl) bnavEl.style.display = (sec === 'landing') ? 'none' : '';
   if(sec === 'landing') {
     if(sidebar) sidebar.style.display = 'none';
     if(mainEl) { mainEl.style.marginLeft = '0'; mainEl.style.paddingTop = '0'; mainEl.style.display = ''; }

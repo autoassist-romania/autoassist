@@ -153,6 +153,7 @@
       return true;
     }catch(e){ return false; }
   }
+  try{ var st=document.createElement('style'); st.textContent='@media(max-width:900px){#aa-push-invite{bottom:86px!important}}'; document.head.appendChild(st); }catch(e){}
   function show(){
     if(document.getElementById('aa-push-invite')) return;
     var d=document.createElement('div'); d.id='aa-push-invite';
