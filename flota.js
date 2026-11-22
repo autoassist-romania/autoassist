@@ -124,7 +124,11 @@
   // Plata flotei cere obligatoriu numele flotei; dacă lipsește, apare o fereastră unde îl scrii
   window.fleetPay = function(){
     var t = ($('fl-tier')||{}).value;
-    if(!PLAN_INFO['fleet_'+t]){ note('ℹ️','Alege un pachet de la 6 la 100 de vehicule.'); return; }
+    if(!PLAN_INFO['fleet_'+t] || !document.querySelector('.fleet-tier.sel')){
+      note('ℹ️','Alege mai întâi pachetul de flotă (S, M, L sau XL) din cardurile de mai sus.');
+      var g=document.querySelector('.fleet-tier'); if(g) g.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
     var nm = String((($('fl-pay-name')||{}).value)||'').trim();
     if(nm.length < 2){ fleetNameAsk(t); return; }
     billingCheckout('fleet_'+t, nm);
@@ -137,6 +141,7 @@
     div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
     div.innerHTML='<div style="background:var(--s1);border:1px solid var(--b2);border-radius:18px;max-width:420px;width:100%;padding:22px">'
       +'<div style="font-size:18px;font-weight:800;margin-bottom:6px">🏢 Cum se numește flota ta?</div>'
+      +'<div style="background:rgba(240,180,41,0.1);border:1px solid #f0b429;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px">Pachet ales: <strong>'+esc(p.name||'')+'</strong> · '+esc(p.range||'')+' · <strong>'+Number(p.price||0).toLocaleString('ro-RO')+' RON / an</strong></div>'
       +'<div style="font-size:13px;color:var(--t3);margin-bottom:14px">Scrie numele flotei (ex. numele firmei). Îl vei vedea în aplicație și în emailurile de alertă. Fără nume nu putem porni plata.</div>'
       +'<input id="fl-name-pop" class="fl-in" placeholder="Numele flotei (ex. Firma SRL)" maxlength="80" autocomplete="organization" style="width:100%;box-sizing:border-box">'
       +'<div id="fl-name-err" style="font-size:12px;color:#ff6b6b;margin-top:6px;display:none">Te rugăm să scrii numele flotei (minim 2 caractere).</div>'
@@ -162,7 +167,8 @@
   function updatePayBlock(){
     var box=$('fl-pay'); if(!box) return;
     var t=($('fl-tier')||{}).value, p=PLAN_INFO['fleet_'+t];
-    var show = (typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) && !!p && !!currentUser;
+    var picked = !!document.querySelector('.fleet-tier.sel');
+    var show = (typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) && !!p && !!currentUser && picked;
     box.style.display = show ? 'block' : 'none';
     var ft=document.querySelector('#fl-form .ct'); if(ft && typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) ft.textContent='Ai nevoie întâi de ofertă sau factură proformă?';
     if(show){ $('fl-pay-sum').textContent = p.name+' · '+p.range+' · '+p.price.toLocaleString('ro-RO')+' RON / an'; }
