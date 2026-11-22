@@ -64,17 +64,70 @@ function deschideCVdinNr(){
 // cumpRaport() este definit în core.js
 
 // ═══ VANZARE ═══
-function vanzFotoPreview(input){
-  const file=input.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    document.getElementById('vanz-foto-img').src=e.target.result;
-    document.getElementById('vanz-foto-preview').style.display='block';
-    // Save as data URL temporarily
-    window._vanzFotoData=e.target.result;
-  };
-  reader.readAsDataURL(file);
+// ── Poze anunț: până la 9, redimensionate, prima = principală ──
+window._vanzFotos = window._vanzFotos || [];
+const VANZ_MAX_FOTO = 9;
+function vanzFotosSet(arr){
+  window._vanzFotos = (Array.isArray(arr)?arr:[]).filter(Boolean).slice(0,VANZ_MAX_FOTO);
+  vanzFotosRender();
+}
+function vanzFotosRender(){
+  const f = window._vanzFotos||[];
+  window._vanzFotoData = f[0]||null; // compatibilitate
+  const el = document.getElementById('vanz-galerie-garaj');
+  if(!el) return;
+  if(!f.length){
+    el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:14px;font-size:12px;color:var(--t3);border:1px dashed var(--b2);border-radius:10px">Nicio poză adăugată încă. Apasă „Adaugă imagini” mai jos (max '+VANZ_MAX_FOTO+').</div>';
+  } else {
+    el.innerHTML = f.map((src,i)=>`<div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:2px solid ${i===0?'var(--accent)':'var(--b2)'};background:#000">
+      <img src="${src}" onclick="vanzFotoMakeMain(${i})" style="width:100%;height:100%;object-fit:cover;cursor:pointer;display:block">
+      ${i===0?'<div style="position:absolute;left:4px;bottom:4px;background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px">PRINCIPALĂ</div>':''}
+      <button type="button" onclick="vanzFotoRemove(${i})" style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(0,0,0,0.75);color:#fff;font-size:15px;line-height:1;cursor:pointer">×</button>
+    </div>`).join('');
+  }
+  const cnt = document.getElementById('vanz-foto-count');
+  if(cnt) cnt.textContent = f.length+' / '+VANZ_MAX_FOTO+' poze';
+  const btn = document.getElementById('vanz-foto-btn');
+  if(btn) btn.textContent = f.length ? '✏️ Editează imagini' : '📷 Adaugă imagini';
+}
+function vanzFotoRemove(i){ const f=(window._vanzFotos||[]).slice(); f.splice(i,1); vanzFotosSet(f); }
+function vanzFotoMakeMain(i){ const f=(window._vanzFotos||[]).slice(); if(i<=0||i>=f.length) return; const [x]=f.splice(i,1); f.unshift(x); vanzFotosSet(f); }
+function vanzFotoResize(file){
+  return new Promise((res,rej)=>{
+    const rd=new FileReader();
+    rd.onerror=()=>rej(new Error('citire'));
+    rd.onload=e=>{
+      const im=new Image();
+      im.onerror=()=>rej(new Error('imagine'));
+      im.onload=()=>{
+        try{
+          const M=1280; let w=im.naturalWidth||im.width, h=im.naturalHeight||im.height;
+          const k=Math.min(1,M/Math.max(w,h)); w=Math.round(w*k); h=Math.round(h*k);
+          const c=document.createElement('canvas'); c.width=w; c.height=h;
+          c.getContext('2d').drawImage(im,0,0,w,h);
+          res(c.toDataURL('image/jpeg',0.78));
+        }catch(err){ rej(err); }
+      };
+      im.src=e.target.result;
+    };
+    rd.readAsDataURL(file);
+  });
+}
+async function vanzFotoPreview(input){
+  const files=[...(input.files||[])];
+  input.value='';
+  if(!files.length) return;
+  const cur=(window._vanzFotos||[]).slice();
+  const loc=VANZ_MAX_FOTO-cur.length;
+  if(loc<=0){ if(typeof showNotification==='function') showNotification('Maxim '+VANZ_MAX_FOTO+' poze','Șterge o poză ca să adaugi alta.'); return; }
+  const take=files.filter(f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic|heif)$/i.test(f.name||'')).slice(0,loc);
+  if(files.length>loc && typeof showNotification==='function') showNotification('Maxim '+VANZ_MAX_FOTO+' poze','Am adăugat doar primele '+loc+'.');
+  let fail=0;
+  for(const f of take){
+    try{ cur.push(await vanzFotoResize(f)); }catch(e){ fail++; }
+  }
+  if(fail && typeof showNotification==='function') showNotification('⚠️ Poză necitită', fail+' poză/poze nu au putut fi citite (format nesuportat). Încearcă JPG sau PNG.');
+  vanzFotosSet(cur);
 }
 
 function loadVanzCars(){
@@ -118,30 +171,14 @@ function selectVanzCar(id){
   if(info) info.innerHTML = `<div style="font-weight:700">${c.brand} ${c.model} ${c.year}</div><div style="font-size:12px;color:var(--t3)">${c.plate} · ${c.km?c.km.toLocaleString()+' km':''}${c.fuel?' · '+c.fuel:''}</div>`;
   const titlu = document.getElementById('vanz-titlu');
   if(titlu && !titlu.value) titlu.value = `${c.brand} ${c.model} ${c.year}`;
-  // Preia automat pozele din garaj
-  if(c.fotos && c.fotos.length > 0) {
-    window._vanzFotoData = c.fotos[0];
-    const img = document.getElementById('vanz-foto-img');
-    const preview = document.getElementById('vanz-foto-preview');
-    if(img) { img.src = c.fotos[0]; }
-    if(preview) preview.style.display = 'block';
-    // Afișez galerie poze din garaj
-    const galerieEl = document.getElementById('vanz-galerie-garaj');
-    if(galerieEl) {
-      galerieEl.innerHTML = c.fotos.map((f,i) => `<img src="${f}" onclick="selectVanzFoto('${f}')" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid ${i===0?'var(--accent)':'var(--b2)'};">`).join('');
-    }
-  }
+  // Preia automat pozele din garaj (le poți șterge / adăuga altele)
+  vanzFotosSet(Array.isArray(c.fotos)?c.fotos:[]);
   vanzEstimPret();
 }
 
 function selectVanzFoto(src) {
-  window._vanzFotoData = src;
-  const img = document.getElementById('vanz-foto-img');
-  if(img) img.src = src;
-  // Update border pe galerie
-  document.querySelectorAll('#vanz-galerie-garaj img').forEach(el => {
-    el.style.borderColor = el.src === src ? 'var(--accent)' : 'var(--b2)';
-  });
+  const i=(window._vanzFotos||[]).indexOf(src);
+  if(i>0) vanzFotoMakeMain(i);
 }
 
 // Precompletează Marcă/Model/An/Km (și pregătește sugestiile de model) când se alege mașina de vândut
@@ -174,6 +211,7 @@ async function openVanz(id){
   vanzStep2Init();
   loadVanzCars();
   vanzPrefillBrandModel(c);
+  vanzFotosSet(Array.isArray(c.fotos)?c.fotos:[]);
   vanzEstimPret();
 }
 
@@ -409,7 +447,7 @@ async function vanzUpdateLocalitati(){
   const g=await vanzGeocode(`județul ${j}, România`);
   if(g && !window._vanzLoc) _vanzMap.setView([g.lat,g.lng],9);
 }
-function vanzStep2Init(){ vanzRenderPachete(); vanzInitMap(); }
+function vanzStep2Init(){ vanzRenderPachete(); vanzInitMap(); vanzFotosRender(); }
 
 // ═══ MODIFICĂ ANUNȚ ═══
 function vanzEditeaza(id){
@@ -428,10 +466,7 @@ function vanzEditeaza(id){
   setv('vanz-pret',a.pret); setv('vanz-desc',a.descriere); setv('vanz-tel',a.tel); setv('vanz-judet',a.judet);
   setv('vanz-localitate',a.localitate); setv('vanz-indicatii',a.indicatii);
   vanzDotariSet(a.dotari);
-  const foto=a.foto||(a.fotos&&a.fotos[0])||null;
-  window._vanzFotoData=foto;
-  const img=document.getElementById('vanz-foto-img'), pv=document.getElementById('vanz-foto-preview');
-  if(img&&foto) img.src=foto; if(pv) pv.style.display=foto?'block':'none';
+  vanzFotosSet((a.fotos&&a.fotos.length)?a.fotos:(a.foto?[a.foto]:[]));
   window._vanzLoc=(a.lat&&a.lng)?{lat:a.lat,lng:a.lng}:null;
   vanzStep2Init();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -564,7 +599,8 @@ async function vanzPublica(){
   const putere_cp = document.getElementById('vanz-putere')?.value ? Number(document.getElementById('vanz-putere').value) : null;
   const locuri = document.getElementById('vanz-locuri')?.value ? Number(document.getElementById('vanz-locuri').value) : null;
   const vin = document.getElementById('vanz-vin')?.value || null;
-  const fotos = window._vanzFotoData ? [window._vanzFotoData] : null;
+  const fotosArr = (window._vanzFotos||[]).filter(Boolean);
+  const fotos = fotosArr.length ? fotosArr : null;
   const localitate = (document.getElementById('vanz-localitate')?.value||'').trim() || null;
   const indicatii = (document.getElementById('vanz-indicatii')?.value||'').trim() || null;
   if(!window._vanzLoc && (localitate||judet)){
@@ -583,7 +619,7 @@ async function vanzPublica(){
     data:new Date().toLocaleDateString('ro-RO'),
     status:'activ',
     pachet:_vanzPachet,
-    foto:window._vanzFotoData||null,
+    foto:fotosArr[0]||null,
     fotos,
     created_at: new Date().toISOString()
   };
@@ -732,8 +768,7 @@ function piataMineSync(){
 }
 
 function vanzNouAnunt(){
-  window._vanzFotoData=null;
-  document.getElementById('vanz-foto-preview').style.display='none';
+  vanzFotosSet([]);
   const fi=document.getElementById('vanz-foto-input');if(fi)fi.value='';
   document.getElementById('vanz-step1').style.display='block';
   document.getElementById('vanz-step2').style.display='none';
