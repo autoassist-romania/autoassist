@@ -149,7 +149,7 @@
       var standalone=(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true;
       if(ios && !standalone) return false;
       if(Notification.permission!=='default') return false;
-      if(localStorage.getItem('aa_push_dismiss')) return false;
+      if(localStorage.getItem('aa_push_dismiss2')) return false;
       return true;
     }catch(e){ return false; }
   }
@@ -159,13 +159,36 @@
     d.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99998;width:min(440px,94vw);background:#14192b;border:1px solid rgba(240,180,41,.55);border-radius:14px;padding:14px 16px;box-shadow:0 10px 36px rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:1.45';
     d.innerHTML='<div style="font-weight:800;margin-bottom:4px">🔔 Vrei să te anunțăm pe telefon?</div><div style="opacity:.85;margin-bottom:10px">Primești o notificare normală, sus pe ecran, înainte să expire RCA, ITP sau rovinieta.</div><div style="display:flex;gap:8px"><button id="aa-push-yes" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#f0b429,#e09e1a);color:#000;font-weight:800;cursor:pointer">Activează</button><button id="aa-push-no" style="padding:10px 14px;border:1px solid rgba(255,255,255,.25);border-radius:10px;background:none;color:#fff;cursor:pointer">Nu acum</button></div>';
     document.body.appendChild(d);
-    document.getElementById('aa-push-yes').onclick=function(){ d.remove(); try{ localStorage.setItem('aa_push_dismiss','1'); }catch(e){} if(window.aaPushEnable) window.aaPushEnable(); };
-    document.getElementById('aa-push-no').onclick=function(){ d.remove(); try{ localStorage.setItem('aa_push_dismiss','1'); }catch(e){} };
+    document.getElementById('aa-push-yes').onclick=function(){ d.remove(); try{ localStorage.setItem('aa_push_dismiss2','1'); }catch(e){} if(window.aaPushEnable) window.aaPushEnable(); };
+    document.getElementById('aa-push-no').onclick=function(){ d.remove(); try{ localStorage.setItem('aa_push_dismiss2','1'); }catch(e){} };
   }
   var tries=0, t=setInterval(function(){
     tries++; if(tries>120){ clearInterval(t); return; }
     if(typeof currentUser==='undefined' || !currentUser) return;
     clearInterval(t);
-    if(ok()) setTimeout(function(){ if(ok()) show(); }, 8000);
+    // apare abia după ce utilizatorul a ales la bannerul de cookie-uri (ca să nu se suprapună)
+    var w=0, t2=setInterval(function(){
+      w++; if(w>300){ clearInterval(t2); return; }
+      if(!(window.aaConsent && window.aaConsent.get())) return;
+      clearInterval(t2);
+      if(ok()) setTimeout(function(){ if(ok()) show(); }, 2500);
+    }, 1000);
+  }, 1000);
+})();
+
+
+// ── Banner cookie / stocare locală (fișier separat, apare la prima vizită) ──
+(function(){
+  try{ var sc=document.createElement('script'); sc.src='cookie-consent.js'; sc.defer=true; document.body.appendChild(sc); }catch(e){}
+})();
+
+// ── Încarcă panoul admin (Clienți & Emailuri) doar pentru contul de admin ──
+(function(){
+  var tries=0, t=setInterval(function(){
+    tries++; if(tries>150){ clearInterval(t); return; }
+    if(typeof currentUser==='undefined' || !currentUser) return;
+    clearInterval(t);
+    if((currentUser.email||'').toLowerCase()!=='autoassist.romania@gmail.com') return;
+    var s=document.createElement('script'); s.src='admin-clienti.js'; document.body.appendChild(s);
   }, 1000);
 })();
