@@ -124,11 +124,7 @@
   // Plata flotei cere obligatoriu numele flotei; dacă lipsește, apare o fereastră unde îl scrii
   window.fleetPay = function(){
     var t = ($('fl-tier')||{}).value;
-    if(!PLAN_INFO['fleet_'+t] || !document.querySelector('.fleet-tier.sel')){
-      note('ℹ️','Alege mai întâi pachetul de flotă (S, M, L sau XL) din cardurile de mai sus.');
-      var g=document.querySelector('.fleet-tier'); if(g) g.scrollIntoView({behavior:'smooth',block:'center'});
-      return;
-    }
+    if(!PLAN_INFO['fleet_'+t]){ note('ℹ️','Alege un pachet de la 6 la 100 de vehicule (S, M, L sau XL).'); return; }
     var nm = String((($('fl-pay-name')||{}).value)||'').trim();
     // numele trebuie scris de utilizator (nu completat automat de browser)
     if(nm.length < 2 || !window._flNameTyped){ fleetNameAsk(t); return; }
@@ -170,8 +166,13 @@
     var t=($('fl-tier')||{}).value, p=PLAN_INFO['fleet_'+t];
     var nmEl=$('fl-pay-name');
     if(nmEl && !nmEl._aaInit){ nmEl._aaInit=true; nmEl.setAttribute('autocomplete','off'); nmEl.setAttribute('name','fleet-company-label'); nmEl.value=''; window._flNameTyped=false; nmEl.addEventListener('input',function(){ window._flNameTyped=true; }); }
-    var picked = !!document.querySelector('.fleet-tier.sel');
-    var show = (typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) && !!p && !!currentUser && picked;
+    // Implicit: Flotă S e deja selectată (evidențiată), omul schimbă dacă vrea alt pachet
+    if(!document.querySelector('.fleet-tier.sel')){
+      var d0=document.querySelector('.fleet-tier[data-id="s"]'); if(d0) d0.classList.add('sel');
+      var sel0=$('fl-tier'); if(sel0) sel0.value='s';
+      t='s'; p=PLAN_INFO['fleet_s'];
+    }
+    var show = (typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) && !!p && !!currentUser;
     box.style.display = show ? 'block' : 'none';
     var ft=document.querySelector('#fl-form .ct'); if(ft && typeof BILLING_LIVE!=='undefined' && BILLING_LIVE) ft.textContent='Ai nevoie întâi de ofertă sau factură proformă?';
     if(show){ $('fl-pay-sum').textContent = p.name+' · '+p.range+' · '+p.price.toLocaleString('ro-RO')+' RON / an'; }
