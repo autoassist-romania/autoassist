@@ -572,6 +572,12 @@ async function vanzRenewGo(){
   vanzPlateste(id);
 }
 
+// Titlul din pasul 3 se potrivește cu starea reală (în așteptare plată / modificat / publicat)
+function vanzStep3Title(txt,color,emoji){
+  const info=document.getElementById('vanz-confirm-info'); if(!info) return;
+  const t=info.previousElementSibling; if(t){ t.textContent=txt; t.style.color=color||'var(--green)'; const e=t.previousElementSibling; if(e&&emoji) e.textContent=emoji; }
+}
+
 async function vanzPublica(){
   const c=vanzCar();
   if(!c)return;
@@ -641,6 +647,7 @@ async function vanzPublica(){
     window._vanzEditId=null;
     document.getElementById('vanz-step2').style.display='none';
     document.getElementById('vanz-step3').style.display='block';
+    vanzStep3Title('Modificări salvate!','var(--green)','✅');
     document.getElementById('vanz-confirm-info').innerHTML=`<strong>${titlu}</strong><br><span style="color:var(--green)">✅ Modificările au fost salvate</span>`;
     document.getElementById('vanz-links').innerHTML=`<button class="btn btn-primary btn-sm btn-full" onclick="vanzBack();vanzLoadLista()">📋 Înapoi la anunțurile mele</button>`;
     vanzLoadLista();
@@ -671,6 +678,7 @@ async function vanzPublica(){
   // Anunț care cere plată: se publică automat după confirmarea plății
   if(saved && saved.status==='in_asteptare'){
     const prem = (typeof isPremium==='function') && isPremium();
+    vanzStep3Title('Anunț salvat — mai e un pas: plata','var(--gold)','💳');
     document.getElementById('vanz-confirm-info').innerHTML=`
       <strong>${titlu}</strong><br>
       📍 ${judet} · 📞 ${tel}<br>
@@ -686,6 +694,7 @@ async function vanzPublica(){
     loadDashVanzari();
     return;
   }
+  vanzStep3Title('Anunț publicat cu succes!','var(--green)','🎉');
   document.getElementById('vanz-confirm-info').innerHTML=`
     <strong>${titlu}</strong><br>
     📍 ${judet} · 📞 ${tel}<br>
