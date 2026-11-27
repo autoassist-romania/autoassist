@@ -488,7 +488,8 @@ function updateUserUI(user) {
     const email = user.email || '';
     if(nameEl) nameEl.textContent = name;
     if(planEl) aaSetPlanLabel(planEl, user);
-    if(emailEl){ emailEl.textContent = email; emailEl.style.display = email ? 'block' : 'none'; }
+    if(emailEl){ emailEl.textContent = email; emailEl.style.display = 'none'; }
+    const lgBtn=document.getElementById('sidebar-logout-btn'); if(lgBtn) lgBtn.style.display='flex';
     if(avatarEl){ avatarEl.textContent = name.charAt(0).toUpperCase(); avatarEl.style.background='linear-gradient(135deg,#00e89a,#4f7dff)'; }
     if(mobLoginBtn) mobLoginBtn.style.display='none';
     const mobSignupBtn = document.getElementById('mob-signup-btn');
@@ -506,6 +507,7 @@ function updateUserUI(user) {
     if(nameEl) nameEl.textContent = 'Intră în cont';
     if(planEl) planEl.textContent = 'Apasă pentru login';
     if(emailEl){ emailEl.textContent = ''; emailEl.style.display='none'; }
+    const lgBtn2=document.getElementById('sidebar-logout-btn'); if(lgBtn2) lgBtn2.style.display='none';
     if(avatarEl){ avatarEl.textContent = 'AA'; avatarEl.style.background='linear-gradient(135deg,#4f7dff,#7c5cfc)'; }
     if(mobLoginBtn) mobLoginBtn.style.display='flex';
     const mobSignupBtn2 = document.getElementById('mob-signup-btn');

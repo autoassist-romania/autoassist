@@ -122,19 +122,34 @@ async function doSetNewPassword(){
     showNotification('✅ Parolă schimbată!','Loghează-te cu noua parolă.');
   }
 }
-function toggleProfileMenu(){
+function toggleProfileMenu(anchor){
   const menu = document.getElementById('profile-menu');
   const overlay = document.getElementById('profile-menu-overlay');
   if(!menu) return;
   const isOpen = menu.style.display !== 'none';
   if(isOpen){ closeProfileMenu(); }
   else {
-    // Update name and email in menu
     if(currentUser){
       const nameEl = document.getElementById('pm-name');
       const emailEl = document.getElementById('pm-email');
+      const planEl = document.getElementById('pm-plan');
       if(nameEl) nameEl.textContent = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'Utilizator';
       if(emailEl) emailEl.textContent = currentUser.email || '';
+      if(planEl){
+        var prem=false; try{ prem=(typeof aaUserIsPremium==='function')?aaUserIsPremium(currentUser):isPremium(); }catch(e){}
+        planEl.innerHTML = prem ? 'Plan Premium <span style="background:linear-gradient(135deg,#f0b429,#e09e1a);color:#000;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:4px">PRO</span>' : 'Plan Gratuit';
+      }
+    }
+    // Poziție: lângă butonul din bara laterală (desktop) sau în dreapta sus (mobil)
+    var pill=document.getElementById('user-pill');
+    if(anchor==='pill' && pill && window.innerWidth>700){
+      var rc=pill.getBoundingClientRect();
+      menu.style.top='auto'; menu.style.right='auto';
+      menu.style.left=Math.max(8,rc.left)+'px';
+      menu.style.bottom=Math.max(8,window.innerHeight-rc.top+8)+'px';
+    } else {
+      menu.style.left='auto'; menu.style.bottom='auto';
+      menu.style.top='60px'; menu.style.right='8px';
     }
     menu.style.display = 'block';
     overlay.style.display = 'block';
@@ -156,7 +171,7 @@ function doLogout(){
   });
 }
 function userPillClick(){
-  if(currentUser){ goTo('setari'); }
+  if(currentUser){ toggleProfileMenu('pill'); }
   else { openM('login'); }
 }
 function savePlateApiKey(){

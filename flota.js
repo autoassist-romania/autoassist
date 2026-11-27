@@ -404,6 +404,39 @@
     if(live) b.textContent='👑 Activează Premium — 99 RON/an · 2 luni incluse gratis';
   }
   window.applyBillingUI=applyBillingUI;
+  // ═══ Benzi Premium contextuale (doar pentru conturi gratuite), cu legătură spre pagina Premium ═══
+  var PREM_STRIPS={
+    dashboard:['Premium 99 RON/an: alerte la 30, 15, 7, 3 și 1 zi, 5 mașini, AI extins și un anunț de vânzare gratuit.','Vezi Premium'],
+    garaj:['Gratuit ai 1 mașină. Cu Premium adaugi până la 5, cu alerte de expirare pentru fiecare.','Treci la Premium'],
+    documente:['Planul gratuit te anunță o singură dată. Premium te anunță de 6 ori, ca să nu prinzi amenda.','Vezi alertele Premium'],
+    docpersonale:['Premium: export dosar mașină (PDF) și raport AI privind starea mașinii.','Vezi Premium'],
+    itp:['Premium îți trimite alerte ITP la 30, 15, 7, 3 și 1 zi înainte, pentru fiecare mașină.','Activează alertele'],
+    mentenanta:['Premium: remindere automate din km (9 tipuri) și grafice de costuri și consum.','Deblochează cu Premium'],
+    vanzare:['Premium: primul anunț de vânzare pe an e gratuit, apoi plătești 15 RON în loc de 25 RON.','Vezi Premium'],
+    agenti:['Gratuit: 5 mesaje AI pe zi. Premium: până la 100 pe zi, cu istoric extins.','Vezi Premium'],
+    asistent:['Gratuit: 3 întrebări vocale pe zi. Premium: uz extins, fără să mai numeri.','Vezi Premium']
+  };
+  function aaPremStrips(){
+    try{
+      var prem=(typeof isPremium==='function') && isPremium();
+      Object.keys(PREM_STRIPS).forEach(function(k){
+        var sec=document.getElementById('sec-'+k); if(!sec) return;
+        var el=document.getElementById('aa-ps-'+k);
+        if(!el){
+          var tb=sec.querySelector('.topbar'); if(!tb) return;
+          el=document.createElement('div'); el.id='aa-ps-'+k; el.className='aa-prem-strip';
+          el.innerHTML='<span class="aps-t">👑 '+PREM_STRIPS[k][0]+'</span><button class="btn btn-gold btn-sm" onclick="goTo(\'premium\')">'+PREM_STRIPS[k][1]+' →</button>';
+          tb.parentNode.insertBefore(el,tb.nextSibling);
+        }
+        el.style.display=prem?'none':'flex';
+      });
+    }catch(e){}
+  }
+  window.aaPremStrips=aaPremStrips;
+  setInterval(aaPremStrips,2000);
+  document.addEventListener('DOMContentLoaded',aaPremStrips);
+  if(document.readyState!=='loading') aaPremStrips();
+
   (function(){ var g=window.goTo; if(typeof g==='function' && !g._aaSub){ var w=function(id){ var r=g.apply(this,arguments); if(id==='setari'){ try{ updateSettingsSub(); }catch(e){} } return r; }; w._aaSub=true; window.goTo=w; } })();
   document.addEventListener('DOMContentLoaded', applyBillingUI);
   if(document.readyState!=='loading') applyBillingUI();
