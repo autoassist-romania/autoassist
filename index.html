@@ -1622,13 +1622,25 @@
     </div>
 
     <div class="card">
-      <div class="ch"><span class="ct">🔔 Notificări & Alerte</span><button class="btn btn-green btn-sm" id="push-toggle-btn" onclick="aaPushEnable()">Activează notificările</button></div>
+      <div class="ch"><span class="ct">🔔 Notificări & Alerte</span><button class="btn btn-red2 btn-sm" id="push-toggle-btn" onclick="aaPushEnable()">🔕 Oprite · apasă să pornești</button></div>
       <div id="notif-status" style="margin-bottom:12px;font-size:12px;color:var(--t2)"></div>
       <p style="font-size:12px;color:var(--t2);margin-bottom:12px">Te avertizăm automat când expiră RCA-ul, ITP-ul, rovinieta, extinctorul și trusa medicală, pentru fiecare mașină din garaj. Alertele vin pe email, iar pe telefon sau pe calculator dacă activezi notificările de mai sus.</p>
       <div style="display:flex;flex-direction:column;gap:10px">
         <div style="padding:10px 12px;background:var(--s2);border-radius:10px"><div style="font-size:13px;font-weight:700">Plan gratuit</div><div style="font-size:12px;color:var(--t2);margin-top:2px">O alertă, cu 30 de zile înainte de expirare.</div></div>
         <div style="padding:10px 12px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:10px"><div style="font-size:13px;font-weight:700;color:var(--gold)">👑 Premium</div><div style="font-size:12px;color:var(--t2);margin-top:2px">Alerte cu 30, 15, 7, 3 și 1 zi înainte, plus în ziua expirării.</div></div>
       </div>
+    </div>
+    <div class="card">
+      <div class="ct" style="margin-bottom:14px">🏢 Despre AutoAssist & Contact</div>
+      <p style="font-size:12px;color:var(--t2);margin-bottom:12px">AutoAssist este o platformă digitală românească pentru șoferi: garaj, documente cu alerte, întreținere și asistenți AI.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--t2);font-weight:500">Firmă</span><span style="font-weight:600;text-align:right">AutoAssist SRL</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--t2);font-weight:500">Cod fiscal (CUI)</span><span style="font-weight:600;text-align:right">50259967</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--t2);font-weight:500">Nr. Registru</span><span style="font-weight:600;text-align:right">J2024012252408</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--t2);font-weight:500">Site</span><span style="font-weight:600;text-align:right"><a href="https://www.autoassist.ro" style="color:var(--accent)">www.autoassist.ro</a></span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--t2);font-weight:500">Email</span><span style="font-weight:600;text-align:right"><a href="mailto:autoassist.romania@gmail.com" style="color:var(--accent)">autoassist.romania@gmail.com</a></span></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="goTo('legal')">⚖️ Termeni, confidențialitate și informații firmă</button>
     </div>
     <div class="card" id="admin-api-card" style="grid-column:1/-1;display:none">
       <div class="ct" style="margin-bottom:10px">🔑 Claude API — Activare Agenți AI</div>

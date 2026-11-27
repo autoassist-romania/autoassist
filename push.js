@@ -74,18 +74,54 @@
     }catch(e){ console.error('aaPushDisable', e); }
   };
 
+  // service worker gata, dar fără să blocheze la nesfârșit (la încărcare poate fi încă în curs de înregistrare)
+  async function swReady(ms){
+    try{
+      var r = await navigator.serviceWorker.getRegistration('/');
+      if(r) return r;
+      return await Promise.race([ navigator.serviceWorker.ready, new Promise(function(res){ setTimeout(function(){ res(null); }, ms||4000); }) ]);
+    }catch(e){ return null; }
+  }
+  function paintBtn(on){
+    var btn = el('push-toggle-btn'); if(!btn) return;
+    btn.textContent = on ? '🔔 Pornite · apasă să oprești' : '🔕 Oprite · apasă să pornești';
+    btn.classList.remove('btn-green','btn-red2');
+    btn.classList.add(on ? 'btn-green' : 'btn-red2');
+    btn.onclick = on ? aaPushDisable : aaPushEnable;
+  }
+
   window.aaPushRefreshStatus = async function(){
     var btn = el('push-toggle-btn'); if(!btn) return;
     try{
-      if(!supported()){ btn.textContent = 'Activează notificările'; btn.onclick = aaPushEnable; return; }
-      var reg = await navigator.serviceWorker.getRegistration('/');
+      if(!supported()){ paintBtn(false); return; }
+      var reg = await swReady(4000);
       var sub = reg && await reg.pushManager.getSubscription();
       var on = !!sub && Notification.permission === 'granted';
-      btn.textContent = on ? 'Oprește notificările' : 'Activează notificările';
-      btn.onclick = on ? aaPushDisable : aaPushEnable;
+      paintBtn(on);
       if(on) setStatus('✅ <span style="color:var(--green)">Notificările push sunt active pe acest dispozitiv.</span>');
+      else if(Notification.permission === 'denied') setStatus('❌ <span style="color:var(--red)">Notificările sunt blocate în browser/telefon pentru autoassist.ro.</span>');
+      else setStatus('🔕 Notificările sunt oprite pe acest dispozitiv.');
     }catch(e){}
   };
+
+  // După login: dacă permisiunea e deja acordată, abonarea se reface și se leagă de contul curent, fără nicio întrebare.
+  var synced = null;
+  async function aaPushSync(){
+    try{
+      if(!supported() || !currentUser || !supabaseClient) return;
+      if(synced === currentUser.id) return;
+      if(Notification.permission !== 'granted'){ await aaPushRefreshStatus(); return; }
+      if(isIOS() && !isStandalone()) return;
+      var reg = await swReady(6000); if(!reg) return;
+      var sub = await reg.pushManager.getSubscription();
+      if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: b64ToU8(VAPID_PUBLIC) });
+      var err = await saveSub(sub);
+      if(!err) synced = currentUser.id;
+    }catch(e){ console.error('aaPushSync', e); }
+    await aaPushRefreshStatus();
+  }
+  window.aaPushSync = aaPushSync;
+  (function(){ var n=0, t=setInterval(function(){ n++; if(n>240){ clearInterval(t); return; } if(typeof currentUser!=='undefined' && currentUser){ aaPushSync(); if(synced===currentUser.id) clearInterval(t); } }, 1500); })();
 
   // butonul vechi din Setări ("Activează notificările") ajunge aici
   window.requestNotifPermission = function(){ return window.aaPushEnable(); };
