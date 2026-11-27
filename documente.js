@@ -665,3 +665,47 @@ function exportReportTXT(plate, report) {
   a.download = `Raport_${plate}_${new Date().toISOString().split('T')[0]}.txt`;
   a.click();
 }
+
+
+// ═══ CARDURI DOCUMENTE PERSONALE (rezumat vizibil + Editează / Vezi / Descarcă) ═══
+function _docZile(iso){
+  if(!iso) return null;
+  var t=Date.parse(iso); if(isNaN(t)) return null;
+  return Math.ceil((t-Date.now())/86400000);
+}
+function renderDocCards(){
+  var box=document.getElementById('docpers-cards'); if(!box) return;
+  function rd(k){ try{ return JSON.parse(localStorage.getItem('docdate_'+k)||'{}'); }catch(e){ return {}; } }
+  var b=rd('buletin'), p=rd('permis'), t=rd('talon');
+  var alt=[]; try{ alt=JSON.parse(localStorage.getItem('altdocs')||'[]'); }catch(e){}
+  var defs=[
+    {k:'buletin',ic:'🪪',nm:'Buletin / CI',has:!!(b['bul-nume']||b['bul-serie']),line:(b['bul-nume']||'')+(b['bul-serie']?' · '+b['bul-serie']:''),exp:b['bul-exp'],expLabel:'Valabil până la'},
+    {k:'permis',ic:'🚘',nm:'Permis auto',has:!!(p['perm-nr']||p['perm-exp']),line:(p['perm-nr']||'')+(p['perm-cat']?' · cat. '+p['perm-cat']:''),exp:p['perm-exp'],expLabel:'Valabil până la'},
+    {k:'talon',ic:'📄',nm:'Talon mașină',has:!!(t['tal-nr']||t['tal-marca']),line:((t['tal-marca']||'')+' '+(t['tal-model']||'')).trim()+(t['tal-nr']?' · '+t['tal-nr']:''),exp:null}
+  ];
+  var h=defs.map(function(d){
+    var img=!!localStorage.getItem('doc_img_'+d.k), z=_docZile(d.exp), badge='';
+    if(z!==null){ var col=z<0?'var(--red)':z<=60?'var(--amber)':'var(--green)'; badge='<div style="font-size:12px;font-weight:700;color:'+col+';margin-top:4px">'+(z<0?'Expirat de '+(-z)+' zile':d.expLabel+': '+new Date(d.exp).toLocaleDateString('ro-RO')+' ('+z+' zile)')+'</div>'; }
+    var status=d.has||img?'<span style="font-size:11px;font-weight:700;color:var(--green)">✅ Salvat'+(img?' · cu poză':'')+'</span>':'<span style="font-size:11px;font-weight:700;color:var(--t3)">Neadăugat încă</span>';
+    return '<div class="card" style="margin:0;padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="font-size:26px">'+d.ic+'</div><div><div style="font-weight:800;font-size:14px">'+d.nm+'</div>'+status+'</div></div>'
+      +'<div style="font-size:12px;color:var(--t2);min-height:16px;word-break:break-word">'+(d.line||'Adaugă documentul ca să-l ai la îndemână')+'</div>'+badge
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-primary btn-sm" onclick="docCardEdit(\''+d.k+'\')">'+(d.has||img?'✏️ Editează':'➕ Adaugă')+'</button>'
+      +(img?'<button class="btn btn-ghost btn-sm" onclick="viewDocImg(\''+d.k+'\')">👁️ Vezi</button><button class="btn btn-ghost btn-sm" onclick="downloadDocImg(\''+d.k+'\')">⬇️</button>':'')+'</div></div>';
+  }).join('');
+  h+='<div class="card" style="margin:0;padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="font-size:26px">📁</div><div><div style="font-weight:800;font-size:14px">Alte documente</div><span style="font-size:11px;font-weight:700;color:'+(alt.length?'var(--green)':'var(--t3)')+'">'+(alt.length?'✅ '+alt.length+' salvate':'Neadăugat încă')+'</span></div></div>'
+    +'<div style="font-size:12px;color:var(--t2);min-height:16px">Polițe, contracte, facturi, alte fișiere</div>'
+    +'<div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-primary btn-sm" onclick="docCardEdit(\'altele\')">'+(alt.length?'✏️ Gestionează':'➕ Adaugă')+'</button></div></div>';
+  if(box._h!==h){ box.innerHTML=h; box._h=h; }
+}
+function docCardEdit(k){
+  docTab(k);
+  var panel=document.getElementById('docpanel-'+k);
+  if(panel) panel.scrollIntoView({behavior:'smooth',block:'start'});
+  var first={buletin:'bul-nume',permis:'perm-nr',talon:'tal-nr'}[k], el=first&&document.getElementById(first);
+  if(el) setTimeout(function(){ try{ el.focus({preventScroll:true}); }catch(e){} },350);
+}
+(function(){
+  var _t=window.docTab; if(typeof _t==='function'){ window.docTab=function(){ var r=_t.apply(this,arguments); try{renderDocCards();}catch(e){} return r; }; }
+  setInterval(function(){ var s=document.getElementById('sec-docpersonale'); if(s && s.classList.contains('active')) { try{renderDocCards();}catch(e){} } },1200);
+  document.addEventListener('DOMContentLoaded',function(){ try{renderDocCards();}catch(e){} });
+})();

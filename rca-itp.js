@@ -171,7 +171,7 @@ function doLogout(){
   });
 }
 function userPillClick(){
-  if(currentUser){ toggleProfileMenu('pill'); }
+  if(currentUser){ goTo('setari'); }
   else { openM('login'); }
 }
 function savePlateApiKey(){

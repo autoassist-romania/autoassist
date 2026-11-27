@@ -765,14 +765,7 @@ function switchAuth(type) {
   else if(type === 'signup') { closeM('login'); openM('signup'); }
 }
 
-// Update upill to show login/logout
-document.querySelector('.upill')?.addEventListener('click', () => {
-  if(currentUser) {
-    if(confirm('Vrei să te deloghezi din AutoAssist?')) logout();
-  } else {
-    openM('login');
-  }
-});
+// Click pe butonul de utilizator: gestionat de userPillClick() (rca-itp.js) — duce la Setări / profil
 
 // Update add car to save to cloud
 // Override addCar to save to cloud

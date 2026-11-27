@@ -49,7 +49,7 @@ function mntTab(tab) {
   if(tab === 'checklist') renderChecklist();
   if(tab === 'istoric') { renderMntList(); renderReminderAuto(); }
   if(tab === 'combustibil') renderFuelList();
-  if(tab === 'reminder') renderReminderList();
+  if(tab === 'reminder') { renderReminderAuto(); renderReminderList(); }
   if(tab === 'anvelope2') renderAnvelope2();
   populateMntSelects();
 }
