@@ -483,6 +483,7 @@ function updateUserUI(user) {
   const mobLoginBtn = document.getElementById('mob-login-btn');
   const mobAvatar = document.getElementById('mob-user-btn');
 
+  try{ document.body.classList.toggle('aa-logged', !!user); }catch(e){}
   if(user) {
     const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Utilizator';
     const email = user.email || '';
@@ -545,7 +546,7 @@ async function loadUserData(userId) {
       const localCars = (() => { try { return JSON.parse(localStorage.getItem('autoassist-cars-'+userId)||'[]'); } catch(e){ return []; } })();
       const supabaseCars = data.map(c => {
         const local = localCars.find(l=>l.id==c.id);
-        return {...c, docs: c.docs||{}, mnt: c.mnt||{oilInt:10000, oilLast:0}, fotos: local?.fotos||c.fotos||[], fotoPos: local?.fotoPos||c.fotoPos||[], anvelope: local?.anvelope||c.anvelope||{}};
+        return {...c, docs: c.docs||{}, mnt: c.mnt||{oilInt:10000, oilLast:0}, fotos: ((local?.fotos||[]).some(Boolean) ? local.fotos : (c.fotos||[])), fotoPos: ((local?.fotos||[]).some(Boolean) ? (local.fotoPos||c.fotoPos||[]) : (c.fotoPos||[])), anvelope: local?.anvelope||c.anvelope||{}};
       });
       // Adaug mașinile locale care nu sunt în Supabase (salvate recent)
       const supabaseIds = new Set(supabaseCars.map(c=>String(c.id)));
@@ -563,7 +564,7 @@ async function loadUserData(userId) {
       // ca să nu mai depindă doar de acest dispozitiv/browser
       supabaseCars.forEach(sc => {
         const orig = data.find(d=>d.id==sc.id);
-        const hadFotosOnlyLocal = sc.fotos?.length && (!orig?.fotos || JSON.stringify(orig.fotos)!==JSON.stringify(sc.fotos));
+        const hadFotosOnlyLocal = (sc.fotos||[]).some(Boolean) && JSON.stringify(orig?.fotos||[])!==JSON.stringify(sc.fotos);
         if(hadFotosOnlyLocal && typeof saveCarToCloud === 'function') saveCarToCloud(sc);
       });
       localStorage.setItem('autoassist-cars-' + userId, JSON.stringify(cars));
@@ -608,7 +609,8 @@ async function saveCarToCloud(car) {
       fotoPos: car.fotoPos || [],
       added: car.added
     };
-    await supabaseClient.from('cars').upsert(carData, { onConflict: 'id' });
+    const rr = await supabaseClient.from('cars').upsert(carData, { onConflict: 'id' });
+    if(rr && rr.error) console.error('Car save error:', rr.error.message);
   } catch(e) { console.log('Car save error:', e); }
 }
 

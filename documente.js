@@ -110,6 +110,7 @@ async function extractDocData(type, imageDataUrl) {
       if(!jm){ lastErr='răspuns fără date'; continue; }
       const n = fillDocFields(type, JSON.parse(jm[0]));
       if(n>0){
+        try{ var dg0=document.getElementById('ocr-diag-'+type); if(dg0) dg0.remove(); }catch(e){}
         try{ _docSaveSilent(type); }catch(e){}
         showNotification('✅ Date extrase!', 'Am completat '+n+' câmpuri. Verifică și corectează dacă e necesar.');
         try{ renderDocCards(); }catch(e){}
@@ -119,6 +120,11 @@ async function extractDocData(type, imageDataUrl) {
     }catch(e){ lastErr=String(e.message||e); if(/autentific|limit/i.test(lastErr)) break; }
   }
   console.warn('OCR doc eșuat:', lastErr, lastReply.slice(0,200));
+  try{
+    var dg=document.getElementById('ocr-diag-'+type);
+    if(!dg){ var pv=document.getElementById(type+'-preview'); if(pv){ dg=document.createElement('div'); dg.id='ocr-diag-'+type; dg.style.cssText='margin:8px 0;padding:10px 12px;border-radius:10px;background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.35);font-size:12px;color:var(--t2);line-height:1.5;word-break:break-word'; pv.parentNode.insertBefore(dg,pv.nextSibling); } }
+    if(dg) dg.innerHTML='⚠️ <b>Scanarea nu a completat datele.</b> Motiv: '+String(lastErr||'necunoscut').replace(/</g,'&lt;')+(lastReply?'<br>Răspuns AI: <i>'+String(lastReply).slice(0,160).replace(/</g,'&lt;')+'</i>':'')+'<br>Poți completa manual câmpurile de mai jos și apăsa Salvează.';
+  }catch(e){}
   showNotification('💡 Completare manuală', 'Nu am putut citi documentul ('+lastErr+'). Încearcă o poză mai clară, cu lumină bună, sau completează manual.');
 }
 
@@ -807,6 +813,7 @@ function _docSaveSilent(type){
   var f=_DOC_FIELDS[type]||[], data={};
   f.forEach(function(id){ var el=document.getElementById(id); if(el) data[id]=el.value; });
   localStorage.setItem('docdate_'+type, JSON.stringify(data));
+  try{ setTimeout(function(){ if(typeof udSyncPersonal==='function') udSyncPersonal(type); },400); }catch(e){}
 }
 
 /* ═══════════ ACTE MULTIPLE (Supabase) — taloane per mașină, acte șoferi pentru admin flotă ═══════════ */

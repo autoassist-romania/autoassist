@@ -598,3 +598,10 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
 @media(max-width:700px){.aa-prem-strip .btn{width:100%}}
 
 html,body,.main{overflow-anchor:none}
+
+/* Bară sus cu Intră în cont / Creează cont și pe desktop (doar când nu ești logat și nu ești pe pagina de start) */
+@media(min-width:769px){
+  body:not(.aa-logged):not(:has(#sec-landing.active)) .mob-top{display:flex;left:var(--sidebar);width:auto;height:52px}
+  body:not(.aa-logged):not(:has(#sec-landing.active)) .mob-top .logo{display:none}
+  body:not(.aa-logged):not(:has(#sec-landing.active)) .main{padding-top:76px}
+}
