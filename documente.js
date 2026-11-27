@@ -1012,3 +1012,15 @@ async function udPullPersonal(){
   }
   if(changed){ try{ loadDocData('buletin'); loadDocData('permis'); }catch(e){} try{ renderDocCards(); }catch(e){} }
 }
+
+/* După încărcare, zona de upload dispare pentru utilizatorul normal (rămâne doar „Înlocuiește"); la flote rămâne vizibilă ca să poți adăuga mai multe */
+function _docUploadVis(){
+  ['buletin','permis','talon'].forEach(function(t){
+    var inp=document.getElementById(t+'-file'); if(!inp) return;
+    var dz=inp.parentElement, btn=dz&&dz.nextElementSibling;
+    var has=!!localStorage.getItem('doc_img_'+t), hide=has && !window.myFleet;
+    if(dz) dz.style.display=hide?'none':'';
+    if(btn && btn.tagName==='BUTTON') btn.style.display=hide?'none':'';
+  });
+}
+setInterval(function(){ var s=document.getElementById('sec-docpersonale'); if(s&&s.classList.contains('active')){ try{ _docUploadVis(); }catch(e){} } },400);
