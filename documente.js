@@ -142,11 +142,12 @@ function loadDocData(type) {
       if(!document.getElementById('doc-actions-'+type)) {
         const actEl = document.createElement('div');
         actEl.id = 'doc-actions-'+type;
-        actEl.style.cssText = 'display:flex;gap:8px;margin-top:8px;justify-content:center';
+        actEl.style.cssText = 'display:flex;gap:8px;margin-top:8px;justify-content:center;flex-wrap:wrap';
         actEl.innerHTML = `
           <button onclick="viewDocImg('${type}')" style="background:rgba(79,125,255,0.1);border:1px solid rgba(79,125,255,0.3);color:var(--accent);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:12px;font-weight:700">👁️ Vizualizează</button>
           <button onclick="downloadDocImg('${type}')" style="background:rgba(0,232,154,0.1);border:1px solid rgba(0,232,154,0.3);color:var(--green);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:12px;font-weight:700">⬇️ Descarcă</button>
-          <button onclick="deleteDocImg('${type}')" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);color:var(--red);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:12px;font-weight:700">🗑️</button>`;
+          <button onclick="document.getElementById('${type}-file').click()" style="background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.35);color:var(--gold);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:12px;font-weight:700">🔄 Înlocuiește</button>
+          <button onclick="docPhotoDelete('${type}')" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);color:var(--red);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:12px;font-weight:700">🗑️ Șterge</button>`;
         prev.appendChild(actEl);
       }
     }
@@ -740,5 +741,20 @@ function docCardDeleteDo(k){
   var a=document.getElementById('doc-actions-'+k); if(a) a.remove();
   _docModalClose();
   try{ showNotification('🗑️ Șters','Ai șters '+(_DOC_NM[k]||'documentul')+'. Îl poți adăuga din nou oricând.'); }catch(e){}
+  renderDocCards();
+}
+
+function docPhotoDelete(k){
+  var nm=_DOC_NM[k]||'documentul';
+  _docModal('🗑️ Ștergi poza pentru '+nm+'?',
+    '<div style="font-size:13px;color:var(--t2);line-height:1.6">Se șterge doar poza scanată. Datele completate rămân salvate. <br><br>Poți adăuga oricând o poză nouă sau o poți înlocui acum.</div>',
+    [['Anulează','btn-ghost','_docModalClose()'],['🔄 Înlocuiește cu una nouă','btn-primary',"_docModalClose();document.getElementById('"+k+"-file').click()"],['🗑️ Da, șterge poza','btn',"docPhotoDeleteDo('"+k+"')",'background:rgba(255,80,80,0.15);color:var(--red);border:1px solid rgba(255,80,80,0.4)']]);
+}
+function docPhotoDeleteDo(k){
+  localStorage.removeItem('doc_img_'+k);
+  var img=document.getElementById(k+'-img'), prev=document.getElementById(k+'-preview'); if(img) img.src=''; if(prev) prev.style.display='none';
+  var a=document.getElementById('doc-actions-'+k); if(a) a.remove();
+  _docModalClose();
+  try{ showNotification('🗑️ Poză ștearsă','Poți adăuga o poză nouă oricând.'); }catch(e){}
   renderDocCards();
 }
