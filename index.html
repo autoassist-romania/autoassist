@@ -75,6 +75,9 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="shortcut icon" href="/icon-32.png">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -338,16 +341,16 @@
 
     <!-- Logo -->
     <div style="margin-bottom:4px;position:relative;line-height:0">
-      <img src="/logo2.png" style="width:min(460px,92vw);height:auto;filter:drop-shadow(0 0 40px rgba(200,150,12,0.6))" alt="AutoAssist">
+      <img class="lp-logo2" src="/logo2.png" style="width:min(460px,92vw);height:auto;filter:drop-shadow(0 0 40px rgba(200,150,12,0.6));position:relative;left:-15px" alt="AutoAssist">
     </div>
 
-    <!-- Conținut sub logo, centrat pe aceeași axă cu logo-ul -->
-    <div>
+    <!-- Conținut sub logo, aliniat cu poziția logo-ului -->
+    <div class="lp-sub" style="position:relative;left:10px">
     <div style="font-size:15px;color:#a0aec0;margin-bottom:8px;line-height:1.5">Asistentul digital al șoferului român<br><span style="color:#c8960c;font-weight:600">Garaj • Documente • AI • Întreținere</span></div>
 
     <!-- Assist tagline -->
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;background:rgba(200,150,12,0.08);border:1px solid rgba(200,150,12,0.2);border-radius:16px;padding:10px 18px;margin:0 auto 10px;max-width:320px;text-align:center">
-      <span style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap">
+      <span class="lp-arow" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap">
         <span style="font-size:20px">🤖</span>
         <span style="font-size:13px;color:#c8960c;font-weight:700;letter-spacing:0.5px">ASSIST</span>
       </span>
@@ -356,19 +359,19 @@
 
     <!-- CTA Buttons -->
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:18px">
-      <button onclick="openM('login')" class="btn btn-primary" style="padding:14px 32px;font-size:16px;font-weight:700;border-radius:12px;box-shadow:0 4px 20px rgba(200,150,12,0.3)">🚀 Intră în cont</button>
-      <button onclick="openM('signup')" class="btn" style="padding:14px 32px;font-size:16px;font-weight:700;border-radius:12px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15)">✨ Creează cont gratuit</button>
+      <button onclick="openM('login')" class="lp-cta btn btn-primary" style="padding:14px 32px;font-size:16px;font-weight:700;border-radius:12px;box-shadow:0 4px 20px rgba(200,150,12,0.3)">🚀 Intră în cont</button>
+      <button onclick="openM('signup')" class="lp-cta btn" style="padding:14px 32px;font-size:16px;font-weight:700;border-radius:12px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15)">✨ Creează cont gratuit</button>
     </div>
 
     <!-- Stats -->
-    <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:18px">
+    <div class="lp-stats" style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:18px">
       <div style="text-align:center"><div style="font-family:'Bebas Neue';font-size:28px;color:#ffd700">GRATUIT</div><div style="font-size:11px;color:#a0aec0">Plan de bază</div></div>
-      <div style="width:1px;background:rgba(255,255,255,0.1)"></div>
+      <div class="lp-sep" style="width:1px;background:rgba(255,255,255,0.1)"></div>
       <div style="text-align:center"><div style="font-family:'Bebas Neue';font-size:28px;color:#ffd700">99 RON</div><div style="font-size:11px;color:#a0aec0">Premium / an</div></div>
-      <div style="width:1px;background:rgba(255,255,255,0.1)"></div>
+      <div class="lp-sep" style="width:1px;background:rgba(255,255,255,0.1)"></div>
       <div style="text-align:center"><div style="font-family:'Bebas Neue';font-size:28px;color:#ffd700">AI</div><div style="font-size:11px;color:#a0aec0">Integrat Claude</div></div>
-      <div style="width:1px;background:rgba(255,255,255,0.1)"></div>
-      <div style="text-align:center"><div style="font-family:'Bebas Neue';font-size:28px;color:#ffd700">APP</div><div style="font-size:11px;color:#a0aec0">Instalabil pe telefon direct din browser<br>(Android și iPhone), fără magazin de aplicații</div></div>
+      <div class="lp-sep" style="width:1px;background:rgba(255,255,255,0.1)"></div>
+      <div class="lp-stat-app" style="text-align:center"><div style="font-family:'Bebas Neue';font-size:28px;color:#ffd700">APP</div><div style="font-size:11px;color:#a0aec0">Instalabil pe telefon direct din browser<br>(Android și iPhone), fără magazin de aplicații</div></div>
     </div>
     </div>
   </div>
@@ -376,7 +379,7 @@
   <!-- POVESTEA NOASTRĂ -->
   <div style="padding:6px 24px;max-width:700px;margin:0 auto">
     <div style="text-align:center;margin-bottom:32px">
-      <div style="font-family:'Bebas Neue';font-size:32px;letter-spacing:2px;color:#fff;margin-bottom:8px">Cum a apărut AutoAssist?</div>
+      <div class="lp-h2" style="font-family:'Bebas Neue';font-size:32px;letter-spacing:2px;color:#fff;margin-bottom:8px">Cum a apărut AutoAssist?</div>
       <div style="width:60px;height:3px;background:linear-gradient(90deg,#c8960c,#ffd700);border-radius:2px;margin:0 auto"></div>
     </div>
     <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px;margin-bottom:24px;border-left:3px solid #c8960c">
@@ -434,8 +437,8 @@
     <div style="text-align:center;padding:20px 0 40px">
       <div style="font-family:'Bebas Neue';font-size:24px;color:#fff;margin-bottom:16px">Începe gratuit astăzi</div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button onclick="openM('signup')" class="btn btn-primary" style="padding:16px 36px;font-size:16px;font-weight:700;border-radius:12px">🚀 Creează cont gratuit</button>
-        <button onclick="openM('login')" class="btn" style="padding:16px 36px;font-size:16px;font-weight:700;border-radius:12px;background:rgba(255,255,255,0.06);color:#fff;border:1px solid rgba(255,255,255,0.12)">Ai deja cont? Intră →</button>
+        <button onclick="openM('signup')" class="lp-cta btn btn-primary" style="padding:16px 36px;font-size:16px;font-weight:700;border-radius:12px">🚀 Creează cont gratuit</button>
+        <button onclick="openM('login')" class="lp-cta btn" style="padding:16px 36px;font-size:16px;font-weight:700;border-radius:12px;background:rgba(255,255,255,0.06);color:#fff;border:1px solid rgba(255,255,255,0.12)">Ai deja cont? Intră →</button>
       </div>
       <div style="margin-top:16px;font-size:12px;color:#4a5568">Nu necesită card bancar • Fără instalare • Funcționează pe orice dispozitiv</div>
       <div style="margin-top:22px;font-size:12px;color:#718096;line-height:1.9">
@@ -1395,7 +1398,7 @@
         <li>Agenți AI și asistent vocal, uz extins (până la 100 mesaje/zi)</li>
         <li>Raport AI privind starea mașinii</li>
         <li>Export dosar mașină (PDF)</li>
-        <li>Istoric conversații nelimitat</li>
+        <li>Istoric conversații extins</li>
         <li>Badge AutoAssist Pro în profil</li>
         <li>Acces la funcțiile noi, în avanpremieră</li>
       </ul>
@@ -1551,7 +1554,7 @@
           <div class="legal-text">Folosim cookie-uri esențiale pentru funcționarea platformei și cookie-uri analitice (cu consimțământ) pentru îmbunătățirea experienței utilizatorului.</div>
         </div>
         <div style="padding:12px 14px;background:rgba(79,125,255,0.08);border:1px solid rgba(79,125,255,0.2);border-radius:var(--rs);margin-top:12px">
-          <div style="font-size:12px;color:var(--t2);font-weight:500">📧 Pentru exercitarea drepturilor GDPR contactați: <strong style="color:var(--accent)">gdpr@autoassist.ro</strong></div>
+          <div style="font-size:12px;color:var(--t2);font-weight:500">📧 Pentru exercitarea drepturilor GDPR contactați: <strong style="color:var(--accent)">autoassist.romania@gmail.com</strong></div>
         </div>
       </div>
 
@@ -1561,12 +1564,9 @@
           <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">Denumire</span><span style="font-weight:700">AutoAssist SRL</span></div>
           <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">Cod fiscal</span><span style="font-family:'JetBrains Mono';font-size:12px">50259967</span></div>
           <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">Nr. Registru</span><span style="font-family:'JetBrains Mono';font-size:12px">J2024012252408</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">CAEN Principal</span><span style="font-weight:600">6201 — Software</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">CAEN Secundar</span><span style="font-weight:600">6311 — Date</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">Email</span><span style="color:var(--accent);font-weight:600">office@autoassist.ro</span></div>
-        </div>
-        <div style="margin-top:14px;padding:10px 13px;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.18);border-radius:var(--rs);font-size:12px;color:var(--t2);font-weight:500">
-          ⚠️ Datele firmei vor fi completate după înregistrarea la ONRC
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">CAEN Principal</span><span style="font-weight:600">6312 — Portaluri web</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">CAEN Secundar</span><span style="font-weight:600">6201 — Software la comandă</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--t2);font-weight:500">Email</span><span style="color:var(--accent);font-weight:600">autoassist.romania@gmail.com</span></div>
         </div>
       </div>
     </div>
@@ -1716,7 +1716,7 @@
           <div>✅ Prețuri carburant + stații pe hartă</div>
           <div>✅ Export PDF dosar mașină</div>
           <div>✅ Raport AI stare mașină</div>
-          <div>✅ Istoric conversații nelimitat</div>
+          <div>✅ Istoric conversații extins</div>
           <div>✅ Badge AutoAssist Pro în profil</div>
         </div>
       </div>

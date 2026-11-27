@@ -154,7 +154,7 @@ function updateAgentLimitUI() {
   const el = document.getElementById('agent-limit-status');
   if(!el) return;
   if(isPremium()) {
-    el.innerHTML = '👑 <span style="color:#f0b429">Premium — mesaje nelimitate</span>';
+    el.innerHTML = '👑 <span style="color:#f0b429">Premium — utilizare extinsă</span>';
   } else {
     const used = getUsage('agenti_msg');
     const left = Math.max(0, FREE_LIMITS.agenti_msg - used);
@@ -244,7 +244,7 @@ async function sendMsg(){
       incrementUsage('agenti_msg');
       const msgs = document.getElementById('chat-msgs');
       msgs.innerHTML += `<div class="msg user"><div class="mav user">👤</div><div class="mb"><div class="mn" style="text-align:right">Tu</div><div class="mbu">${txt.replace(/</g,'&lt;')}</div></div></div>`;
-      msgs.innerHTML += `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[curAgent]||'🤖'}</div><div class="mb"><div class="mn">${AGENT_NAMES[curAgent]}</div><div class="mbu">Ai atins limita de <strong>5 mesaje gratuite</strong> pe zi. Revin mâine cu răspunsuri proaspete! 😊<br><br>Pentru conversații nelimitate, activează <strong>Premium — 99 RON/an</strong>.</div></div></div>`;
+      msgs.innerHTML += `<div class="msg ai"><div class="mav ai">${AGENT_ICONS[curAgent]||'🤖'}</div><div class="mb"><div class="mn">${AGENT_NAMES[curAgent]}</div><div class="mbu">Ai atins limita de <strong>5 mesaje gratuite</strong> pe zi. Revin mâine cu răspunsuri proaspete! 😊<br><br>Pentru mai multe mesaje, activează <strong>Premium — 99 RON/an</strong>.</div></div></div>`;
       msgs.scrollTop = msgs.scrollHeight;
       inp.value = '';
       inp.disabled = true;

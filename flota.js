@@ -370,7 +370,7 @@
       st.textContent=(window.myFleet && window.myFleet.active) ? '✅ Premium activ prin flotă.' : '✅ Premium activ.';
       bt.style.display='none';
     } else {
-      st.textContent='Folosești planul gratuit: o mașină în garaj, 5 mesaje AI pe zi. Cu Premium (99 RON/an) ai mașini nelimitate, alerte extinse, agenți AI nelimitați și raportul AI al mașinii.';
+      st.textContent='Folosești planul gratuit: o mașină în garaj, 5 mesaje AI pe zi. Cu Premium (99 RON/an) ai până la 5 mașini, alerte extinse, utilizare AI extinsă și raportul AI al mașinii.';
       bt.style.display='none'; if(by) by.style.display='';
     }
   }

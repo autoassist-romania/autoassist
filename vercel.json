@@ -19,9 +19,9 @@
       ]
     },
     {
-      "source": "/(index.html|app.html|core.js|rca-itp.js|vanzare-cv.js|asistent.js|documente.js|mentenanta.js|piese.js|ev-vocal-init.js|style.css)",
+      "source": "/(index.html|app.html|core.js|rca-itp.js|vanzare-cv.js|asistent.js|documente.js|mentenanta.js|piese.js|ev-vocal-init.js|style.css|flota.js|push.js|support-chat.js|cautare.js|cookie-consent.js|admin-clienti.js|export-docx.js)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     }
   ]

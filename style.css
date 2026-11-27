@@ -541,3 +541,23 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
   #support-chat-btn{bottom:76px;right:12px;width:48px;height:48px;font-size:19px;}
   #support-chat-panel{bottom:0;right:0;left:0;width:100%;max-width:100%;height:75vh;max-height:75vh;border-radius:18px 18px 0 0;}
 }
+
+/* fix mobil: coloanele de grid nu mai depășesc ecranul (Premium era tăiat pe telefon) */
+.g2>*,.g3>*,.g4>*{min-width:0}
+.prem-card,.prem-list li{overflow-wrap:anywhere}
+
+/* telefon: logo-ul de pe pagina de intrare centrat exact (offset-ul de -15px era făcut pentru desktop) */
+@media(max-width:700px){
+  .lp-logo2{display:block;margin:0 auto;width:min(460px,84vw)!important;max-width:100%;left:0!important}
+  .lp-sub{left:0!important}
+  /* cuvântul ASSIST exact pe mijloc; robotul stă în stânga lui */
+  .lp-cta{display:block;width:100%;max-width:300px;margin-left:auto;margin-right:auto;box-sizing:border-box;padding-left:12px!important;padding-right:12px!important;text-align:center}
+  .lp-stats{display:grid!important;grid-template-columns:repeat(3,1fr);gap:14px 8px!important;max-width:340px;margin-left:auto;margin-right:auto}
+  .lp-stats .lp-sep{display:none}
+  .lp-stats>div{min-width:0}
+  .lp-stats>div>div:first-child{white-space:nowrap}
+  .lp-stat-app{grid-column:1/-1;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1)}
+  .lp-h2{font-size:clamp(24px,7.4vw,32px)!important;letter-spacing:1px!important;padding-right:56px;padding-left:56px}
+  .lp-arow{position:relative}
+  .lp-arow>span:first-child{position:absolute;right:100%;margin-right:8px}
+}

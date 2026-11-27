@@ -136,7 +136,7 @@ const SEARCH_INDEX = [
   {title:'Alerte SMS', desc:'SMS cu 7 zile înainte de expirare RCA/ITP/Rovinietă — Premium', icon:'📱', cat:'Cont & Setări', kw:'sms alerte premium telefon notificare expirare', go:()=>_aaGoScroll('setari','card-sms')},
   {title:'Notificări & Alerte', desc:'Activează notificările push pentru documente', icon:'🔔', cat:'Cont & Setări', kw:'notificari alerte push email activare', go:()=>_aaGoScroll('setari','card-notif')},
   {title:'Configurare Dashboard', desc:'Alege ce apare pe pagina principală', icon:'🎛️', cat:'Cont & Setări', kw:'configurare dashboard widgets pagina principala personalizare', go:()=>_aaGoScroll('setari','card-dashcfg')},
-  {title:'Contul meu', desc:'Detalii cont și autentificare', icon:'👤', cat:'Cont & Setări', kw:'cont autentificare login profil', go:()=>goTo('cont')},
+  {title:'Contul meu', desc:'Detalii cont și autentificare', icon:'👤', cat:'Cont & Setări', kw:'cont autentificare login profil', go:()=>goTo('setari')},
   {title:'Deconectare', desc:'Ieși din contul tău AutoAssist', icon:'🚪', cat:'Cont & Setări', kw:'logout deconectare delogare exit', go:()=>{ if (typeof doLogout === 'function') doLogout(); }},
 ];
 

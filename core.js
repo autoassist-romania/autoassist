@@ -101,7 +101,7 @@ const MOCK={
 const AUTOASSIST_KNOWLEDGE = `
 === PLATFORMA AUTOASSIST — CUNOȘTINȚE COMPLETE ===
 
-DESCRIERE: AutoAssist este prima platformă digitală din România care combină managementul complet al mașinilor personale și de firmă cu inteligență artificială. Fondată în 2026.
+DESCRIERE: AutoAssist este o platformă digitală românească care combină managementul complet al mașinilor personale și de firmă cu inteligență artificială. Fondată în 2026.
 
 MISIUNE: "Asistentul tău auto — mereu disponibil, mereu corect"
 
@@ -111,7 +111,7 @@ FUNCȚIONALITĂȚI PRINCIPALE:
 3. ASIGURĂRI RCA — reînnoiești sau faci RCA prin parteneri autorizați ASF: Allianz, Euroins, Groupama, Omniasig, Generali, GRAWE, Uniqa
 4. CARVERTICAL — verificare istorică mașini SH cu reducere -20% (cea mai mare de pe piață)
 5. PROGRAMARE ITP — găsești stații autorizate RAR în zona ta
-6. VÂNZARE MAȘINI — anunț completat automat, publicare pe OLX și Autovit cu promovare 7 zile gratuită
+6. VÂNZARE MAȘINI — anunț completat automat, publicat în Piața Auto AutoAssist
 7. ASISTENȚĂ RUTIERĂ — firme partenere în raza 50-100km, 50 RON comision per colaborare
 8. MENTENANȚĂ — urmărire interval schimb ulei, programare service, comandă piese ePiesa/AutoKarma
 9. CALCULATOR COSTURI — calculează costul real anual al mașinii tale
@@ -131,7 +131,7 @@ PREȚURI:
 SURSE DE VENIT AUTOASSIST:
 - Comision RCA: negociat cu partenerii autorizați ASF
 - Comision carVertical: 5 EUR per raport achiziționat (cod AUTOASSIST, reducere 20% pentru utilizatori)
-- Comision vânzare mașini: 20-50 RON per anunț (de la OLX/Autovit)
+- Anunțuri vânzare mașini: taxă de publicare/promovare plătită de vânzător
 - Abonament Premium: 99 RON/an
 - Asistență rutieră: 50 RON per colaborare confirmată
 - Raport SH: 10 RON per raport
@@ -140,14 +140,14 @@ SURSE DE VENIT AUTOASSIST:
 PARTENERI:
 - Brokeri RCA: Allianz, Euroins, Groupama, Omniasig, Generali, GRAWE, Uniqa
 - Verificare istorică: carVertical (reducere -20% exclusiv AutoAssist)
-- Publicare anunțuri: OLX.ro, Autovit.ro, Storia.ro
+- Anunțurile se publică în Piața Auto AutoAssist (nu pe OLX/Autovit)
 - Piese auto: ePiesa, AutoKarma
 - Stații ITP autorizate RAR în zona ta
 - Firme asistență rutieră: AutoAssist România, Road Help 24/7, Tractări Express
 
 ASPECT LEGAL:
-- Formă juridică: AutoAssist SRL (în curs de înregistrare)
-- Coduri CAEN: 6201 (software), 6311 (date), 5829 (produse software), 6312 (portaluri web)
+- Formă juridică: AutoAssist SRL (CUI 50259967)
+- Cod CAEN principal: 6312 (portaluri web), secundar 6201 (software la comandă)
 - GDPR compliant, Termeni și Condiții complete
 - Înregistrare marcă la OSIM în curs
 
@@ -166,7 +166,7 @@ PIAȚĂ ȘI CONCURENȚĂ:
 
 FONDATOR: Anonim (mecanic auto cu experiență, locuiește în Olanda)
 WEBSITE: www.autoassist.ro (în dezvoltare)
-EMAIL: office@autoassist.ro
+EMAIL: autoassist.romania@gmail.com
 `;
 
 function buildAgentPrompt(agent) {
@@ -209,7 +209,7 @@ function buildAgentPrompt(agent) {
     auto:      `Ești Agentul Auto & Service — mecanic virtual expert. Ajuți cu defecțiuni, reparații, piese, întreținere, costuri service. Ai acces la datele mașinilor utilizatorului și le folosești direct.`,
     documente: `Ești Agentul Documente — specialist RCA, ITP, rovinietă, asigurări. Știi exact ce documente are utilizatorul, când expiră și ce trebuie făcut. Ajuți cu proceduri, amenzi, termene. La finalul oricărui răspuns despre termene legale, amenzi sau proceduri oficiale, adaugă scurt: "⚠️ Verifică datele actualizate pe drpciv.ro sau politiarutiera.ro."`,
     juridic:   `Ești Agentul Juridic — expert legislație auto română 2026, contracte vânzare, drepturi consumatori, amenzi, contestații, GDPR auto. Răspunzi clar și util, menționezi când e nevoie de avocat real. La finalul oricărui răspuns despre legi, amenzi sau drepturi, adaugă scurt: "⚠️ Legislația se poate modifica — verifică pe legislatie.just.ro sau consultă un avocat pentru cazuri complexe."`,
-    vanzare:   `Ești Agentul Vânzare — expert vânzare mașini SH în România. Ai acces la mașinile din garajul utilizatorului și poți ajuta direct cu prețuri, descrieri pentru OLX/Autovit, acte necesare, negociere, evitare escrocherii.`,
+    vanzare:   `Ești Agentul Vânzare — expert vânzare mașini SH în România. Ai acces la mașinile din garajul utilizatorului și poți ajuta direct cu prețuri, descrieri de anunț, acte necesare, negociere, evitare escrocherii.`,
     itp:       `Ești Agentul ITP & Service — expert ITP, RAR, pregătire mașină, revisii periodice. Știi exact când expiră ITP-ul utilizatorului și ce trebuie verificat.`,
   };
 
@@ -1316,7 +1316,7 @@ function showUpgradeModal(reason) {
     raport_ai:'Raportul AI de stare mașină este disponibil doar în Premium.',
   };
   const el=document.getElementById('upgrade-modal-text');
-  if(el) el.textContent=(typeof reason==='string'&&msg[reason])?msg[reason]:(typeof reason==='string'&&!msg[reason]?reason:'Activează Premium pentru acces nelimitat!');
+  if(el) el.textContent=(typeof reason==='string'&&msg[reason])?msg[reason]:(typeof reason==='string'&&!msg[reason]?reason:'Activează Premium pentru limite extinse!');
   openM('upgrade');
 }
 
@@ -1781,3 +1781,13 @@ function docRenewSave(carId,key){
   const mp = document.getElementById('sec-masina');
   if(mp && mp.classList.contains('active')) renderCarPage(car);
 }
+
+// ═══ Reparații audit (27 nov): funcții apelate din butoane care nu existau ═══
+function saveKey(){
+  const el=document.getElementById('api-key'); const st=document.getElementById('key-status');
+  const v=el?String(el.value||'').trim():'';
+  if(!v){ if(st){ st.style.display='block'; st.style.color='var(--red)'; st.textContent='Introdu cheia API.'; } return; }
+  try{ localStorage.setItem('autoassist-api-key', v); }catch(e){}
+  if(st){ st.style.display='block'; st.style.background='rgba(0,232,154,0.1)'; st.style.border='1px solid rgba(0,232,154,0.25)'; st.style.color='var(--green)'; st.textContent='✅ API Key salvat.'; }
+}
+function comPiese(plate){ goTo('piese'); }
