@@ -679,9 +679,9 @@ function renderDocCards(){
   var b=rd('buletin'), p=rd('permis'), t=rd('talon');
   var alt=[]; try{ alt=JSON.parse(localStorage.getItem('altdocs')||'[]'); }catch(e){}
   var defs=[
-    {k:'buletin',ic:'🪪',nm:'Buletin / CI',has:!!(b['bul-nume']||b['bul-serie']),line:(b['bul-nume']||'')+(b['bul-serie']?' · '+b['bul-serie']:''),exp:b['bul-exp'],expLabel:'Valabil până la'},
-    {k:'permis',ic:'🚘',nm:'Permis auto',has:!!(p['perm-nr']||p['perm-exp']),line:(p['perm-nr']||'')+(p['perm-cat']?' · cat. '+p['perm-cat']:''),exp:p['perm-exp'],expLabel:'Valabil până la'},
-    {k:'talon',ic:'📄',nm:'Talon mașină',has:!!(t['tal-nr']||t['tal-marca']),line:((t['tal-marca']||'')+' '+(t['tal-model']||'')).trim()+(t['tal-nr']?' · '+t['tal-nr']:''),exp:null}
+    {k:'buletin',vezi:'buletinul',ic:'🪪',nm:'Buletin / CI',has:!!(b['bul-nume']||b['bul-serie']),line:(b['bul-nume']||'')+(b['bul-serie']?' · '+b['bul-serie']:''),exp:b['bul-exp'],expLabel:'Valabil până la'},
+    {k:'permis',vezi:'permisul',ic:'🚘',nm:'Permis auto',has:!!(p['perm-nr']||p['perm-exp']),line:(p['perm-nr']||'')+(p['perm-cat']?' · cat. '+p['perm-cat']:''),exp:p['perm-exp'],expLabel:'Valabil până la'},
+    {k:'talon',vezi:'talonul',ic:'📄',nm:'Talon mașină',has:!!(t['tal-nr']||t['tal-marca']),line:((t['tal-marca']||'')+' '+(t['tal-model']||'')).trim()+(t['tal-nr']?' · '+t['tal-nr']:''),exp:null}
   ];
   var h=defs.map(function(d){
     var img=!!localStorage.getItem('doc_img_'+d.k), z=_docZile(d.exp), badge='';
@@ -689,8 +689,11 @@ function renderDocCards(){
     var status=d.has||img?'<span style="font-size:11px;font-weight:700;color:var(--green)">✅ Salvat'+(img?' · cu poză':'')+'</span>':'<span style="font-size:11px;font-weight:700;color:var(--t3)">Neadăugat încă</span>';
     return '<div class="card" style="margin:0;padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="font-size:26px">'+d.ic+'</div><div><div style="font-weight:800;font-size:14px">'+d.nm+'</div>'+status+'</div></div>'
       +'<div style="font-size:12px;color:var(--t2);min-height:16px;word-break:break-word">'+(d.line||'Adaugă documentul ca să-l ai la îndemână')+'</div>'+badge
-      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-primary btn-sm" onclick="docCardEdit(\''+d.k+'\')">'+(d.has||img?'✏️ Editează':'➕ Adaugă')+'</button>'
-      +(img?'<button class="btn btn-ghost btn-sm" onclick="viewDocImg(\''+d.k+'\')">👁️ Vezi</button><button class="btn btn-ghost btn-sm" onclick="downloadDocImg(\''+d.k+'\')">⬇️</button>':'')+'</div></div>';
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'
+      +((d.has||img)
+        ? '<button class="btn btn-primary btn-sm" onclick="docCardView(\''+d.k+'\')">👁️ Vezi '+d.vezi+'</button><button class="btn btn-ghost btn-sm" onclick="docCardEdit(\''+d.k+'\')">✏️ Editează</button><button class="btn btn-sm" style="background:rgba(255,80,80,0.1);color:var(--red);border:1px solid rgba(255,80,80,0.3)" onclick="docCardDelete(\''+d.k+'\')">🗑️ Șterge</button>'+(img?'<button class="btn btn-ghost btn-sm" onclick="downloadDocImg(\''+d.k+'\')">⬇️</button>':'')
+        : '<button class="btn btn-primary btn-sm" onclick="docCardEdit(\''+d.k+'\')">➕ Adaugă</button>')
+      +'</div></div>';
   }).join('');
   h+='<div class="card" style="margin:0;padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="font-size:26px">📁</div><div><div style="font-weight:800;font-size:14px">Alte documente</div><span style="font-size:11px;font-weight:700;color:'+(alt.length?'var(--green)':'var(--t3)')+'">'+(alt.length?'✅ '+alt.length+' salvate':'Neadăugat încă')+'</span></div></div>'
     +'<div style="font-size:12px;color:var(--t2);min-height:16px">Polițe, contracte, facturi, alte fișiere</div>'
@@ -706,6 +709,36 @@ function docCardEdit(k){
 }
 (function(){
   var _t=window.docTab; if(typeof _t==='function'){ window.docTab=function(){ var r=_t.apply(this,arguments); try{renderDocCards();}catch(e){} return r; }; }
-  setInterval(function(){ var s=document.getElementById('sec-docpersonale'); if(s && s.classList.contains('active')) { try{renderDocCards();}catch(e){} } },1200);
+  setInterval(function(){ var s=document.getElementById('sec-docpersonale'); if(s && s.classList.contains('active')) { try{renderDocCards();}catch(e){} } },500);
   document.addEventListener('DOMContentLoaded',function(){ try{renderDocCards();}catch(e){} });
 })();
+
+var _DOC_FIELDS={buletin:['bul-nume','bul-cnp','bul-dob','bul-serie','bul-adresa','bul-judet','bul-exp'],permis:['perm-nr','perm-data','perm-exp','perm-cat','perm-elib'],talon:['tal-nr','tal-vin','tal-marca','tal-model','tal-an','tal-cmc','tal-kw','tal-comb','tal-culoare']};
+var _DOC_NM={buletin:'buletinul',permis:'permisul',talon:'talonul'};
+function docCardView(k){
+  if(localStorage.getItem('doc_img_'+k)){ viewDocImg(k); return; }
+  var data={}; try{ data=JSON.parse(localStorage.getItem('docdate_'+k)||'{}'); }catch(e){}
+  var labels={'bul-nume':'Nume','bul-cnp':'CNP','bul-dob':'Data nașterii','bul-serie':'Seria și nr.','bul-adresa':'Adresa','bul-judet':'Județ','bul-exp':'Valabil până la','perm-nr':'Număr permis','perm-data':'Data eliberării','perm-exp':'Valabil până la','perm-cat':'Categorii','perm-elib':'Eliberat de','tal-nr':'Nr. înmatriculare','tal-vin':'VIN','tal-marca':'Marca','tal-model':'Model','tal-an':'An','tal-cmc':'Capacitate (cmc)','tal-kw':'Putere (kW)','tal-comb':'Combustibil','tal-culoare':'Culoare'};
+  var rows=Object.keys(data).filter(function(x){return data[x];}).map(function(x){return '<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--b2);font-size:13px"><span style="color:var(--t3)">'+(labels[x]||x)+'</span><b style="text-align:right;word-break:break-word">'+String(data[x]).replace(/</g,'&lt;')+'</b></div>';}).join('')||'<div style="color:var(--t3);font-size:13px">Nu sunt date salvate.</div>';
+  _docModal('📄 Datele din '+_DOC_NM[k],rows+'<div style="font-size:11px;color:var(--t3);margin-top:10px">Nu ai încărcat o poză a documentului. Poți adăuga una din „Editează”.</div>',[['Închide','btn-ghost','_docModalClose()'],['✏️ Editează','btn-primary',"_docModalClose();docCardEdit('"+k+"')"]]);
+}
+function _docModalClose(){ var m=document.getElementById('doc-card-modal'); if(m) m.remove(); }
+function _docModal(title,body,btns){
+  _docModalClose();
+  document.body.insertAdjacentHTML('beforeend','<div id="doc-card-modal" onclick="if(event.target===this)_docModalClose()" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99990;display:flex;align-items:center;justify-content:center;padding:16px"><div style="background:var(--s1);border:1px solid var(--b2);border-radius:16px;max-width:440px;width:100%;padding:20px;max-height:88vh;overflow:auto"><div style="font-weight:800;font-size:16px;margin-bottom:12px">'+title+'</div><div>'+body+'</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;justify-content:flex-end">'+btns.map(function(b){return '<button class="btn btn-sm '+b[1]+'" '+(b[3]?'style="'+b[3]+'" ':'')+'onclick="'+b[2]+'">'+b[0]+'</button>';}).join('')+'</div></div></div>');
+}
+function docCardDelete(k){
+  var nm=_DOC_NM[k]||'documentul';
+  _docModal('🗑️ Ștergi '+nm+'?',
+    '<div style="font-size:13px;color:var(--t2);line-height:1.6">Se șterg datele salvate și poza scanată pentru <b>'+nm+'</b>. <br><br>Nu e o problemă dacă te răzgândești: poți adăuga '+nm+' din nou oricând, sau îl poți înlocui acum cu unul nou.</div>',
+    [['Anulează','btn-ghost','_docModalClose()'],['🔄 Înlocuiește cu unul nou','btn-primary',"_docModalClose();docCardEdit('"+k+"')"],['🗑️ Da, șterge','btn',"docCardDeleteDo('"+k+"')",'background:rgba(255,80,80,0.15);color:var(--red);border:1px solid rgba(255,80,80,0.4)']]);
+}
+function docCardDeleteDo(k){
+  localStorage.removeItem('docdate_'+k); localStorage.removeItem('doc_img_'+k);
+  (_DOC_FIELDS[k]||[]).forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var img=document.getElementById(k+'-img'), prev=document.getElementById(k+'-preview'); if(img) img.src=''; if(prev) prev.style.display='none';
+  var a=document.getElementById('doc-actions-'+k); if(a) a.remove();
+  _docModalClose();
+  try{ showNotification('🗑️ Șters','Ai șters '+(_DOC_NM[k]||'documentul')+'. Îl poți adăuga din nou oricând.'); }catch(e){}
+  renderDocCards();
+}
