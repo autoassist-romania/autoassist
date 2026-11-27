@@ -1,3 +1,6 @@
+function premLock(titlu, txt, reason){
+  return `<div style="margin:14px 0;padding:16px;background:var(--s2);border:1px dashed rgba(240,180,41,.5);border-radius:12px;text-align:center"><div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:4px">🔒 ${titlu}</div><div style="font-size:12px;color:var(--t2);margin-bottom:10px">${txt}</div><button class="btn btn-gold btn-sm" onclick="showUpgradeModal('${reason}')">👑 Vezi Premium</button></div>`;
+}
 // ═══ MENTENANȚĂ ═══
 const CHECKLIST_ITEMS = [
   { id: 'cl1', text: 'Presiune anvelope verificată', icon: '🔵' },
@@ -312,7 +315,9 @@ function renderMntList() {
   const withCost = list.filter(m=>m.cost&&parseFloat(m.cost)>0);
   let totalCost = withCost.reduce((s,m)=>s+parseFloat(m.cost),0);
   let graficHtml = '';
-  if(withCost.length >= 2) {
+  if(withCost.length >= 2 && !isPremium()) {
+    graficHtml = premLock('Grafic costuri service','Vezi cât ai cheltuit pe fiecare intervenție, într-un grafic. Disponibil în Premium.','grafice');
+  } else if(withCost.length >= 2) {
     const maxC = Math.max(...withCost.map(m=>parseFloat(m.cost)));
     graficHtml = `<div style="margin-bottom:16px;padding:14px;background:var(--s2);border-radius:12px">
       <div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:10px">📊 COSTURI SERVICE</div>
@@ -809,6 +814,7 @@ function renderReminderAuto() {
   if(!el || !carId) return;
   const car = cars.find(c=>c.id==carId);
   if(!car || !car.km) { el.innerHTML = ''; return; }
+  if(!isPremium()){ el.innerHTML = premLock('Remindere automate din kilometri','Ulei, filtre, distribuție, plăcuțe și și alte intervale: te anunțăm când se apropie scadența, după kilometrii mașinii. Disponibil în Premium.','remindere'); return; }
   const mntList = JSON.parse(localStorage.getItem('mnt_'+carId)||'[]');
   const remSave = JSON.parse(localStorage.getItem('rem_auto_'+carId)||'{}');
 
@@ -965,7 +971,8 @@ function renderFuelList() {
           <div style="font-size:11px;color:var(--t3)">Total cheltuit</div>
         </div>
       </div>
-      ${consumuri.length>=2?`
+      ${consumuri.length>=2&&!isPremium()?premLock('Grafic consum L/100 km','Urmărești cum evoluează consumul de la un plin la altul. Disponibil în Premium.','grafice'):''}
+      ${consumuri.length>=2&&isPremium()?`
       <div style="padding:14px;background:var(--s2);border-radius:10px;margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:10px">📈 CONSUM PER PLIN (L/100km)</div>
         <div style="display:flex;align-items:flex-end;gap:4px;height:50px">
@@ -1315,6 +1322,7 @@ function getDashConfig() {
 }
 
 function saveDashConfig() {
+  if(!isPremium()){ showUpgradeModal('dash'); return; }
   const config = {};
   DASH_ITEMS.forEach(item => { const cb = document.getElementById('dashcb-' + item.id); if(cb) config[item.id] = cb.checked; });
   localStorage.setItem('dashConfig', JSON.stringify(config));

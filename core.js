@@ -1314,6 +1314,9 @@ function showUpgradeModal(reason) {
     export_pdf:'Exportul dosarului mașinii (PDF) e în Premium. Îl ai la îndemână când vinzi mașina sau mergi la service.',
     sms:'Alertele SMS sunt disponibile doar în Premium.',
     raport_ai:'Raportul AI privind starea mașinii e în Premium. Primești o analiză completă, într-un singur loc.',
+    grafice:'Graficele de costuri service și de consum (L/100 km) sunt în Premium. Vezi unde se duc banii pe mașină.',
+    remindere:'Remindere automate din kilometri (ulei, filtre, distribuție, plăcuțe și altele) sunt în Premium. Nu mai ții minte intervalele.',
+    dash:'Dashboard-ul personalizat e în Premium. Îți pui pe prima pagină exact funcțiile pe care le folosești.',
     alerte:'Planul gratuit te anunță o singură dată, cu 30 de zile înainte. Premium te anunță de 6 ori, ca RCA-ul, ITP-ul sau rovinieta să nu expire pe nepregătite.',
   };
   const el=document.getElementById('upgrade-modal-text');
