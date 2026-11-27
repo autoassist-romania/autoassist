@@ -755,6 +755,7 @@ async function logout() {
   currentUser = null;
   cars = [];
   localStorage.removeItem('autoassist-cars');
+  try{ localStorage.removeItem('aa_last_sec'); }catch(e){}
   updateUserUI(null);
   renderAll();
   _applySection('landing');

@@ -166,6 +166,7 @@ function doLogout(){
   supabaseClient.auth.signOut().then(function(){
     currentUser = null;
     cars = [];
+    try{ localStorage.removeItem('aa_last_sec'); }catch(e){}
     showNotification('👋 Deconectat','La revedere!');
     setTimeout(function(){ window.location.href = window.location.pathname; }, 800);
   });

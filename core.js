@@ -1516,6 +1516,7 @@ function addCarFoto(carId, index, input) {
     if(!car) return;
     if(!car.fotos) car.fotos = [];
     car.fotos[index] = e.target.result;
+    try{ if(typeof _docResize==='function') _docResize(e.target.result,1280).then(function(sm){ car.fotos[index]=sm; save(); if(typeof saveCarToCloud==='function') saveCarToCloud(car); }); }catch(er){}
     save();
     if(typeof saveCarToCloud === 'function') saveCarToCloud(car);
     openCar(carId); // refresh pagina

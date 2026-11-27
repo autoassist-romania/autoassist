@@ -727,6 +727,7 @@ function renderDocCards(){
     {k:'permis',vezi:'permisul',ic:'🚘',nm:'Permis auto',has:!!(p['perm-nr']||p['perm-exp']),line:(p['perm-nr']||'')+(p['perm-cat']?' · cat. '+p['perm-cat']:''),exp:p['perm-exp'],expLabel:'Valabil până la'},
     {k:'talon',vezi:'talonul',ic:'📄',nm:'Talon mașină',has:!!(t['tal-nr']||t['tal-marca']),line:((t['tal-marca']||'')+' '+(t['tal-model']||'')).trim()+(t['tal-nr']?' · '+t['tal-nr']:''),exp:null}
   ];
+  defs=defs.filter(function(d){ return d.k!=='talon' || d.has || !!localStorage.getItem('doc_img_talon'); });
   var h=defs.map(function(d){
     var img=!!localStorage.getItem('doc_img_'+d.k), z=_docZile(d.exp), badge='';
     if(z!==null){ var col=z<0?'var(--red)':z<=60?'var(--amber)':'var(--green)'; badge='<div style="font-size:12px;font-weight:700;color:'+col+';margin-top:4px">'+(z<0?'Expirat de '+(-z)+' zile':d.expLabel+': '+new Date(d.exp).toLocaleDateString('ro-RO')+' ('+z+' zile)')+'</div>'; }
@@ -806,4 +807,201 @@ function _docSaveSilent(type){
   var f=_DOC_FIELDS[type]||[], data={};
   f.forEach(function(id){ var el=document.getElementById(id); if(el) data[id]=el.value; });
   localStorage.setItem('docdate_'+type, JSON.stringify(data));
+}
+
+/* ═══════════ ACTE MULTIPLE (Supabase) — taloane per mașină, acte șoferi pentru admin flotă ═══════════ */
+var _udRows=[], _udMembers={}, _udLoadedAt=0, _udUidSeen=null, _udBusy=false, _udDraft=null;
+var _UD_TAL=['tal-nr','tal-vin','tal-marca','tal-model','tal-an','tal-cmc','tal-kw','tal-comb','tal-culoare'];
+var _UD_LBL={'tal-nr':'Nr. înmatriculare','tal-vin':'VIN','tal-marca':'Marca','tal-model':'Model','tal-an':'An','tal-cmc':'Capacitate (cmc)','tal-kw':'Putere (kW)','tal-comb':'Combustibil','tal-culoare':'Culoare','bul-nume':'Nume','bul-cnp':'CNP','bul-dob':'Data nașterii','bul-serie':'Seria și nr.','bul-adresa':'Adresa','bul-judet':'Județ','bul-exp':'Valabil până la','perm-nr':'Număr permis','perm-data':'Data eliberării','perm-exp':'Valabil până la','perm-cat':'Categorii','perm-elib':'Eliberat de'};
+function _udEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function _udUid(){ try{ return currentUser&&currentUser.id||null; }catch(e){ return null; } }
+function _udIsAdmin(){ var f=window.myFleet; return !!(f && f.role==='admin' && f.active); }
+function _udCars(){ try{ return (typeof cars!=='undefined'&&Array.isArray(cars))?cars:[]; }catch(e){ return []; } }
+function _udCarName(id){ var c=_udCars().find(function(x){return String(x.id)===String(id);}); return c?((c.plate||'')+' '+(c.brand||'')+' '+(c.model||'')).trim():('Mașina #'+id); }
+async function udLoad(force){
+  var uid=_udUid(); if(!uid||typeof supabaseClient==='undefined'){ _udRows=[]; return; }
+  if(_udBusy) return; if(!force && Date.now()-_udLoadedAt<45000 && _udUidSeen===uid) return;
+  _udBusy=true;
+  try{
+    var r=await supabaseClient.from('user_documents').select('*').order('created_at',{ascending:true});
+    if(!r.error){ _udRows=r.data||[]; }
+    _udMembers={};
+    if(window.myFleet && window.myFleet.id){
+      var m=await supabaseClient.from('fleet_members').select('email,user_id').eq('fleet_id',window.myFleet.id);
+      (m.data||[]).forEach(function(x){ if(x.user_id) _udMembers[x.user_id]=x.email; });
+    }
+    _udLoadedAt=Date.now(); _udUidSeen=uid;
+  }catch(e){ console.warn('udLoad',e); }
+  _udBusy=false; udRender();
+  try{ await udPullPersonal(); }catch(e){ console.warn('udPull',e); }
+}
+function _udRowCardBtns(r,mine){
+  var h='<button class="btn btn-primary btn-sm" onclick="udView(\''+r.id+'\')">👁️ Vezi</button>';
+  if(r.kind==='talon' && r.car_id) h+='<button class="btn btn-ghost btn-sm" onclick="udGoCar('+r.car_id+')">🚗 Vezi mașina</button>';
+  if(!mine && r.kind!=='talon') h+='<button class="btn btn-ghost btn-sm" onclick="udGoDriver()">👤 Vezi șoferul</button>';
+  if(mine && r.kind==='talon') h+='<button class="btn btn-ghost btn-sm" onclick="udEditTalon('+r.car_id+')">✏️ Editează</button>';
+  h+='<button class="btn btn-sm" style="background:rgba(255,80,80,0.1);color:var(--red);border:1px solid rgba(255,80,80,0.3)" onclick="udDelete(\''+r.id+'\')">🗑️ Șterge</button>';
+  return h;
+}
+function udRender(){
+  var anchor=document.getElementById('docpers-cards'); if(!anchor) return;
+  var box=document.getElementById('docpers-multi');
+  if(!box){ box=document.createElement('div'); box.id='docpers-multi'; anchor.parentNode.insertBefore(box,anchor); }
+  var uid=_udUid(), carsL=_udCars(), mine=_udRows.filter(function(r){return r.owner_id===uid;}), h='';
+  if(!uid){ box.innerHTML=''; box._h=''; return; }
+  var admin=_udIsAdmin();
+  h+='<div style="font-weight:800;font-size:15px;margin:4px 0 8px">📄 Taloane pe mașini</div>';
+  if(!carsL.length){
+    h+='<div class="card" style="margin:0 0 14px;padding:14px;font-size:13px;color:var(--t2)">Nu ai nicio mașină în garaj. Adaugă o mașină și apoi îi poți atașa talonul aici.</div>';
+  } else {
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:18px">';
+    carsL.forEach(function(c){
+      var t=mine.find(function(r){return r.kind==='talon' && String(r.car_id)===String(c.id);});
+      var line=t?(((t.data['tal-marca']||'')+' '+(t.data['tal-model']||'')).trim()+(t.data['tal-vin']?' · VIN '+t.data['tal-vin']:'')):'Talonul nu e adăugat încă';
+      h+='<div class="card" style="margin:0;padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="font-size:26px">📄</div><div><div style="font-weight:800;font-size:14px">'+_udEsc(((c.plate||'')+' '+(c.brand||'')+' '+(c.model||'')).trim()||'Mașină')+'</div>'
+        +(t?'<span style="font-size:11px;font-weight:700;color:var(--green)">✅ Talon salvat'+(t.file_path?' · cu poză':'')+'</span>':'<span style="font-size:11px;font-weight:700;color:var(--t3)">Neadăugat încă</span>')+'</div></div>'
+        +'<div style="font-size:12px;color:var(--t2);min-height:16px;word-break:break-word">'+_udEsc(line)+'</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'
+        +(t?_udRowCardBtns(t,true):'<button class="btn btn-primary btn-sm" onclick="udEditTalon('+c.id+')">➕ Adaugă talon</button><button class="btn btn-ghost btn-sm" onclick="udGoCar('+c.id+')">🚗 Vezi mașina</button>')
+        +'</div></div>';
+    });
+    h+='</div>';
+  }
+  if(window.myFleet){
+    var others=_udRows.filter(function(r){return r.owner_id!==uid;});
+    h+='<div style="font-weight:800;font-size:15px;margin:4px 0 4px">👥 Actele flotei '+_udEsc(window.myFleet.name||'')+'</div>';
+    h+='<div style="font-size:12px;color:var(--t3);margin-bottom:10px">'+(admin?'Ești administrator: vezi actele tuturor șoferilor din flotă. Fiecare șofer vede doar actele lui.':'Fiecare șofer vede doar actele lui. Administratorul flotei le poate vedea pe toate.')+'</div>';
+    if(admin){
+      if(!others.length) h+='<div class="card" style="margin:0 0 14px;padding:14px;font-size:13px;color:var(--t2)">Încă niciun șofer nu a adăugat acte.</div>';
+      else{
+        var by={}; others.forEach(function(r){ (by[r.owner_id]=by[r.owner_id]||[]).push(r); });
+        Object.keys(by).forEach(function(o){
+          h+='<div style="font-weight:700;font-size:13px;margin:10px 0 6px">👤 '+_udEsc(_udMembers[o]||'Șofer')+'</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:12px">';
+          by[o].forEach(function(r){
+            var ic={buletin:'🪪',permis:'🚘',talon:'📄',altele:'📁'}[r.kind]||'📁', nm={buletin:'Buletin',permis:'Permis',talon:'Talon',altele:'Document'}[r.kind];
+            var exp=r.data&&(r.data['bul-exp']||r.data['perm-exp']), z=_docZile(exp), badge='';
+            if(z!==null){ var col=z<0?'var(--red)':z<=60?'var(--amber)':'var(--green)'; badge='<div style="font-size:12px;font-weight:700;color:'+col+';margin-top:4px">'+(z<0?'Expirat de '+(-z)+' zile':'Valabil până la '+new Date(exp).toLocaleDateString('ro-RO')+' ('+z+' zile)')+'</div>'; }
+            h+='<div class="card" style="margin:0;padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="font-size:26px">'+ic+'</div><div><div style="font-weight:800;font-size:14px">'+nm+(r.kind==='talon'?' · '+_udEsc(_udCarName(r.car_id)):'')+'</div></div></div>'+badge
+              +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+_udRowCardBtns(r,false)+'</div></div>';
+          });
+          h+='</div>';
+        });
+      }
+    }
+  }
+  if(box._h!==h){ box.innerHTML=h; box._h=h; }
+}
+function udGoCar(id){ if(typeof openCar==='function') openCar(id); }
+function udGoDriver(){ if(typeof goTo==='function') goTo('flota'); setTimeout(function(){ try{ fleetTab('membri'); }catch(e){} },400); }
+async function udView(id){
+  var r=_udRows.find(function(x){return x.id===id;}); if(!r) return;
+  var rows=Object.keys(r.data||{}).filter(function(k){return r.data[k];}).map(function(k){return '<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--b2);font-size:13px"><span style="color:var(--t3)">'+(_UD_LBL[k]||k)+'</span><b style="text-align:right;word-break:break-word">'+_udEsc(r.data[k])+'</b></div>';}).join('')||'<div style="color:var(--t3);font-size:13px">Nu sunt date completate.</div>';
+  var imgHtml='';
+  if(r.file_path){
+    var s=await supabaseClient.storage.from('user-docs').createSignedUrl(r.file_path,300);
+    if(s.data&&s.data.signedUrl) imgHtml='<img src="'+s.data.signedUrl+'" style="width:100%;border-radius:10px;margin-bottom:12px">';
+  }
+  var btns=[['Închide','btn-ghost','_docModalClose()']];
+  if(r.kind==='talon'&&r.car_id) btns.push(['🚗 Vezi mașina','btn-primary',"_docModalClose();udGoCar("+r.car_id+")"]);
+  _docModal('📄 '+_udEsc(r.kind==='talon'?_udCarName(r.car_id):(r.kind==='buletin'?'Buletin':'Permis')),imgHtml+rows,btns);
+}
+function udEditTalon(carId){
+  var uid=_udUid(), t=_udRows.find(function(r){return r.owner_id===uid&&r.kind==='talon'&&String(r.car_id)===String(carId);});
+  var c=_udCars().find(function(x){return String(x.id)===String(carId);})||{};
+  var d=(t&&t.data)||{};
+  if(!t){ d={'tal-nr':c.plate||'','tal-marca':c.brand||'','tal-model':c.model||'','tal-an':c.year||''}; }
+  _udDraft={carId:carId,id:t?t.id:null,path:t?t.file_path:null,img:null};
+  var body='<div style="font-size:12px;color:var(--t3);margin-bottom:10px">Talon pentru <b>'+_udEsc(_udCarName(carId))+'</b></div>'
+    +'<label class="btn btn-ghost btn-sm" style="display:inline-block;margin-bottom:10px;cursor:pointer">📸 Scanează talonul<input type="file" accept="image/*" style="display:none" onchange="udPickImg(this)"></label><div id="ud-scan-st" style="font-size:12px;color:var(--t3);margin-bottom:8px">'+(t&&t.file_path?'Are deja o poză salvată (alege alta ca s-o înlocuiești).':'')+'</div>'
+    +_UD_TAL.map(function(k){ return '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--t3);margin-bottom:2px">'+_UD_LBL[k]+'</div><input id="ud-f-'+k+'" class="fi" style="width:100%" value="'+_udEsc(d[k]||'')+'"></div>'; }).join('');
+  _docModal('📄 '+(t?'Editează talonul':'Adaugă talonul'),body,[['Anulează','btn-ghost','_docModalClose()'],['💾 Salvează','btn-primary','udSaveTalon()']]);
+}
+async function udPickImg(inp){
+  var f=inp.files&&inp.files[0]; if(!f) return;
+  var st=document.getElementById('ud-scan-st'); if(st) st.textContent='🔍 Se citește talonul...';
+  var du=await new Promise(function(res){ var fr=new FileReader(); fr.onload=function(e){res(e.target.result);}; fr.readAsDataURL(f); });
+  var small=await _docResize(du,1800); _udDraft.img=small;
+  try{
+    var token=await aaAuthHeader(), b64=small.split(',')[1], mt=small.split(';')[0].split(':')[1];
+    var res=await fetch('https://zspcknjuqdjfxtqrqhhm.supabase.co/functions/v1/asistent',{method:'POST',headers:{'Content-Type':'application/json','Authorization':token},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:700,system:'Ești un sistem OCR pentru documente românești. Returnezi DOAR JSON valid, fără explicații.',messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:'Utilizatorul își încarcă propriul document în AutoAssist ca să completeze formularul. Transcrie exact textul tipărit pe certificatul de înmatriculare (talon) românesc. Returnează JSON: {"nr":"număr înmatriculare (A)","vin":"serie șasiu (E)","marca":"(D.1)","model":"(D.3)","an":"anul fabricației","cmc":"capacitate cilindrică (P.1)","kw":"putere kW (P.2)","combustibil":"(P.3)","culoare":"(R)"}. Dacă un câmp nu se vede, pune "".'}]}]})});
+    var j=await res.json(); var reply=j.reply||''; var m=reply.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('fără date'); var o=JSON.parse(m[0]), map={'tal-nr':'nr','tal-vin':'vin','tal-marca':'marca','tal-model':'model','tal-an':'an','tal-cmc':'cmc','tal-kw':'kw','tal-comb':'combustibil','tal-culoare':'culoare'}, n=0;
+    Object.keys(map).forEach(function(id){ var v=o[map[id]], el=document.getElementById('ud-f-'+id); if(el&&v&&String(v).trim()){ el.value=String(v).trim(); n++; } });
+    if(st) st.textContent=n?('✅ Am completat '+n+' câmpuri. Verifică-le înainte de salvare.'):'⚠️ Nu am putut citi datele; completează manual (poza se salvează oricum).';
+  }catch(e){ if(st) st.textContent='⚠️ Nu am putut citi datele ('+(e.message||e)+'). Completează manual; poza se salvează oricum.'; }
+}
+async function _udUpload(path,dataUrl){
+  var blob=await (await fetch(dataUrl)).blob();
+  return supabaseClient.storage.from('user-docs').upload(path,blob,{upsert:true,contentType:'image/jpeg'});
+}
+async function udSaveTalon(){
+  var d=_udDraft; if(!d) return; var uid=_udUid(); if(!uid) return;
+  var data={}; _UD_TAL.forEach(function(k){ var el=document.getElementById('ud-f-'+k); if(el&&el.value.trim()) data[k]=el.value.trim(); });
+  if(!Object.keys(data).length && !d.img){ showNotification('⚠️','Completează cel puțin un câmp sau scanează talonul.'); return; }
+  var id=d.id||(window.crypto&&crypto.randomUUID?crypto.randomUUID():'ud'+Date.now()), path=d.path||null;
+  if(d.img){ path=uid+'/'+id+'.jpg'; var up=await _udUpload(path,d.img); if(up.error){ showNotification('⚠️','Poza nu s-a încărcat: '+up.error.message); return; } }
+  var r=await supabaseClient.from('user_documents').upsert({id:id,owner_id:uid,kind:'talon',car_id:d.carId,label:_udCarName(d.carId),data:data,file_path:path});
+  if(r.error){ showNotification('⚠️','Nu am putut salva: '+r.error.message); return; }
+  _docModalClose(); showNotification('✅ Salvat','Talonul a fost atașat mașinii.'); udLoad(true);
+}
+function udDelete(id){
+  _docModal('🗑️ Ștergi documentul?','<div style="font-size:13px;color:var(--t2);line-height:1.6">Se șterg definitiv datele și poza. Poți adăuga documentul din nou oricând.</div>',
+    [['Anulează','btn-ghost','_docModalClose()'],['🗑️ Da, șterge','btn',"udDeleteDo('"+id+"')",'background:rgba(255,80,80,0.15);color:var(--red);border:1px solid rgba(255,80,80,0.4)']]);
+}
+async function udDeleteDo(id){
+  var r=_udRows.find(function(x){return x.id===id;});
+  if(r&&r.file_path){ try{ await supabaseClient.storage.from('user-docs').remove([r.file_path]); }catch(e){} }
+  var q=await supabaseClient.from('user_documents').delete().eq('id',id);
+  _docModalClose();
+  if(q.error){ showNotification('⚠️','Nu am putut șterge: '+q.error.message); return; }
+  showNotification('🗑️ Șters','Documentul a fost șters.'); udLoad(true);
+}
+/* buletin / permis personale → Supabase doar pentru membrii unei flote (ca administratorul să le vadă) */
+async function udSyncPersonal(kind){
+  try{
+    var uid=_udUid(); if(!uid||typeof supabaseClient==='undefined') return;
+    if(kind!=='buletin'&&kind!=='permis') return;
+    var data={}; try{ data=JSON.parse(localStorage.getItem('docdate_'+kind)||'{}'); }catch(e){}
+    var img=localStorage.getItem('doc_img_'+kind), ex=_udRows.find(function(r){return r.owner_id===uid&&r.kind===kind;});
+    var id=ex?ex.id:(window.crypto&&crypto.randomUUID?crypto.randomUUID():'ud'+Date.now()), path=ex?ex.file_path:null;
+    if(img){ path=uid+'/'+id+'.jpg'; var up=await _udUpload(path,img); if(up.error) path=ex?ex.file_path:null; }
+    else if(ex&&ex.file_path&&!img){ try{ await supabaseClient.storage.from('user-docs').remove([ex.file_path]); }catch(e){} path=null; }
+    if(!Object.keys(data).some(function(k){return data[k];}) && !path){ if(ex) await supabaseClient.from('user_documents').delete().eq('id',ex.id); }
+    else await supabaseClient.from('user_documents').upsert({id:id,owner_id:uid,kind:kind,label:kind,data:data,file_path:path});
+    try{ localStorage.setItem('docts_'+kind,new Date().toISOString()); }catch(e){}
+    udLoad(true);
+  }catch(e){ console.warn('udSyncPersonal',e); }
+}
+(function(){
+  var s=window.saveDocDate; if(typeof s==='function') window.saveDocDate=function(t){ var r=s.apply(this,arguments); setTimeout(function(){udSyncPersonal(t);},50); return r; };
+  var p=window.processDoc; if(typeof p==='function') window.processDoc=function(t,i){ var r=p.apply(this,arguments); setTimeout(function(){udSyncPersonal(t);},9000); setTimeout(function(){udSyncPersonal(t);},20000); return r; };
+  var d=window.docCardDeleteDo; if(typeof d==='function') window.docCardDeleteDo=function(k){ var r=d.apply(this,arguments); setTimeout(function(){udSyncPersonal(k);},50); return r; };
+  var pd=window.docPhotoDeleteDo; if(typeof pd==='function') window.docPhotoDeleteDo=function(k){ var r=pd.apply(this,arguments); setTimeout(function(){udSyncPersonal(k);},50); return r; };
+  setInterval(function(){
+    if(!_udUid()) return;
+    var sec=document.getElementById('sec-docpersonale'), act=!!(sec&&sec.classList.contains('active'));
+    if(!act && _udUidSeen===_udUid()) return;
+    if(_udUidSeen!==_udUid()){ _udRows=[]; _udLoadedAt=0; }
+    udLoad(false); udRender();
+  },700);
+})();
+
+/* Descarcă din cloud buletinul/permisul pe dispozitivul curent (sincronizare între telefon și laptop) */
+async function udPullPersonal(){
+  var uid=_udUid(); if(!uid) return; var changed=false;
+  for(const kind of ['buletin','permis']){
+    var r=_udRows.find(function(x){return x.owner_id===uid&&x.kind===kind;}); if(!r) continue;
+    var ts=localStorage.getItem('docts_'+kind), hasLocal=!!(localStorage.getItem('docdate_'+kind)&&Object.keys(JSON.parse(localStorage.getItem('docdate_'+kind)||'{}')).some(function(k){return JSON.parse(localStorage.getItem('docdate_'+kind))[k];}))||!!localStorage.getItem('doc_img_'+kind);
+    if(hasLocal && ts && Date.parse(r.updated_at)<=Date.parse(ts)) continue;
+    if(hasLocal && !ts){ udSyncPersonal(kind); continue; } // local existent, necunoscut în cloud → urcă
+    localStorage.setItem('docdate_'+kind,JSON.stringify(r.data||{}));
+    if(r.file_path){
+      try{
+        var sg=await supabaseClient.storage.from('user-docs').createSignedUrl(r.file_path,120);
+        if(sg.data&&sg.data.signedUrl){ var b=await (await fetch(sg.data.signedUrl)).blob(); var du=await new Promise(function(res){var fr=new FileReader();fr.onload=function(e){res(e.target.result);};fr.readAsDataURL(b);}); localStorage.setItem('doc_img_'+kind,du); }
+      }catch(e){}
+    } else localStorage.removeItem('doc_img_'+kind);
+    localStorage.setItem('docts_'+kind,new Date().toISOString()); changed=true;
+  }
+  if(changed){ try{ loadDocData('buletin'); loadDocData('permis'); }catch(e){} try{ renderDocCards(); }catch(e){} }
 }
