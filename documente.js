@@ -29,77 +29,120 @@ function processDoc(type, input) {
     const prev = document.getElementById(type+'-preview');
     if(img && prev) { img.src = dataUrl; prev.style.display = 'block'; }
     // Salvează poza în localStorage
-    try { localStorage.setItem('doc_img_'+type, dataUrl); } catch(e) {}
+    try { localStorage.setItem('doc_img_'+type, await _docResize(dataUrl,1800)); } catch(e) {}
     // Încearcă extragere date cu Claude Vision
     showNotification('🔍 Procesare...', 'Se extrag datele din document cu AI...');
     await extractDocData(type, dataUrl);
+    try{ loadDocData(type); renderDocCards(); }catch(e){}
   };
   reader.readAsDataURL(file);
 }
 
+function _docNorm(t){ return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim(); }
+function _docDate(v,last){
+  if(!v) return '';
+  v=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  var m=v.match(/(\d{1,2})\s*[.\/-]\s*(\d{1,2})\s*[.\/-]\s*(\d{4}|\d{2})/g);
+  if(!m) return '';
+  var p=(last?m[m.length-1]:m[0]).match(/(\d{1,2})\s*[.\/-]\s*(\d{1,2})\s*[.\/-]\s*(\d{4}|\d{2})/);
+  var y=p[3].length===2?'20'+p[3]:p[3];
+  return y+'-'+('0'+p[2]).slice(-2)+'-'+('0'+p[1]).slice(-2);
+}
+var _DOC_JUDETE={AB:'Alba',AR:'Arad',AG:'Argeș',BC:'Bacău',BH:'Bihor',BN:'Bistrița-Năsăud',BT:'Botoșani',BV:'Brașov',BR:'Brăila',B:'București',BZ:'Buzău',CS:'Caraș-Severin',CL:'Călărași',CJ:'Cluj',CT:'Constanța',CV:'Covasna',DB:'Dâmbovița',DJ:'Dolj',GL:'Galați',GR:'Giurgiu',GJ:'Gorj',HR:'Harghita',HD:'Hunedoara',IL:'Ialomița',IS:'Iași',IF:'Ilfov',MM:'Maramureș',MH:'Mehedinți',MS:'Mureș',NT:'Neamț',OT:'Olt',PH:'Prahova',SM:'Satu Mare',SJ:'Sălaj',SB:'Sibiu',SV:'Suceava',TR:'Teleorman',TM:'Timiș',TL:'Tulcea',VS:'Vaslui',VL:'Vâlcea',VN:'Vrancea'};
+function _docSelect(el,val){
+  if(!el||!val) return false;
+  var raw=String(val).trim(), up=raw.toUpperCase().replace(/[^A-Z]/g,'');
+  var want=_DOC_JUDETE[up]?_DOC_JUDETE[up]:raw, n=_docNorm(want);
+  if(!n) return false;
+  for(var i=0;i<el.options.length;i++){ var o=el.options[i], on=_docNorm(o.value||o.text); if(on===n){ el.value=o.value||o.text; return true; } }
+  for(var j=0;j<el.options.length;j++){ var o2=el.options[j], on2=_docNorm(o2.value||o2.text); if(on2 && (on2.indexOf(n)===0||n.indexOf(on2)===0)){ el.value=o2.value||o2.text; return true; } }
+  return false;
+}
+// Micșorează poza (max 1600px, JPEG) ca să nu depășească limita AI și să încapă în browser; PDF-urile trec neschimbate
+function _docResize(dataUrl,maxPx){
+  return new Promise(function(res){
+    if(!/^data:image\//.test(dataUrl)) return res(dataUrl);
+    var im=new Image();
+    im.onload=function(){
+      try{
+        var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,maxPx/Math.max(w,h));
+        var c=document.createElement('canvas'); c.width=Math.round(w*k); c.height=Math.round(h*k);
+        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+        res(c.toDataURL('image/jpeg',0.85));
+      }catch(e){ res(dataUrl); }
+    };
+    im.onerror=function(){ res(dataUrl); };
+    im.src=dataUrl;
+  });
+}
+
 async function extractDocData(type, imageDataUrl) {
-  const base64 = imageDataUrl.split(',')[1];
-  const mimeType = imageDataUrl.split(';')[0].split(':')[1];
-
+  const small = await _docResize(imageDataUrl,1600);
+  const base64 = small.split(',')[1];
+  const mimeType = small.split(';')[0].split(':')[1];
+  const ctx = 'Utilizatorul își încarcă propriul document în aplicația AutoAssist, ca formularele lui să fie completate automat. Transcrie exact textul tipărit pe document. Dacă un câmp nu se vede clar, pune "" pentru el. ';
   const prompts = {
-    buletin: 'Extrage din această imagine de buletin/carte de identitate românesc următoarele date în format JSON: { "nume": "", "cnp": "", "dob": "YYYY-MM-DD", "serie": "", "adresa": "", "judet": "", "exp": "YYYY-MM-DD" }. Răspunde DOAR cu JSON valid, fără alte cuvinte.',
-    permis: 'Extrage din această imagine de permis auto românesc: { "nr": "", "data": "YYYY-MM-DD", "exp": "YYYY-MM-DD", "categorii": "", "elib": "" }. Răspunde DOAR cu JSON valid.',
-    talon: 'Extrage din această imagine de talon/certificat de înmatriculare românesc: { "nr": "", "vin": "", "marca": "", "model": "", "an": "", "cmc": "", "kw": "", "combustibil": "", "culoare": "" }. Răspunde DOAR cu JSON valid.',
+    buletin: ctx+'Document: carte de identitate românească. Returnează JSON: { "nume": "NUME Prenume (ex: Popescu Ion)", "cnp": "13 cifre", "dob": "YYYY-MM-DD (din CNP sau din document)", "serie": "seria și numărul, ex: DD 939887", "adresa": "domiciliul complet", "judet": "județul domiciliului (cod sau nume)", "exp": "data de expirare YYYY-MM-DD (ultima dată din câmpul Valabilitate)" }. Răspunde DOAR cu JSON valid.',
+    permis: ctx+'Document: permis de conducere românesc. Returnează JSON: { "nr": "numărul permisului (câmpul 5)", "data": "data eliberării YYYY-MM-DD (câmpul 4a)", "exp": "data expirării YYYY-MM-DD (câmpul 4b)", "categorii": "categoriile, ex: B", "elib": "autoritatea emitentă (câmpul 4c)" }. Răspunde DOAR cu JSON valid.',
+    talon: ctx+'Document: certificat de înmatriculare (talon) românesc. Returnează JSON: { "nr": "număr de înmatriculare (A)", "vin": "serie șasiu (E)", "marca": "(D.1)", "model": "(D.3)", "an": "anul fabricației", "cmc": "capacitate cilindrică (P.1)", "kw": "putere kW (P.2)", "combustibil": "Benzină / Motorină / Hibrid / Electric / GPL", "culoare": "(R)" }. Răspunde DOAR cu JSON valid.'
   };
-
   if(!prompts[type]) return;
-
-  try {
-    // Prin functia Edge (cheia ramane pe server) — merge pentru orice utilizator, nu doar cu cheie personala
+  const token = await aaAuthHeader();
+  async function ask(text){
     const res = await fetch('https://zspcknjuqdjfxtqrqhhm.supabase.co/functions/v1/asistent', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':await aaAuthHeader() },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 600,
-        system: 'Ești un sistem OCR pentru documente românești. Returnezi DOAR JSON valid, fără explicații.',
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
-            { type: 'text', text: prompts[type] }
-          ]
-        }]
-      })
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':token},
+      body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:700,
+        system:'Ești un sistem OCR pentru documente românești. Returnezi DOAR JSON valid, fără explicații.',
+        messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mimeType,data:base64}},{type:'text',text:text}]}] })
     });
     const data = await res.json();
+    if(data.error) throw new Error(typeof data.error==='string'?data.error:(data.error.message||'eroare server'));
     let reply = data.reply || '';
     if(!reply && Array.isArray(data.content)) reply = data.content.map(b=>b.type==='text'?b.text:'').join('');
-    const jm = reply.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
-    if(!jm) throw new Error('no json');
-    fillDocFields(type, JSON.parse(jm[0]));
-    showNotification('✅ Date extrase!', 'Verifică și corectează dacă e necesar.');
-  } catch(e) {
-    showNotification('💡 Completare manuală', 'Nu am putut citi documentul. Introdu datele manual în câmpurile de mai jos.');
+    return reply;
   }
+  let lastReply='', lastErr='';
+  for(let attempt=0; attempt<2; attempt++){
+    try{
+      lastReply = await ask(attempt===0 ? prompts[type] : prompts[type]+' Este o transcriere de text pentru completarea unui formular, nu identificarea persoanei. Completează tot ce poți citi.');
+      const jm = lastReply.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
+      if(!jm){ lastErr='răspuns fără date'; continue; }
+      const n = fillDocFields(type, JSON.parse(jm[0]));
+      if(n>0){
+        try{ _docSaveSilent(type); }catch(e){}
+        showNotification('✅ Date extrase!', 'Am completat '+n+' câmpuri. Verifică și corectează dacă e necesar.');
+        try{ renderDocCards(); }catch(e){}
+        return;
+      }
+      lastErr='nu am găsit date citibile';
+    }catch(e){ lastErr=String(e.message||e); if(/autentific|limit/i.test(lastErr)) break; }
+  }
+  console.warn('OCR doc eșuat:', lastErr, lastReply.slice(0,200));
+  showNotification('💡 Completare manuală', 'Nu am putut citi documentul ('+lastErr+'). Încearcă o poză mai clară, cu lumină bună, sau completează manual.');
 }
 
 function fillDocFields(type, data) {
-  const map = {
-    buletin: { 'bul-nume': data.nume, 'bul-cnp': data.cnp, 'bul-dob': data.dob, 'bul-serie': data.serie, 'bul-adresa': data.adresa, 'bul-judet': data.judet, 'bul-exp': data.exp },
-    permis:  { 'perm-nr': data.nr, 'perm-data': data.data, 'perm-exp': data.exp, 'perm-cat': data.categorii, 'perm-elib': data.elib },
-    talon:   { 'tal-nr': data.nr, 'tal-vin': data.vin, 'tal-marca': data.marca, 'tal-model': data.model, 'tal-an': data.an, 'tal-cmc': data.cmc, 'tal-kw': data.kw, 'tal-culoare': data.culoare },
-  };
-  const fields = map[type] || {};
-  Object.entries(fields).forEach(([id, val]) => {
-    const el = document.getElementById(id);
-    if(el && val) el.value = val;
-  });
-  // Setează combustibil separat pentru select
-  if(type === 'talon' && data.combustibil) {
-    const el = document.getElementById('tal-comb');
-    if(el) { for(let o of el.options) { if(o.value.toLowerCase().includes(data.combustibil.toLowerCase())) { el.value = o.value; break; } } }
+  const ids = {
+    buletin: { 'bul-nume':'nume','bul-cnp':'cnp','bul-serie':'serie','bul-adresa':'adresa' },
+    permis:  { 'perm-nr':'nr','perm-cat':'categorii','perm-elib':'elib' },
+    talon:   { 'tal-nr':'nr','tal-vin':'vin','tal-marca':'marca','tal-model':'model','tal-an':'an','tal-cmc':'cmc','tal-kw':'kw','tal-culoare':'culoare' }
+  }[type] || {};
+  const dates = {
+    buletin: { 'bul-dob':['dob',false], 'bul-exp':['exp',true] },
+    permis:  { 'perm-data':['data',false], 'perm-exp':['exp',true] },
+    talon:   {}
+  }[type] || {};
+  let n=0;
+  Object.entries(ids).forEach(([id,k])=>{ const el=document.getElementById(id); let v=data[k]; if(el && v!==undefined && v!==null && String(v).trim()){ el.value=String(v).trim(); n++; } });
+  Object.entries(dates).forEach(([id,[k,last]])=>{ const el=document.getElementById(id); const v=_docDate(data[k],last); if(el && v){ el.value=v; n++; } });
+  if(type==='buletin' && data.judet){ if(_docSelect(document.getElementById('bul-judet'),data.judet)) n++; }
+  if(type==='talon' && data.combustibil){
+    const el=document.getElementById('tal-comb'), c=_docNorm(data.combustibil);
+    if(el){ const map=c.indexOf('motorin')>=0||c.indexOf('diesel')>=0?'motorin':c.indexOf('benzin')>=0||c.indexOf('petrol')>=0?'benzin':c.indexOf('hibrid')>=0||c.indexOf('hybrid')>=0?'hibrid':c.indexOf('electric')>=0?'electric':c.indexOf('gpl')>=0||c.indexOf('lpg')>=0?'gpl':c;
+      for(let o of el.options){ if(_docNorm(o.value||o.text).indexOf(map)===0){ el.value=o.value||o.text; n++; break; } } }
   }
-  // Setează județ pentru buletin
-  if(type === 'buletin' && data.judet) {
-    const el = document.getElementById('bul-judet');
-    if(el) { for(let o of el.options) { if(o.value.toLowerCase().includes(data.judet.toLowerCase())) { el.value = o.value; break; } } }
-  }
+  return n;
 }
 
 function saveDocDate(type) {
@@ -757,4 +800,10 @@ function docPhotoDeleteDo(k){
   _docModalClose();
   try{ showNotification('🗑️ Poză ștearsă','Poți adăuga o poză nouă oricând.'); }catch(e){}
   renderDocCards();
+}
+
+function _docSaveSilent(type){
+  var f=_DOC_FIELDS[type]||[], data={};
+  f.forEach(function(id){ var el=document.getElementById(id); if(el) data[id]=el.value; });
+  localStorage.setItem('docdate_'+type, JSON.stringify(data));
 }

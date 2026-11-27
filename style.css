@@ -596,3 +596,5 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
 .aa-prem-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:10px 14px;border-radius:12px;border:1px solid rgba(240,180,41,.4);background:linear-gradient(135deg,rgba(240,180,41,.12),rgba(240,180,41,.04))}
 .aa-prem-strip .aps-t{flex:1 1 240px;font-size:12.5px;line-height:1.45;color:var(--t2);font-weight:600}
 @media(max-width:700px){.aa-prem-strip .btn{width:100%}}
+
+html,body,.main{overflow-anchor:none}

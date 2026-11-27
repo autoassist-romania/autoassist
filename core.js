@@ -353,8 +353,19 @@ function _applySection(sec){
   renderAll(); 
   if(sec==='flota' && typeof renderFlota==='function') renderFlota();
   // Nu face scroll la top pentru sectiuni cu iframe (asigurari)
-  if(sec !== 'asigurari') window.scrollTo(0,0);
+  if(sec !== 'asigurari') aaScrollTop();
 }
+// Pagina nouă se deschide mereu de sus: resetăm și după randările întârziate (cardurile adăugate deasupra mută scroll-ul)
+var _aaUserScrolled=false, _aaTopTimers=[];
+['touchstart','wheel','keydown','mousedown'].forEach(function(ev){ window.addEventListener(ev,function(){ _aaUserScrolled=true; },{passive:true}); });
+function _aaTopNow(){ try{ window.scrollTo(0,0); document.documentElement.scrollTop=0; document.body.scrollTop=0; }catch(e){} }
+function aaScrollTop(){
+  _aaUserScrolled=false;
+  _aaTopTimers.forEach(clearTimeout); _aaTopTimers=[];
+  _aaTopNow();
+  [60,200,450,900,1500].forEach(function(ms){ _aaTopTimers.push(setTimeout(function(){ if(!_aaUserScrolled) _aaTopNow(); },ms)); });
+}
+try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(e){}
 function goBack(){
   try{
     if(window._returnToCarId && typeof openCar==='function'){ const id=window._returnToCarId; window._returnToCarId=null; openCar(id); return; }
