@@ -1308,12 +1308,13 @@ function isLastFreeMsg(type){ if(isPremium())return false;return getUsage(type)=
 
 function showUpgradeModal(reason) {
   const msg = {
-    agenti_msg:'Ai folosit toate cele 5 mesaje gratuite de azi. Activează Premium!',
-    vocal_queries:'Ai folosit cele 3 întrebări vocale gratuite de azi. Activează Premium!',
-    masini:'Planul gratuit permite o singură mașină. Premium include până la 5 mașini. Ai mai multe? Vezi pachetele Flotă.',
-    export_pdf:'Exportul dosarului auto este disponibil doar în Premium.',
+    agenti_msg:'Ai folosit cele 5 mesaje AI gratuite de azi. Cu Premium ai până la 100 pe zi, ca să nu te oprești la jumătatea unei probleme.',
+    vocal_queries:'Ai folosit cele 3 întrebări vocale gratuite de azi. Premium îți dă uz extins, fără să mai numeri.',
+    masini:'Planul gratuit are o mașină în garaj. Cu Premium adaugi până la 5 și primești alerte la 30, 15, 7, 3 și 1 zi pentru fiecare. Ai mai multe? Vezi pachetele Flotă.',
+    export_pdf:'Exportul dosarului mașinii (PDF) e în Premium. Îl ai la îndemână când vinzi mașina sau mergi la service.',
     sms:'Alertele SMS sunt disponibile doar în Premium.',
-    raport_ai:'Raportul AI de stare mașină este disponibil doar în Premium.',
+    raport_ai:'Raportul AI privind starea mașinii e în Premium. Primești o analiză completă, într-un singur loc.',
+    alerte:'Planul gratuit te anunță o singură dată, cu 30 de zile înainte. Premium te anunță de 6 ori, ca RCA-ul, ITP-ul sau rovinieta să nu expire pe nepregătite.',
   };
   const el=document.getElementById('upgrade-modal-text');
   if(el) el.textContent=(typeof reason==='string'&&msg[reason])?msg[reason]:(typeof reason==='string'&&!msg[reason]?reason:'Activează Premium pentru limite extinse!');

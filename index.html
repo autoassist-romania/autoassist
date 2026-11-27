@@ -1414,7 +1414,18 @@
 <!-- PREMIUM -->
 <section class="sec" id="sec-premium">
   <button class="back-btn" onclick="goTo('dashboard')">← Înapoi</button>
-  <div class="topbar"><div><div class="pt">AutoAssist Premium</div><div class="ps">Acces complet la toate funcționalitățile platformei</div></div></div>
+  <div class="topbar"><div><div class="pt">AutoAssist Premium</div><div class="ps">Alerte la timp, mai multe mașini și AI fără limite</div></div></div>
+
+  <div class="card pc-hero">
+    <div class="pc-hero-t">Premium costă mai puțin de <span>0,30 RON pe zi</span>. Amenda pentru lipsa rovinietei începe de la 500 lei.</div>
+    <div class="pc-hero-s">Rovinieta, RCA-ul sau ITP-ul expirate pot costa mult mai mult decât un an de Premium. Cu AutoAssist Premium te anunțăm cu 30, 15, 7, 3 și 1 zi înainte, pentru fiecare mașină din garaj.</div>
+    <div class="pc-stats">
+      <div><b>99 RON</b><small>pe an, o singură plată</small></div>
+      <div><b>5 mașini</b><small>într-un singur cont</small></div>
+      <div><b>6 alerte</b><small>înainte de fiecare expirare</small></div>
+    </div>
+  </div>
+
   <div class="g2">
     <div class="prem-card">
       <div class="prem-badge">⭐ Recomandat</div>
@@ -1434,21 +1445,24 @@
       <button class="btn btn-gold btn-full" style="padding:14px;font-size:14px" id="prem-buy-btn" onclick="cumpPrem()">⏳ Premium — în curând (99 RON/an)</button>
       <div style="text-align:center;margin-top:10px;font-size:12px"><a href="#" onclick="goTo('flota');return false" style="color:var(--gold);font-weight:700">🚚 Ai mai mult de 5 vehicule? Vezi pachetele pentru flote →</a></div>
     </div>
-    <div>
-      <div class="card">
-        <div class="ch"><span class="ct">Plan Gratuit — Ce ai acum</span></div>
-        <div style="display:flex;flex-direction:column;gap:9px">
-          <div style="font-size:13px;color:var(--t2);display:flex;gap:8px;font-weight:500"><span style="color:var(--green);font-weight:800">✓</span>O mașină în garaj, cu pagină completă</div>
-          <div style="font-size:13px;color:var(--t2);display:flex;gap:8px;font-weight:500"><span style="color:var(--green);font-weight:800">✓</span>Alerte de expirare RCA, ITP, rovinietă (30 de zile înainte)</div>
-          <div style="font-size:13px;color:var(--t2);display:flex;gap:8px;font-weight:500"><span style="color:var(--green);font-weight:800">✓</span>5 mesaje AI și 3 întrebări vocale pe zi</div>
-          <div style="font-size:13px;color:var(--t2);display:flex;gap:8px;font-weight:500"><span style="color:var(--green);font-weight:800">✓</span>Jurnal service și combustibil, documente, calculator costuri</div>
-          <div style="font-size:13px;color:var(--t2);display:flex;gap:8px;font-weight:500"><span style="color:var(--green);font-weight:800">✓</span>Anunțuri de vânzare mașină și verificare carVertical</div>
-          <div style="font-size:13px;color:var(--t3);display:flex;gap:8px;font-weight:500"><span>✗</span>Până la 5 mașini</div>
-          <div style="font-size:13px;color:var(--t3);display:flex;gap:8px;font-weight:500"><span>✗</span>Agenți AI și vocal extins</div>
-          <div style="font-size:13px;color:var(--t3);display:flex;gap:8px;font-weight:500"><span>✗</span>Raport AI și export dosar PDF</div>
-        </div>
-      </div>
+    <div class="card pc-cmp">
+      <div class="ch"><span class="ct">Gratuit sau Premium?</span></div>
+      <div class="pc-r pc-h"><div class="pc-f"></div><div class="pc-g">Gratuit</div><div class="pc-p">Premium</div></div>
+      <div class="pc-r"><div class="pc-f">Mașini în garaj</div><div class="pc-g">1</div><div class="pc-p">până la 5</div></div><div class="pc-r"><div class="pc-f">Alerte de expirare (RCA, ITP, rovinietă…)</div><div class="pc-g">o alertă, cu 30 de zile înainte</div><div class="pc-p">30, 15, 7, 3, 1 zi și în ziua expirării</div></div><div class="pc-r"><div class="pc-f">Mesaje cu Agenții AI</div><div class="pc-g">5 pe zi</div><div class="pc-p">până la 100 pe zi</div></div><div class="pc-r"><div class="pc-f">Asistent vocal</div><div class="pc-g">3 întrebări pe zi</div><div class="pc-p">uz extins</div></div><div class="pc-r"><div class="pc-f">Raport AI privind starea mașinii</div><div class="pc-g">—</div><div class="pc-p">✓</div></div><div class="pc-r"><div class="pc-f">Export dosar mașină (PDF)</div><div class="pc-g">—</div><div class="pc-p">✓</div></div><div class="pc-r"><div class="pc-f">Istoric conversații AI</div><div class="pc-g">limitat</div><div class="pc-p">extins</div></div><div class="pc-r"><div class="pc-f">Badge Pro și funcții noi în avanpremieră</div><div class="pc-g">—</div><div class="pc-p">✓</div></div>
     </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="ch"><span class="ct">Rămân gratuite pentru toți</span></div>
+    <p style="font-size:12px;color:var(--t2);margin-bottom:12px">Premium nu îți ia ce ai deja. Aplicația rămâne utilă și fără abonament:</p>
+    <div class="pc-chips"><span class="pc-chip">📋 Documente și alerte de bază</span><span class="pc-chip">🔧 Jurnal service și combustibil</span><span class="pc-chip">📸 Scanare talon</span><span class="pc-chip">💸 Calculator costuri</span><span class="pc-chip">⛽ Prețuri carburant</span><span class="pc-chip">⚡ Stații EV</span><span class="pc-chip">🚘 carVertical cu reducere</span><span class="pc-chip">💰 Anunțuri de vânzare</span><span class="pc-chip">🛒 Piese auto</span><span class="pc-chip">🏎️ Anvelope și detailing</span></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="ch"><span class="ct">Întrebări frecvente</span></div>
+    <div class="pc-faq"><b>Pot anula oricând?</b><span>Da. După activare, în pagina asta apare butonul „Gestionează abonamentul / facturi / anulare".</span></div>
+    <div class="pc-faq"><b>Ce se întâmplă dacă nu plătesc?</b><span>Rămâi pe planul gratuit: o mașină în garaj, alertă de expirare, jurnal, documente și celelalte funcții din lista de mai sus.</span></div>
+    <div class="pc-faq"><b>Am mai mult de 5 vehicule.</b><span>Pentru firme și familii cu mai multe mașini avem pachetele Flotă.</span></div>
   </div>
 </section>
 
