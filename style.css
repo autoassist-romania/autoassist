@@ -548,7 +548,7 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
 
 /* telefon: logo-ul de pe pagina de intrare centrat exact (offset-ul de -15px era făcut pentru desktop) */
 @media(max-width:700px){
-  .lp-logo2{display:block;margin:0 auto;width:min(460px,84vw)!important;max-width:100%;left:0!important}
+  .lp-logo2{display:block;margin:0 0 0 calc(50% - min(230px,46vw));width:min(460px,92vw)!important;max-width:none;left:0!important}
   .lp-sub{left:0!important}
   /* cuvântul ASSIST exact pe mijloc; robotul stă în stânga lui */
   .lp-cta{display:block;width:100%;max-width:300px;margin-left:auto;margin-right:auto;box-sizing:border-box;padding-left:12px!important;padding-right:12px!important;text-align:center}
