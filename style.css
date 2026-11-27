@@ -599,9 +599,11 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
 
 html,body,.main{overflow-anchor:none}
 
-/* Bară sus cu Intră în cont / Creează cont și pe desktop (doar când nu ești logat și nu ești pe pagina de start) */
+/* Bară sus cu Intră în cont / Creează cont și pe desktop (doar când nu ești logat) */
 @media(min-width:769px){
-  body:not(.aa-logged):not(:has(#sec-landing.active)) .mob-top{display:flex;left:var(--sidebar);width:auto;height:52px}
-  body:not(.aa-logged):not(:has(#sec-landing.active)) .mob-top .logo{display:none}
-  body:not(.aa-logged):not(:has(#sec-landing.active)) .main{padding-top:76px}
+  body:not(.aa-logged) .mob-top{display:flex;left:var(--sidebar);width:auto;height:52px}
+  body:not(.aa-logged) .mob-top .logo{display:none}
+  body:not(.aa-logged) .main{padding-top:76px}
+  body:not(.aa-logged):has(#sec-landing.active) .mob-top{left:0;width:100%}
+  body:not(.aa-logged):has(#sec-landing.active) .mob-top .logo{display:flex}
 }
