@@ -1295,9 +1295,18 @@ const DASH_ITEMS = [
   { id: 'detailing', icon: '🧽', label: 'Detailing', desc: 'Polish, folii, huse și îngrijire auto', gradient: 'linear-gradient(135deg,#00c8c8,#0088aa)', defaultOn: true },
   { id: 'costuri', icon: '💸', label: 'Calculator Costuri', desc: 'Cât cheltuiești lunar cu mașina ta', gradient: 'linear-gradient(135deg,#ffb300,#ff8f00)', defaultOn: false },
   { id: 'electric', icon: '⚡', label: 'Mașini Electrice', desc: 'Stații EV și info hibrid', gradient: 'linear-gradient(135deg,#4fc3f7,#0288d1)', defaultOn: false },
-  { id: 'verificare', icon: '🔍', label: 'Verificare Documente', desc: 'Verifică RCA, ITP, rovinietă orice mașină', gradient: 'linear-gradient(135deg,#7c5cfc,#a259ff)', defaultOn: false },
+  { id: 'verificare', icon: '🚘', label: 'Verificare second-hand', desc: 'Istoric complet al mașinii prin carVertical', gradient: 'linear-gradient(135deg,#7c5cfc,#a259ff)', defaultOn: false },
   { id: 'vanzare', icon: '💰', label: 'Vânzare Mașini', desc: 'Publică anunț și găsești cumpărători', gradient: 'linear-gradient(135deg,#ff4757,#ff6b81)', defaultOn: false },
   { id: 'agenti', icon: '🧠', label: 'Agenți AI', desc: 'Echipa ta de asistenți inteligenți', gradient: 'linear-gradient(135deg,#4f7dff,#7c5cfc)', defaultOn: false },
+  { id: 'garaj', icon: '🏠', label: 'Garajul meu', desc: 'Toate mașinile tale, cu pagină completă', gradient: 'linear-gradient(135deg,#4f7dff,#2f5bd6)', defaultOn: false },
+  { id: 'documente', icon: '📋', label: 'Documente Mașină', desc: 'RCA, ITP, rovinietă, extinctor, trusă, cu alerte', gradient: 'linear-gradient(135deg,#00b8a9,#008f84)', defaultOn: false },
+  { id: 'docpersonale', icon: '🪪', label: 'Documente Personale', desc: 'Buletin, permis, talon scanate și stocate', gradient: 'linear-gradient(135deg,#6c7a89,#44505c)', defaultOn: false },
+  { id: 'itp', icon: '🔬', label: 'ITP & Service', desc: 'Când expiră, stații autorizate, acte necesare', gradient: 'linear-gradient(135deg,#26a69a,#00796b)', defaultOn: false },
+  { id: 'piata', icon: '🏪', label: 'Piața Auto', desc: 'Anunțuri cu documente verificate', gradient: 'linear-gradient(135deg,#ec407a,#c2185b)', defaultOn: false },
+  { id: 'piese', icon: '🛒', label: 'Piese Auto', desc: 'Piese pentru mașina ta', gradient: 'linear-gradient(135deg,#8d6e63,#5d4037)', defaultOn: false },
+  { id: 'peco', icon: '⛽', label: 'Prețuri Carburant', desc: 'Prețuri în România, stații pe hartă, traseu', gradient: 'linear-gradient(135deg,#ef5350,#c62828)', defaultOn: false },
+  { id: 'servicii-stat', icon: '🏛️', label: 'Servicii de Stat', desc: 'Linkuri oficiale: amenzi, impozit, DRPCIV, RAR', gradient: 'linear-gradient(135deg,#5c6bc0,#303f9f)', defaultOn: false },
+  { id: 'flota', icon: '🚚', label: 'Flote', desc: 'Pentru firme cu mai multe vehicule', gradient: 'linear-gradient(135deg,#ffa726,#ef6c00)', defaultOn: false },
 ];
 
 function getDashConfig() {
