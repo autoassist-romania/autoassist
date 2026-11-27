@@ -215,34 +215,35 @@
     <div class="ns">Principal</div>
     <div class="ni active" onclick="goTo('dashboard')"><span class="ni-i">⊞</span>Dashboard</div>
     <div class="ni" onclick="goTo('garaj')"><span class="ni-i">🚗</span>Garajul meu<span class="nbadge b" id="nb-c">0</span></div>
-    <div class="ni" onclick="goTo('docpersonale')"><span class="ni-i">🪪</span>Documente Personale</div>
+    <div class="ni" onclick="goTo('flota')"><span class="ni-i">🚚</span>Flote</div>
+    <div class="ni" onclick="goTo('asistent')"><span class="ni-i">🎙️</span>Asistent Vocal AI</div>
+    <div class="ni" onclick="goTo('agenti')" style="border:1px solid rgba(79,125,255,0.15)"><span class="ni-i">🧠</span>Agenți AI<span class="nbadge g">LIVE</span></div>
+    <div class="ns">Documente &amp; Alerte</div>
     <div class="ni" onclick="goTo('documente')"><span class="ni-i">📋</span>Documente Mașină<span class="nbadge" id="nb-a" style="display:none">!</span></div>
-    <div class="ni" onclick="goTo('mentenanta')"><span class="ni-i">🔧</span>Întreținere</div>
+    <div class="ni" onclick="goTo('docpersonale')"><span class="ni-i">🪪</span>Documente Personale</div>
     <div class="ni" onclick="goTo('itp')"><span class="ni-i">🔬</span>ITP & Service</div>
-    <div class="ns">Servicii</div>
     <div class="ni" onclick="goTo('asigurari')"><span class="ni-i">🛡️</span>Asigurări RCA <small style="opacity:.6">· în curând</small></div>
-    <div class="ni" onclick="goTo('verificare')" style="color:var(--cv)"><span class="ni-i">🚘</span>carVertical / Verificare SH</div>
+    <div class="ni" onclick="soonRov()"><span class="ni-i">🛣️</span>Rovinietă <small style="opacity:.6">· în curând</small></div>
+    <div class="ns">Întreținere &amp; Costuri</div>
+    <div class="ni" onclick="goTo('mentenanta')"><span class="ni-i">🔧</span>Întreținere</div>
+    <div class="ni" onclick="goTo('anvelope')"><span class="ni-i">🏎️</span>Anvelope</div>
+    <div class="ni" onclick="goTo('detailing')"><span class="ni-i">🧽</span>Detailing</div>
+    <div class="ni" onclick="goTo('piese')"><span class="ni-i">🛒</span>Piese Auto</div>
+    <div class="ni" onclick="goTo('costuri')"><span class="ni-i">💸</span>Calculator Costuri</div>
+    <div class="ns">Vânzare &amp; Verificări</div>
     <div class="ni" onclick="goTo('vanzare')"><span class="ni-i">💰</span>Vânzare mașini</div>
     <div class="ni" onclick="goTo('piata')"><span class="ni-i">🏪</span>Piața Auto</div>
+    <div class="ni" onclick="goTo('verificare')" style="color:var(--cv)"><span class="ni-i">🚘</span>carVertical / Verificare SH</div>
+    <div class="ni" onclick="goTo('verif-nr');renderVerifRecent()"><span class="ni-i">🔍</span>Verificare Nr. Înmatr.</div>
+    <div class="ns">Pe drum &amp; Servicii</div>
+    <div class="ni" onclick="goTo('peco')"><span class="ni-i">⛽</span>Prețuri Carburant</div>
+    <div class="ni" onclick="goTo('electric')"><span class="ni-i">⚡</span>Mașini Electrice</div>
     <div class="ni" onclick="goTo('asistenta')"><span class="ni-i">🆘</span>Asistență rutieră <small style="opacity:.6">· în curând</small></div>
     <div class="ni" onclick="goTo('servicii-stat')"><span class="ni-i">🏛️</span>Servicii de Stat</div>
     <div class="ns">Cont</div>
     <div class="ni" onclick="goTo('premium')"><span class="ni-i">👑</span>Premium</div>
-    <div class="ni" onclick="goTo('flota')"><span class="ni-i">🚚</span>Flote</div>
-    <div class="ni" onclick="goTo('legal')"><span class="ni-i">⚖️</span>Legal & GDPR</div>
-    <div class="ns">Auto</div>
-    <div class="ni" onclick="goTo('mentenanta')"><span class="ni-i">🔧</span>Întreținere</div>
-    <div class="ni" onclick="goTo('piese')"><span class="ni-i">🛒</span>Piese Auto</div>
-    <div class="ni" onclick="goTo('anvelope')"><span class="ni-i">🏎️</span>Anvelope</div>
-    <div class="ni" onclick="goTo('detailing')"><span class="ni-i">🧽</span>Detailing</div>
-    <div class="ni" onclick="goTo('costuri')"><span class="ni-i">💸</span>Calculator Costuri</div>
-    <div class="ni" onclick="goTo('electric')"><span class="ni-i">⚡</span>Mașini Electrice</div>
-    <div class="ni" onclick="goTo('peco')"><span class="ni-i">⛽</span>Prețuri Carburant</div>
-    <div class="ni" onclick="goTo('verif-nr');renderVerifRecent()"><span class="ni-i">🔍</span>Verificare Nr. Înmatr.</div>
-    <div class="ni" onclick="goTo('asistent')"><span class="ni-i">🎙️</span>Asistent Vocal AI</div>
     <div class="ni" onclick="goTo('setari')"><span class="ni-i">⚙️</span>Setări</div>
-    <div class="ns">Admin</div>
-    <div class="ni" onclick="goTo('agenti')" style="border:1px solid rgba(79,125,255,0.15)"><span class="ni-i">🧠</span>Agenți AI<span class="nbadge g">LIVE</span></div>
+    <div class="ni" onclick="goTo('legal')"><span class="ni-i">⚖️</span>Legal & GDPR</div>
   </nav>
   <div class="sf">
     <button id="sidebar-premium-btn" onclick="goTo('premium')" style="display:none;width:100%;margin-bottom:8px;padding:10px;background:linear-gradient(135deg,#f0b429,#e09e1a);border:none;border-radius:11px;color:#000;font-size:12px;font-weight:800;cursor:pointer;align-items:center;justify-content:center;gap:6px">👑 Activează Premium</button>
