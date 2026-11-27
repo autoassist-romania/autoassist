@@ -561,3 +561,6 @@ body.auth-open .mo.mo-auth .md{position:relative;z-index:520;}
   .lp-arow{position:relative}
   .lp-arow>span:first-child{position:absolute;right:100%;margin-right:8px}
 }
+
+@media(min-width:701px){ .lp-feat{grid-template-columns:repeat(3,1fr)!important} }
+.lp-feat>div{min-width:0;overflow-wrap:anywhere}
